@@ -1,14 +1,12 @@
 import streamlit as st
-import random
 import os
 import glob
+import random
 
 # Import our custom modules
 import config
 import logic
 
-
-# --- STREAMLIT UI ---
 
 # --- CUSTOM CSS FOR KARNATAKA THEME ---
 def local_css():
@@ -26,26 +24,23 @@ def local_css():
             background-color: transparent;
         }
 
-        /* Style the individual labels to look like blocks */
         div.row-widget.stRadio > div[role="radiogroup"] > label {
             background-color: white;
             padding: 15px;
             margin-bottom: 5px;
-            border-radius: 0px; /* Flush rectangles */
-            border-left: 6px solid var(--karnataka-gold); /* Gold accent */
+            border-radius: 0px; 
+            border-left: 6px solid var(--karnataka-gold); 
             transition: all 0.3s ease;
             cursor: pointer;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        /* HOVER STATE: Red Background, Gold Text */
         div.row-widget.stRadio > div[role="radiogroup"] > label:hover {
             background-color: var(--karnataka-red);
             color: var(--karnataka-gold) !important;
             border-left: 6px solid var(--karnataka-gold);
         }
 
-        /* TEXT STYLING IN SIDEBAR */
         div.row-widget.stRadio > div[role="radiogroup"] > label > div {
             color: inherit;
             font-weight: 600;
@@ -58,7 +53,7 @@ def local_css():
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
 
-        /* 4. BUTTONS (Primary Actions) */
+        /* 4. BUTTONS */
         .stButton > button {
             background-color: var(--karnataka-red);
             color: white;
@@ -66,7 +61,7 @@ def local_css():
             border-radius: 4px;
         }
         .stButton > button:hover {
-            background-color: #B71C1C; /* Darker red */
+            background-color: #B71C1C;
             color: var(--karnataka-gold);
         }
         </style>
@@ -74,10 +69,11 @@ def local_css():
         unsafe_allow_html=True
     )
 
-def main():
-    st.set_page_config(page_title="Kannada Bhasheya Guru", layout="wide")
 
-    # Inject the Red & Gold CSS
+# --- STREAMLIT UI ---
+
+def main():
+    st.set_page_config(page_title="Kannada Bhasheya Guru", page_icon="🪔", layout="wide")
     local_css()
 
     st.title("Kannada Bhasheya Guru")
@@ -88,41 +84,55 @@ def main():
         with st.spinner("Loading Knowledge Base..."):
             st.session_state.context = logic.load_knowledge_base()
 
-    # 2. Sidebar Navigation
-    st.sidebar.header("Navigation")
-    mode = st.sidebar.radio("Choose Mode:",
-                            ["Home", "Send Email Lesson", "Mastery Quiz", "Writing Critique", "Reading Comprehension"])
+    # --- SIDEBAR SETTINGS (Language Toggle) ---
+    st.sidebar.header("SETTINGS")
+    # This variable controls the language for the whole app
+    # logic.py uses this to decide whether to show English, Script, or Roman
+    lang_mode = st.sidebar.radio("App Language / ಭಾಷೆ:",
+                                 ["English", "Kannada (Roman)", "Kannada (Script)"])
+
+    st.sidebar.markdown("---")
+    st.sidebar.header("NAVIGATION")
+
+    # Mapping internal logic keys to the translation keys in config.py
+    nav_options = {
+        "Home": "NAV_HOME",
+        "Send Email Lesson": "NAV_EMAIL",
+        "Mastery Quiz": "NAV_QUIZ",
+        "Writing Critique": "NAV_WRITE",
+        "Reading Comprehension": "NAV_READ"
+    }
+
+    # The radio button returns the English Key (e.g., "Home"),
+    # but displays the translated text using format_func
+    mode = st.sidebar.radio(
+        "Go to:",
+        options=list(nav_options.keys()),
+        format_func=lambda x: logic.get_ui_text(nav_options[x], lang_mode)
+    )
 
     # --- MODE: HOME ---
     if mode == "Home":
-        st.subheader("Overview")
+        st.subheader(logic.get_ui_text("TITLE_HOME", lang_mode))
 
-        # Wry, dry-humoured text
         st.markdown("""
-            Welcome. You are here because you want to learn Kannada, and presumably, you have realized that smiling and nodding is not a viable long-term communication strategy in Bengaluru.
+        Welcome. You are here because you want to learn Kannada, and presumably, you have realized that smiling and nodding is not a viable long-term communication strategy in Bengaluru.
 
-            This application utilizes a Large Language Model to simulate a strict but arguably fair Kannada tutor. It does not sleep, it does not judge (much), and it will not ask you why you aren't married yet.
+        This application utilizes a Large Language Model to simulate a strict but arguably fair Kannada tutor. It does not sleep, it does not judge (much), and it will not ask you why you aren't married yet.
 
-            **How to survive this tool:**
+        **Select a torture method from the sidebar to begin.**
+        """)
 
-            * **Send Email Lesson:** For when you want to feel productive without actually doing anything.
-            * **Mastery Quiz:** The machine will test your translation skills. It is pedantic. Accuracy matters.
-            * **Writing Critique:** Paste your broken sentences here. The AI will dismantle them and show you the pieces.
-            * **Reading Comprehension:** Read texts you barely understand and answer questions to prove you guessed correctly.
-
-            Select a torture method from the sidebar to begin.
-            """)
-
-        # Access config variable for directory
         file_count = len(glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.txt')))
-        st.info(f"System Status: {file_count} grammar modules loaded and ready.")
+        st.info(f"System Status: {file_count} grammar modules loaded.")
 
     # --- MODE: SEND LESSON ---
     elif mode == "Send Email Lesson":
-        st.subheader("Send Next Lesson")
-        st.write("This will check your Google Sheet for the next topic and email you a lesson.")
-        if st.button("Generate & Send Lesson"):
-            with st.spinner("Working..."):
+        st.subheader(logic.get_ui_text("TITLE_EMAIL", lang_mode))
+
+        st.write("This will check your Google Sheet for the next topic and dispatch a lesson to your inbox.")
+        if st.button(logic.get_ui_text("BTN_SEND", lang_mode)):
+            with st.spinner("Compiling lesson..."):
                 result = logic.send_email_lesson(st.session_state.context)
                 if "Error" in result:
                     st.error(result)
@@ -131,77 +141,78 @@ def main():
 
     # --- MODE: MASTERY QUIZ ---
     elif mode == "Mastery Quiz":
-        st.subheader("Mastery Quiz")
+        st.subheader(logic.get_ui_text("TITLE_QUIZ", lang_mode))
 
-        # --- SESSION STATE SAFETY CHECK ---
-        # Ensure variables exist even if hot-reloading
         if "quiz_questions" not in st.session_state:
             st.session_state.quiz_questions = []
-        if "quiz_history" not in st.session_state:
             st.session_state.quiz_history = []
-        if "current_q_index" not in st.session_state:
             st.session_state.current_q_index = 0
-        if "quiz_score" not in st.session_state:
             st.session_state.quiz_score = 0
 
-        # State 1: Setup - Select Topic (Only if no questions loaded)
+        # State 1: Setup
         if not st.session_state.quiz_questions:
             sheet, topics = logic.get_quiz_data(st.session_state.context)
             if topics:
                 topic_names = [t['topic'] for t in topics]
-                selected_topic = st.selectbox("Select Topic:", topic_names)
+                st.write(logic.get_ui_text("LBL_TOPIC", lang_mode))
+                selected_topic = st.selectbox("Topic", topic_names, label_visibility="collapsed")
 
-                if st.button("Start Quiz"):
+                if st.button(logic.get_ui_text("BTN_START_QUIZ", lang_mode)):
                     row = next(t['row'] for t in topics if t['topic'] == selected_topic)
                     with st.spinner("Generating 10 questions..."):
-                        # Ensure logic.py was updated to ask for 10 questions!
                         qs = logic.generate_quiz(selected_topic, st.session_state.context)
                         st.session_state.quiz_questions = qs
                         st.session_state.quiz_topic = selected_topic
                         st.session_state.quiz_sheet_row = row
                         st.session_state.quiz_score = 0
                         st.session_state.current_q_index = 0
-                        st.session_state.quiz_history = []  # Reset history
+                        st.session_state.quiz_history = []
                         st.rerun()
             else:
-                st.warning("No 'Sent' topics available or Error connecting.")
+                st.warning("No 'Sent' topics available.")
 
         # State 2: Active Quiz
         else:
             total = len(st.session_state.quiz_questions)
 
-            # --- DISPLAY HISTORY (Previous Questions) ---
+            # History
             if st.session_state.quiz_history:
                 st.markdown("### Previous Answers")
                 for i, item in enumerate(st.session_state.quiz_history):
-                    with st.expander(f"Q{i + 1}: {item['question']}", expanded=False):
+                    # Toggle script for history
+                    display_q = logic.toggle_script(item['question'], lang_mode)
+                    with st.expander(f"Q{i + 1}: {display_q}", expanded=False):
                         st.write(f"**Your Answer:** {item['user_answer']}")
+
+                        feed = logic.toggle_script(item['feedback'], lang_mode)
+                        corr = logic.toggle_script(item['correct_translation'], lang_mode)
+
                         if item['correct']:
-                            st.success(f"✅ {item['feedback']}")
+                            st.success(feed)
                         else:
-                            st.error(f"❌ {item['feedback']}")
-                            st.write(f"**Correct:** {item['correct_translation']}")
+                            st.error(feed)
+                            st.write(f"**Correct:** {corr}")
                 st.markdown("---")
 
-            # --- CURRENT QUESTION LOGIC ---
+            # Current Question
             if st.session_state.current_q_index < total:
                 q_idx = st.session_state.current_q_index
                 q_text = st.session_state.quiz_questions[q_idx]
 
-                # Progress Bar
+                # Apply toggle to the question text
+                display_q = logic.toggle_script(q_text, lang_mode)
+
                 st.progress(q_idx / total)
-                st.markdown(f"### Q{q_idx + 1}: {q_text}")
+                st.markdown(f"### Q{q_idx + 1}: {display_q}")
 
-                # Check if we have ALREADY answered this specific question
                 if len(st.session_state.quiz_history) == q_idx:
-                    # -- INPUT PHASE --
-                    user_ans = st.text_input("Your Translation:", key=f"input_{q_idx}")
+                    st.write(logic.get_ui_text("LBL_TRANS", lang_mode))
+                    user_ans = st.text_input("Answer", key=f"input_{q_idx}", label_visibility="collapsed")
 
-                    if st.button("Submit Answer"):
+                    if st.button(logic.get_ui_text("BTN_SUBMIT", lang_mode)):
                         with st.spinner("Grading..."):
                             res = logic.grade_answer_ai(q_text, user_ans, st.session_state.context)
 
-                            # Save to history
                             history_item = {
                                 'question': q_text,
                                 'user_answer': user_ans,
@@ -210,170 +221,157 @@ def main():
                                 'correct_translation': res.get('correct_translation', '')
                             }
                             st.session_state.quiz_history.append(history_item)
-
-                            # Update score
-                            if res['is_correct']:
-                                st.session_state.quiz_score += 1
-
-                            # Force rerun to switch to "Result Phase"
+                            if res['is_correct']: st.session_state.quiz_score += 1
                             st.rerun()
-
                 else:
-                    # -- RESULT PHASE (Answered, waiting for Next) --
-                    # Get the result from the last history item
+                    # Result Phase (Waiting for Next)
                     last_result = st.session_state.quiz_history[-1]
+                    feed_text = logic.toggle_script(last_result['feedback'], lang_mode)
 
                     if last_result['correct']:
-                        st.success(f"✅ Correct! {last_result['feedback']}")
+                        st.success(f"Correct. {feed_text}")
                     else:
-                        st.error(
-                            f"❌ Incorrect.\n\nCorrect: **{last_result['correct_translation']}**\n\nTip: {last_result['feedback']}")
+                        st.error(f"Incorrect. {feed_text}")
 
-                    if st.button("Next Question ➡️"):
+                    if st.button(logic.get_ui_text("BTN_NEXT", lang_mode)):
                         st.session_state.current_q_index += 1
                         st.rerun()
-
-            # --- QUIZ COMPLETE ---
             else:
                 score = st.session_state.quiz_score
-                st.markdown(f"## Quiz Complete! Score: {score}/{total}")
-
+                st.markdown(f"## Score: {score}/{total}")
                 if score >= (total * 0.9):
-                    st.balloons()
-                    st.success("🎉 PASSED! Topic marked as 'Mastered'.")
+                    st.success("Topic Mastered! Sheet updated.")
                     logic.update_mastery(st.session_state.quiz_sheet_row)
                 else:
-                    phrases = ["ಇನ್ನೂ ಪ್ರಯತ್ನಿಸಿ! (Innū prayatnisi!)", "ಉತ್ತಮವಾಗಿರಲಿ! (Mundina bāri uttamavāgirali!)"]
-                    st.warning(random.choice(phrases))
-                    st.write("Status remains 'Sent'. Study more and try again!")
+                    st.warning("Score insufficient for mastery. Keep practicing.")
 
-                if st.button("Back to Menu"):
+                if st.button(logic.get_ui_text("BTN_BACK", lang_mode)):
                     st.session_state.quiz_questions = []
-                    st.session_state.quiz_history = []
                     st.rerun()
 
     # --- MODE: WRITING CRITIQUE ---
     elif mode == "Writing Critique":
-        st.subheader("Writing Critique")
+        st.subheader(logic.get_ui_text("TITLE_WRITE", lang_mode))
 
         col1, col2 = st.columns(2)
         with col1:
-            style = st.selectbox("Style", ["Formal (Literary)", "Colloquial (Spoken)"])
+            st.write(logic.get_ui_text("LBL_STYLE", lang_mode))
+            style = st.selectbox("Style", ["Formal", "Colloquial"], label_visibility="collapsed")
         with col2:
-            method = st.radio("Input Method", ["Paste Text", "Get Prompt"])
+            st.write(logic.get_ui_text("LBL_INPUT", lang_mode))
+            method = st.radio("Input", ["Paste Text", "Get Prompt"], label_visibility="collapsed")
 
         if method == "Get Prompt":
-            topic = st.selectbox("Topic", config.WRITING_TOPICS)
-            if st.button("Generate Prompt"):
-                with st.spinner("Generating prompt..."):
-                    prompt_res = logic.generate_content(
-                        f"Create a specific, 1-sentence creative writing prompt about {topic} for a learner. Do not include any preliminary text; just give the writing prompt and nothing else.",
-                        st.session_state.context)
-                    st.info(f"✨ PROMPT: {prompt_res}")
+            st.write(logic.get_ui_text("LBL_TOPIC", lang_mode))
+            topic = st.selectbox("Topic", config.WRITING_TOPICS, label_visibility="collapsed")
+            if st.button(logic.get_ui_text("BTN_GEN_PROMPT", lang_mode)):
+                with st.spinner("Generating..."):
+                    prompt_res = logic.generate_content(f"Create a 1-sentence writing prompt regarding {topic}",
+                                                        st.session_state.context)
+                    st.info(logic.toggle_script(prompt_res, lang_mode))
 
-        user_text = st.text_area("Write/Paste your Kannada text here:", height=150)
+        st.write(logic.get_ui_text("LBL_PASTE", lang_mode))
+        user_text = st.text_area("User Text", height=150, label_visibility="collapsed")
 
-        if st.button("Analyze Writing"):
+        if st.button(logic.get_ui_text("BTN_ANALYZE", lang_mode)):
             if len(user_text) < 5:
-                st.error("Text is too short!")
+                st.error("Text is too short.")
             else:
-                with st.spinner("Analyzing sentence-by-sentence..."):
-                    res = logic.critique_text_ai(user_text, style.split()[0], st.session_state.context)
+                with st.spinner("Analyzing..."):
+                    res = logic.critique_text_ai(user_text, style, st.session_state.context)
                     if "overall_summary" in res:
-                        st.markdown("### 📝 Critique Report")
-                        st.info(f"**Summary:** {res.get('overall_summary')}")
+                        st.info(logic.toggle_script(res.get('overall_summary'), lang_mode))
                         for item in res.get('analysis', []):
-                            with st.expander(f"Sentence: {item.get('original', 'Unknown')[:30]}...", expanded=True):
-                                if item.get('status') == 'CORRECT':
-                                    st.caption("✅ Perfect")
+                            # Display sentence with toggle
+                            orig = logic.toggle_script(item.get('original', ''), lang_mode)
+                            with st.expander(f"{orig[:40]}..."):
+                                if item.get('status') != 'CORRECT':
+                                    corr = logic.toggle_script(item.get('corrected'), lang_mode)
+                                    feed = logic.toggle_script(item.get('feedback'), lang_mode)
+                                    st.write(f"**Correction:** {corr}")
+                                    st.write(f"**Feedback:** {feed}")
                                 else:
-                                    st.error(f"❌ Needs Improvement")
-                                    st.write(f"**Correction:** {item.get('corrected')}")
-                                    st.write(f"**Feedback:** {item.get('feedback')}")
-                    else:
-                        st.warning("Could not analyze text.")
+                                    st.caption("Correct")
 
     # --- MODE: READING COMPREHENSION ---
     elif mode == "Reading Comprehension":
-        st.subheader("Reading Comprehension / ಓದುವ ಗ್ರಹಿಕೆ")
+        st.subheader(logic.get_ui_text("TITLE_READ", lang_mode))
 
-        input_method = st.radio("Choose input method:", ("Paste Kannada Text", "Generate (AI)"))
+        st.write(logic.get_ui_text("LBL_INPUT", lang_mode))
+        input_method = st.radio("Method", ("Paste Kannada Text", "Generate (AI)"), label_visibility="collapsed")
 
-        # Input Section
         if input_method == "Paste Kannada Text":
-            user_text = st.text_area("Paste Article Here:", height=200)
-            if st.button("Load Text"):
+            st.write(logic.get_ui_text("LBL_PASTE", lang_mode))
+            user_text = st.text_area("Paste", height=200, label_visibility="collapsed")
+            if st.button(logic.get_ui_text("BTN_LOAD", lang_mode)):
                 if len(user_text) > 5:
                     st.session_state['current_article'] = user_text
-                    st.session_state.pop('qa_content', None)  # Clear old questions
-                    st.success("Text loaded successfully!")
+                    st.session_state.pop('qa_content', None)
+                    st.success("Loaded.")
                 else:
                     st.warning("Please paste some text first.")
 
         elif input_method == "Generate (AI)":
             col1, col2 = st.columns(2)
             with col1:
-                topic = st.selectbox("Topic", config.WRITING_TOPICS, key="rc_topic")
+                st.write(logic.get_ui_text("LBL_TOPIC", lang_mode))
+                topic = st.selectbox("Topic", config.WRITING_TOPICS, key="rc_topic", label_visibility="collapsed")
             with col2:
-                style = st.selectbox("Style", ["Formal", "Colloquial"], key="rc_style")
+                st.write(logic.get_ui_text("LBL_STYLE", lang_mode))
+                style = st.selectbox("Style", ["Formal", "Colloquial"], key="rc_style", label_visibility="collapsed")
 
-            if st.button("Generate Text"):
-                with st.spinner("Generating article..."):
+            if st.button(logic.get_ui_text("BTN_GEN_TEXT", lang_mode)):
+                with st.spinner("Generating..."):
                     generated_text = logic.generate_kannada_article_ai(topic, style, st.session_state.context)
                     st.session_state['current_article'] = generated_text
                     st.session_state.pop('qa_content', None)
-                    st.success("Article generated!")
+                    st.success("Generated.")
 
-        # Display Article & Questions
         if 'current_article' in st.session_state and st.session_state['current_article']:
-            st.markdown("### Current Article")
-            st.info(st.session_state['current_article'])
+            st.markdown("### Article")
+            # Apply toggle to article text
+            st.info(logic.toggle_script(st.session_state['current_article'], lang_mode))
             st.markdown("---")
 
-            # Button to generate questions
-            if st.button("Generate Comprehension Questions"):
+            if st.button(logic.get_ui_text("BTN_GEN_QS", lang_mode)):
                 with st.spinner("Creating questions..."):
                     qa_response = logic.generate_comprehension_questions(st.session_state['current_article'],
                                                                          st.session_state.context)
                     st.session_state['qa_content'] = qa_response
 
-            # Render the Questions (Iterate through the list)
             if 'qa_content' in st.session_state and isinstance(st.session_state['qa_content'], list):
                 if len(st.session_state['qa_content']) == 0:
-                    st.error(
-                        "Error: The AI returned no questions. You may have hit the rate limit. Please try again later.")
+                    st.error("Rate limit hit or no questions generated.")
                 else:
-                    st.markdown("### Comprehension Questions")
-
+                    st.markdown("### Questions")
                     for i, item in enumerate(st.session_state['qa_content']):
-                        st.markdown(f"**Q{i + 1}: {item.get('question')}**")
+                        # Apply toggle to question
+                        q_text = logic.toggle_script(item.get('question'), lang_mode)
+                        st.markdown(f"**Q{i + 1}: {q_text}**")
 
-                        user_ans = st.text_input(f"Your Answer for Q{i + 1}:", key=f"rc_answer_{i}")
+                        user_ans = st.text_input(f"Answer {i + 1}", key=f"rc_answer_{i}", label_visibility="collapsed")
 
-                        if st.button(f"Check Answer {i + 1}", key=f"btn_check_{i}"):
+                        if st.button(logic.get_ui_text("BTN_CHECK", lang_mode) + f" {i + 1}", key=f"btn_check_{i}"):
                             if not user_ans:
-                                st.warning("Please write an answer first.")
+                                st.warning("Write an answer first.")
                             else:
                                 with st.spinner("Grading..."):
-                                    res = logic.grade_reading_ai(
-                                        item.get('question'),
-                                        st.session_state['current_article'],
-                                        user_ans,
-                                        st.session_state.context
-                                    )
+                                    res = logic.grade_reading_ai(item.get('question'),
+                                                                 st.session_state['current_article'], user_ans,
+                                                                 st.session_state.context)
+
+                                    # Apply toggle to feedback
+                                    feed = logic.toggle_script(res['feedback'], lang_mode)
+                                    expl = logic.toggle_script(res['detailed_explanation'], lang_mode)
 
                                     if res['is_correct']:
-                                        st.success(f"✅ {res['feedback']}")
+                                        st.success(f"Correct. {feed}")
                                     else:
-                                        st.error(f"❌ {res['feedback']}")
+                                        st.error(f"Incorrect. {feed}")
 
-                                    with st.expander("📘 Deep Dive Explanation"):
-                                        st.write(res['detailed_explanation'])
-                    st.markdown("---")
-
-            elif 'qa_content' in st.session_state:
-                # Fallback if something goes wrong and it returns text instead of list
-                st.error("Error: Questions were not generated in the correct format. Please try again.")
+                                    with st.expander("Explanation"):
+                                        st.write(expl)
+                        st.markdown("---")
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ import smtplib
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from indic_transliteration import sanscript
 
 import google.generativeai as genai
 import gspread
@@ -84,6 +85,54 @@ def generate_content(user_prompt, context_override=None):
         return response.text
     except Exception as e:
         return f"API Error: {e}"
+
+
+# --- TEXT & TRANSLATION HANDLERS ---
+
+def get_ui_text(key, lang_mode):
+    """
+    Retrieves UI text based on the selected language mode.
+    Modes: 'English', 'Kannada (Roman)', 'Kannada (Script)'
+    """
+    # 1. Default to English if key missing
+    if key not in config.UI_TEXT:
+        return key
+
+    entry = config.UI_TEXT[key]
+
+    # 2. Return English
+    if lang_mode == "English":
+        return entry["EN"]
+
+    # 3. Return Kannada Script
+    if lang_mode == "Kannada (Script)":
+        return entry["KN"]
+
+    # 4. Return Kannada Roman (Transliterated)
+    if lang_mode == "Kannada (Roman)":
+        # Convert the Kannada script entry to Roman (IAST)
+        # Note: IAST is the academic standard (e.g., 'Kannaḍa')
+        return sanscript.transliterate(entry["KN"], sanscript.KANNADA, sanscript.IAST)
+
+    return entry["EN"]
+
+
+def toggle_script(text, lang_mode):
+    """
+    Helper for dynamic content (like AI output).
+    Converts to Roman only if mode is 'Kannada (Roman)'.
+    """
+    if not text:
+        return ""
+
+    # We check if the specific mode is Roman.
+    # If it is 'Kannada (Script)' or 'English', we generally leave the AI output (which is usually Kannada) alone
+    # UNLESS the user wants English UI, in which case we still show the Kannada text as Kannada script.
+
+    if lang_mode == "Kannada (Roman)":
+        return sanscript.transliterate(text, sanscript.KANNADA, sanscript.IAST)
+
+    return text
 
 
 # --- FEATURE FUNCTIONS ---
@@ -215,6 +264,7 @@ def generate_comprehension_questions(text, context):
     if data:
         return data
     return []
+
 
 def grade_reading_ai(question, text, answer, context):
     """Grades a single reading comprehension answer."""

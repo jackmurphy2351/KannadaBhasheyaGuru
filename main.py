@@ -10,10 +10,77 @@ import logic
 
 # --- STREAMLIT UI ---
 
-def main():
-    st.set_page_config(page_title="Kannada Bhasheya Guru", page_icon="🏫", layout="wide")
+# --- CUSTOM CSS FOR KARNATAKA THEME ---
+def local_css():
+    st.markdown(
+        """
+        <style>
+        /* 1. MAIN THEME COLORS (Karnataka Flag: Yellow/Gold & Red) */
+        :root {
+            --karnataka-red: #D32F2F;
+            --karnataka-gold: #FFD700;
+        }
 
-    st.title("🏫 Kannada Bhasheya Guru")
+        /* 2. SIDEBAR RADIO BUTTONS -> FLUSH RECTANGLES */
+        div.row-widget.stRadio > div {
+            background-color: transparent;
+        }
+
+        /* Style the individual labels to look like blocks */
+        div.row-widget.stRadio > div[role="radiogroup"] > label {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 5px;
+            border-radius: 0px; /* Flush rectangles */
+            border-left: 6px solid var(--karnataka-gold); /* Gold accent */
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* HOVER STATE: Red Background, Gold Text */
+        div.row-widget.stRadio > div[role="radiogroup"] > label:hover {
+            background-color: var(--karnataka-red);
+            color: var(--karnataka-gold) !important;
+            border-left: 6px solid var(--karnataka-gold);
+        }
+
+        /* TEXT STYLING IN SIDEBAR */
+        div.row-widget.stRadio > div[role="radiogroup"] > label > div {
+            color: inherit;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* 3. GENERAL HEADERS */
+        h1, h2, h3 {
+            color: var(--karnataka-red) !important;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        /* 4. BUTTONS (Primary Actions) */
+        .stButton > button {
+            background-color: var(--karnataka-red);
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        .stButton > button:hover {
+            background-color: #B71C1C; /* Darker red */
+            color: var(--karnataka-gold);
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+def main():
+    st.set_page_config(page_title="Kannada Bhasheya Guru", layout="wide")
+
+    # Inject the Red & Gold CSS
+    local_css()
+
+    st.title("Kannada Bhasheya Guru")
     st.markdown("---")
 
     # 1. Load Context
@@ -28,14 +95,31 @@ def main():
 
     # --- MODE: HOME ---
     if mode == "Home":
-        st.subheader("Welcome back!")
-        st.write("Select a module from the sidebar to begin your practice.")
+        st.subheader("Overview")
+
+        # Wry, dry-humoured text
+        st.markdown("""
+            Welcome. You are here because you want to learn Kannada, and presumably, you have realized that smiling and nodding is not a viable long-term communication strategy in Bengaluru.
+
+            This application utilizes a Large Language Model to simulate a strict but arguably fair Kannada tutor. It does not sleep, it does not judge (much), and it will not ask you why you aren't married yet.
+
+            **How to survive this tool:**
+
+            * **Send Email Lesson:** For when you want to feel productive without actually doing anything.
+            * **Mastery Quiz:** The machine will test your translation skills. It is pedantic. Accuracy matters.
+            * **Writing Critique:** Paste your broken sentences here. The AI will dismantle them and show you the pieces.
+            * **Reading Comprehension:** Read texts you barely understand and answer questions to prove you guessed correctly.
+
+            Select a torture method from the sidebar to begin.
+            """)
+
+        # Access config variable for directory
         file_count = len(glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.txt')))
-        st.info(f"Loaded {file_count} grammar primers from your Knowledge Base.")
+        st.info(f"System Status: {file_count} grammar modules loaded and ready.")
 
     # --- MODE: SEND LESSON ---
     elif mode == "Send Email Lesson":
-        st.subheader("📧 Send Next Lesson")
+        st.subheader("Send Next Lesson")
         st.write("This will check your Google Sheet for the next topic and email you a lesson.")
         if st.button("Generate & Send Lesson"):
             with st.spinner("Working..."):
@@ -47,7 +131,7 @@ def main():
 
     # --- MODE: MASTERY QUIZ ---
     elif mode == "Mastery Quiz":
-        st.subheader("🏆 Mastery Quiz")
+        st.subheader("Mastery Quiz")
 
         # --- SESSION STATE SAFETY CHECK ---
         # Ensure variables exist even if hot-reloading
@@ -88,7 +172,7 @@ def main():
 
             # --- DISPLAY HISTORY (Previous Questions) ---
             if st.session_state.quiz_history:
-                st.markdown("### 📜 Previous Answers")
+                st.markdown("### Previous Answers")
                 for i, item in enumerate(st.session_state.quiz_history):
                     with st.expander(f"Q{i + 1}: {item['question']}", expanded=False):
                         st.write(f"**Your Answer:** {item['user_answer']}")
@@ -152,7 +236,7 @@ def main():
             # --- QUIZ COMPLETE ---
             else:
                 score = st.session_state.quiz_score
-                st.markdown(f"## 🏁 Quiz Complete! Score: {score}/{total}")
+                st.markdown(f"## Quiz Complete! Score: {score}/{total}")
 
                 if score >= (total * 0.9):
                     st.balloons()
@@ -170,7 +254,7 @@ def main():
 
     # --- MODE: WRITING CRITIQUE ---
     elif mode == "Writing Critique":
-        st.subheader("✍️ Writing Critique")
+        st.subheader("Writing Critique")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -211,7 +295,7 @@ def main():
 
     # --- MODE: READING COMPREHENSION ---
     elif mode == "Reading Comprehension":
-        st.subheader("📖 Reading Comprehension / ಓದುವ ಗ್ರಹಿಕೆ")
+        st.subheader("Reading Comprehension / ಓದುವ ಗ್ರಹಿಕೆ")
 
         input_method = st.radio("Choose input method:", ("Paste Kannada Text", "Generate (AI)"))
 

@@ -149,6 +149,7 @@ def update_mastery(row_num):
 
 
 def generate_quiz(topic, context):
+    # CHANGED: Reverted to 10 questions to save API quota
     prompt = f"""
     TASK: Generate exactly 10 simple sentences in English based on the topic "{topic}" 
     that the student must translate into Kannada.
@@ -196,23 +197,36 @@ def generate_kannada_article_ai(topic, style, context):
 
 
 def generate_comprehension_questions(text, context):
+    """Generates structured JSON Q&A so the UI can create input boxes."""
     prompt = f"""
     Analyze the following Kannada text:
     "{text}"
 
-    1. Create 3 reading comprehension questions in Kannada based on this text.
-    2. Provide the answers to these questions in Kannada.
+    TASK:
+    1. Create 3 reading comprehension questions in Kannada.
+    2. Provide the correct answer for each.
 
-    IMPORTANT FORMATTING INSTRUCTIONS:
-    - Output the questions and answers in a clean, readable format.
-    - Do NOT use JSON format. 
-    - Do NOT use curly braces {{}} or dictionary keys like 'question':.
-    - Do NOT escape unicode characters (e.g. print ಪ್ಯಾರಾಗ್ರಾಫ್‌ನಲ್ಲಿ, not ಪ್ಯಾರಾಗ್ರಾಫ್\u200cನಲ್ಲಿ).
-    - Format it simply as:
-      Q1: [Question text]
-      A1: [Answer text]
-
-      Q2: [Question text]
-      A2: [Answer text]
+    OUTPUT FORMAT:
+    Return a strictly valid JSON list of objects. 
+    Example: [{{"question": "Question text here", "answer": "Answer text here"}}]
     """
-    return generate_content(prompt, context)
+    res = generate_content(prompt, context)
+    data = clean_json(res)
+    if data:
+        return data
+    return []
+
+def grade_reading_ai(question, text, answer, context):
+    """Grades a single reading comprehension answer."""
+    prompt = f"""
+    Text: "{text}"
+    Question: "{question}"
+    User Answer: "{answer}"
+    Task: Grade the user's answer for factual and grammatical accuracy based on the text.
+    Output JSON: {{ "is_correct": boolean, "feedback": "string", "detailed_explanation": "string" }}
+    """
+    res = generate_content(prompt, context)
+    data = clean_json(res)
+    if data:
+        return data
+    return {"is_correct": False, "feedback": "AI Error", "detailed_explanation": "Error"}

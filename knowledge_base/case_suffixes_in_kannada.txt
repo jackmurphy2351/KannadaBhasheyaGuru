@@ -1,0 +1,100 @@
+A Grammar Guide to Case Suffixes (ವಿಭಕ್ತಿ ಪ್ರತ್ಯಯಗಳು)
+
+
+1. The "Magic Glue": The Oblique Stem
+
+Before adding a case suffix, you often need to modify the noun slightly. This modified form is called the Oblique Stem.
+●	The "D" Insertion (Neuter 'a' nouns):
+If a non-living noun ends in short -a (e.g., Mara - Tree), you insert a -d- before the ending.
+○	Mara + alli (in) = Maradalli (Not Maraalli)
+○	Pustaka + inda (from) = Pustakadinda
+●	The "in" Insertion (Nouns ending in 'u'):
+If a noun ends in -u (e.g., Ūru - Town), you often change it to -in-.
+○	Ūru + alli = Ūrinalli
+
+2. The Seven Cases (Vibhaktis)
+
+Here is the master table. In Kannada, these cover every role a noun can play.
+Case Name	Kannada Name	Function	Suffix (Formal)	Suffix (Colloquial)	Latin Equiv.
+Nominative	Prathama	The Subject	(u) / None	None	Nominative
+Accusative	Dwitiya	The Object	-ಅನ್ನು (-annu)	-ನ್ನ (-nna) / None	Accusative
+Instrumental	Tritiya	By/With (Means)	-ಇಂದ (-inda)	-ಇಂದ (-inda)	Ablative (Instr)
+Dative	Chaturthi	To/For/Possession	-ಗೆ / -ಕ್ಕೆ (-ge/-kke)	-ಗೆ / -ಕ್ಕೆ (-ge/-kke)	Dative
+Genitive	Shashthi	Of/'s (Relation)	-ಅ (-a)	-ಅ (-a)	Genitive
+Locative	Saptami	In/At (Location)	-ಅಲ್ಲಿ (-alli)	-ಅಲ್ಲಿ (-alli)	Locative
+Vocative	Sambhodhane	Calling Out	-ಏ (-ē)	-ಏ / -ಆ (-ē / -ā)	Vocative
+
+3. Deep Dive: The Critical Cases
+
+
+A. Nominative (The Doer)
+
+The noun is in its dictionary form.
+●	Example: ರಾಮ ಬಂದನು. (Rāma bandanu) - Rama came.
+●	Example: ಮರ ಬಿತ್ತು. (Mara bittu) - The tree fell.
+
+B. Accusative (The Target) - Suffix: -annu
+
+Used when the verb is acting upon the noun.
+●	Rule: In spoken Kannada, you can drop this suffix for inanimate objects. For humans, you must use it.
+●	Formal: ನಾನು ಪುಸ್ತಕವನ್ನು ಓದಿದೆ. (Nānu pustakavannu ōdide.) - I read the book.
+●	Spoken: ನಾನು ಪುಸ್ತಕ ಓದಿದೆ. (Nānu pustaka ōdide.)
+●	Human (Mandatory): ನಾನು ಅವನನ್ನು ನೋಡಿದೆ. (Nānu avanannu nōḍide.) - I saw him. (Never "Nanu avanu nodide").
+
+C. Instrumental / Ablative (The Means/Source) - Suffix: -inda
+
+Kannada groups "By means of" and "From" under the same suffix.
+●	Means (Instrumental): ನಾನು ಕೈಯಿಂದ ಬರೆದೆ. (Nānu kayiyinda barede.) - I wrote with (my) hand.
+●	Source (Ablative): ನಾನು ಅಮೇರಿಕದಿಂದ ಬಂದೆ. (Nānu Amērikadinda bande.) - I came from America.
+●	Cause: ಮಳೆಯಿಂದ ಟ್ರಾಫಿಕ್ ಇದೆ. (Maḷeyinda ṭrāphik ide.) - There is traffic because of rain.
+
+D. Dative (The Recipient & "Haver") - Suffix: -ge / -ige / -kke
+
+This is the most distinctively "Dravidian" case. It is used for direction, but also for feelings and possession.
+●	Direction: ನಾನು ಮನೆಗೆ ಹೋದೆ. (Nānu manege hōde.) - I went to the house.
+●	Possession: ನನಗೆ ಬೆಕ್ಕು ಇದೆ. (Nanage bekku ide.) - To me, a cat exists. (I have a cat). 1
+
+●	Feeling: ಅವನಿಗೆ ಹಸಿವು ಆಗಿದೆ. (Avanige hasivu āgide.) - To him, hunger has happened. (He is hungry). 2
+
+The "-ge" vs. "-kke" Rule:
+1.	Humans/Living: Always -ge or -ige. (Rāmanige, Gīthage).
+2.	Neuter nouns ending in 'u' or 'i': -ge. (Ūrige - to town, Manege - to house).
+3.	Neuter nouns ending in 'a': -kke. (Marakke - to the tree, Kelasakke - to work).
+
+E. Genitive (The Owner) - Suffix: -a
+
+Connects two nouns.
+●	Example: ಇದು ರಾಮನ ಮನೆ. (Idu Rāmana mane.) - This is Rama's house.
+●	Example: ಮರದ ಎಲೆ. (Marada ele.) - Tree's leaf (Leaf of the tree).
+
+F. Locative (The Container) - Suffix: -alli
+
+Simple "in" or "at".
+●	Example: ಅವಳು ಆಫೀಸಿನಲ್ಲಿ ಇದ್ದಾಳೆ. (Avaḷu āphīsinalli iddāḷe.) - She is in the office. 3
+
+●	Example: ಬೆಂಗಳೂರಲ್ಲಿ ಮಳೆ ಬರ್ತಾ ಇದೆ. (Beṅgaḷūralli maḷe bartā ide.) - Rain is coming in Bangalore.
+
+G. Vocative (The Call) - Suffix: -ē / -ā
+
+Used to get attention.
+●	Example: ರಾಮನೇ! ಇಲ್ಲಿ ಬಾ. (Rāmanē! illi bā.) - Hey Rama! Come here.
+●	Spoken: ಗುರುಗಳೇ (Gurugaḷē - Oh Teacher/Master).
+
+4. Plurals and Cases
+
+When a noun is plural, the case suffix attaches after the plural marker (-gaḷu).
+Formula: Noun + gaḷu + Case Suffix
+●	Nominative: ಮರಗಳು (Maragaḷu - Trees)
+●	Accusative: ಮರಗಳನ್ನು (Maragaḷannu - The trees)
+●	Dative: ಮರಗಳಿಗೆ (Maragaḷige - To the trees) Note: gaḷu + ge becomes gaḷige
+●	Locative: ಮರಗಳಲ್ಲಿ (Maragaḷalli - In the trees)
+
+5. Everyday Examples (Conversational)
+
+Scenario	Kannada Sentence	Breakdown	Meaning
+Work	ನಾನು ಕೆಲಸಕ್ಕೆ ಹೋಗ್ತೀನಿ.	Kelasa (Work) + kke (to)	I go to work.
+Shopping	ಅಂಗಡಿಯಲ್ಲಿ ಹಣ್ಣು ಇದೆ.	Aṅgaḍi (Shop) + yalli (in)	There is fruit in the shop.
+Traffic	ಬಸ್ಸಿನಲ್ಲಿ ಜಾಗ ಇಲ್ಲ.	Bassu (Bus) + in + alli (in)	No space in the bus.
+Family	ಅಮ್ಮನ ಫೋನ್ ಬಂತು.	Amma (Mom) + na (of/Poss)	Mom's phone (call) came.
+Data	ಕಂಪ್ಯೂಟರಿನಿಂದ ಕಳಿಸಿದೆ.	Kampyūṭar (Computer) + inda (by)	Sent by/from the computer.
+

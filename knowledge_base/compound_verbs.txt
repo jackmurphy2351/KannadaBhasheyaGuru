@@ -1,0 +1,61 @@
+Kannada Compound Verbs: A Guide to Kollu, Kodu, and Bidu
+1. Overview
+In Kannada, just like in Hindi (Lena/Dena/Jana), auxiliary verbs are attached to the Past Participle of a main verb to add nuance to the action. These are often called "Vector Verbs."
+
+The Golden Formula:
+Main Verb (Past Participle) + Auxiliary Verb (Conjugated)
+2. The Big Three: Self, Others, and Completion
+A. The Reflexive/Self-Benefactive: ಕೊಳ್ಳು (Kollu)
+Hindi Equivalent: लेना (Lena) - To take Function: Indicates the action is done for oneself or directed inwards.
+Root Verb	Past Participle	+ Kollu (Written)	+ Kollu (Spoken)	Meaning	Hindi Eq.
+ಮಾಡು (To do)	ಮಾಡಿ (Maadi)	ಮಾಡಿಕೊಳ್ಳು (Maadikollu)	ಮಾಡ್ಕೊಳ್ಳು (Maadkollu)	Do it (yourself)	कर लेना
+ಬರೆ (To write)	ಬರೆದು (Baredu)	ಬರೆದುಕೊಳ್ಳು (Baredukollu)	ಬರ್ಕೊಳ್ಳು (Barkollu)	Write down (note it)	लिख लेना
+ತಿಳಿ (To know)	ತಿಳಿದು (Tilidu)	ತಿಳಿದುಕೊಳ್ಳು (Tilidukollu)	ತಿಳ್ಕೊಳ್ಳು (Tilkollu)	Understand/Grasp	समझ लेना
+ತೆಗೆ (To take)	ತೆಗೆದು (Tegedu)	ತೆಗೆದುಕೊಳ್ಳು (Tegedukollu)	ತಗೊಳ್ಳು (Togollu)	To buy/take	ले लेना
+
+B. The Benefactive: ಕೊಡು (Kodu)
+Hindi Equivalent: देना (Dena) - To give Function: Indicates the action is done for someone else or directed outwards.
+Root Verb	Past Participle	+ Kodu (Written)	+ Kodu (Spoken)	Meaning	Hindi Eq.
+ಮಾಡು (To do)	ಮಾಡಿ (Maadi)	ಮಾಡಿಕೊಡು (Maadikodu)	ಮಾಡ್ಕೊಡು (Maadkodu)	Do it (for someone)	कर देना
+ಕಳುಹಿಸು (To send)	ಕಳುಹಿಸಿ (Kaluhisi)	ಕಳುಹಿಸಿಕೊಡು (Kaluhisikodu)	ಕಲ್ಸ್ಕಿಕೊಡು (Kalskodu)	Send it (out)	भेज देना
+ಹೇಳು (To say)	ಹೇಳಿ (Heli)	ಹೇಳಿಕೊಡು (Helikodu)	ಹೇಳ್ಕೊಡು (Helkodu)	Teach (Say to someone)	बता देना
+ 
+C. The Completive: ಬಿಡು (Bidu)
+Hindi Equivalent: देना (Dena) / डालना (Daalna) / चुकना (Chukna) Function: Indicates finality, relief, or getting something over with.
+Root Verb	Past Participle	+ Bidu (Written)	+ Bidu (Spoken)	Meaning	Hindi Eq.
+ಸ್ವಚ್ಛ ಮಾಡು	ಸ್ವಚ್ಛ ಮಾಡಿ	ಸ್ವಚ್ಛ ಮಾಡಿಬಿಡು	ಸ್ವಚ್ಛ ಮಾಡ್ಬಿಡು	Clean it up (finish it)	साफ़ कर दो
+ಬರೆ (To write)	ಬರೆದು	ಬರೆದುಬಿಡು	ಬರ್ದ್ಬಿಡು (Bard-bidu)	Write it off/finish writing	लिख डालो
+
+3. The Kondu Rule: Stative Verbs (Body Posture)
+Unlike Hindi, where you use the Past Participle + To Be (Baitha hoon), Kannada requires the reflexive Kondu (having taken) + Iru (to be) for body positions.
+Formula:
+Root (Past) + ಕೊಂಡು (Kondu) + ಇದ್ದೇನೆ (Iddene)
+Verb	Written Form	Spoken Form (Bangalore)	Meaning	Hindi
+To Sit	ಕುಳಿತುಕೊಂಡಿದ್ದೇನೆ (Kulitukond-iddene)	ಕೂತ್ಕೊಂಡಿದ್ದೀನಿ (Kootkond-iddini)	I am sitting	बैठा हूँ
+To Stand	ನಿಂತುಕೊಂಡಿದ್ದೇನೆ (Nintukond-iddene)	ನಿಂತ್ಕೊಂಡಿದ್ದೀನಿ (Nintkond-iddini)	I am standing	खड़ा हूँ
+To Sleep	ಮಲಗಿಕೊಂಡಿದ್ದೇನೆ (Malagikond-iddene)	ಮಲ್ಕೊಂಡಿದ್ದೀನಿ (Malkond-iddini)	I am sleeping	सोया हूँ
+4. Nuances & False Friends
+ಕೇಳು (Kelu) vs. ಕೇಳಿಕೊಳ್ಳು (Keli-kollu)
+●	Kelu: To ask / To hear.
+●	Keli-kollu: To Request / To Beg / To Pray (Asking for oneself).
+●	Kelisi-kollu: To Listen (Causative reflexive - "To make sound heard by oneself").
+Emotions
+Emotions are often treated as nouns that you "do onto yourself."
+●	To get angry: ಕೋಪ ಮಾಡಿಕೊಳ್ಳು (Kopa maadi-kollu) -> Don't get angry: ಕೋಪ ಮಾಡ್ಕೋಬೇಡ (Kopa maadkobeda).
+●	To hurry: ಬೇಗ ಮಾಡಿಕೊಳ್ಳು (Bega maadi-kollu).
+5. Spoken Kannada Morphology (The "Squeeze")
+In conversational Bangalore Kannada, the vowel between the Root and the Auxiliary usually disappears.
+1.	Kulitu becomes Koot-
+2.	Malagi becomes Mal-
+3.	Nintu becomes Nint-
+4.	Maadi becomes Maad-
+5.	Tegedu becomes Togo- (Irregular)
+6. Conjugation Reference: ಕೊಳ್ಳು (Kollu)
+Root used for example: ಮಾಡು (Maadi - to do) -> Maadikollu
+Tense/Mood	Suffix	Written Example	Spoken Example	Meaning
+Past (I)	-konde	ಮಾಡಿಕೊಂಡೆ	ಮಾಡ್ಕೊಂಡೆ	I did it (for myself)
+Past (It/Neut)	-konditu/de	ಮಾಡಿಕೊಂಡಿತು	ಮಾಡ್ಕೊಂಡಿದೆ	It did it (It is doing)
+Future (I)	-kolluttene	ಮಾಡಿಕೊಳ್ಳುತ್ತೇನೆ	ಮಾಡ್ಕೊತೀನಿ	I will do it
+Imperative	-ko / -kolli	ಮಾಡಿಕೋ / ಕೊಳ್ಳಿ	ಮಾಡ್ಕೋ / ಮಾಡ್ಕೊಳ್ಳಿ	Do it! (Casual / Polite)
+Continuous	-kond-iddene	ಮಾಡಿಕೊಂಡು ಇದ್ದೇನೆ	ಮಾಡ್ಕೊಂಡಿದ್ದೀನಿ	I am doing it (busy with)
+

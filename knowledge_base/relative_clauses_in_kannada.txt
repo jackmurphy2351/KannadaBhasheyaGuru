@@ -1,0 +1,112 @@
+Kannada Grammar Guide: Relative Clauses & Participles
+
+Concept: Translating "Who," "That," and "Which"
+
+1. The Core Concept
+
+In English and Hindi, we use relative pronouns (who, that, which, jo, jis) to connect a verb to a noun (e.g., "The man who came").
+In Kannada, relative pronouns do not exist. Instead, Kannada turns the verb into an adjective and places it before the noun.
+The Golden Rule:
+English: Noun + [Relative Pronoun] + Verb
+Kannada: [Verb-turned-Adjective] + Noun
+
+ 
+2. Forming the Verbal Adjective (Relative Participle)
+
+To turn a verb into an adjective, attach the appropriate suffix to the verb root or stem.
+
+A. The Three Main Forms
+
+Context	Tense	Suffix	Formulation	Example (Root: Māḍu - to do)	Meaning
+Habit / Future	Present/Fut	-uva	Root + uva	ಮಾಡುವ (Māḍuva)	The doing / The one who does
+Completed	Past	-a	Past Stem + a	ಮಾಡಿದ (Māḍida)	The done / The one who did
+Negative	Any	-ada	Root + ada	ಮಾಡದ (Māḍada)	The not doing / The one who didn't
+
+B. Common Irregular Verbs
+
+Root	Meaning	Present/Future (-uva)	Past (-a)	Negative (-ada)
+ಬರು (Baru)	To come	ಬರುವ (Baruva)	ಬಂದ (Banda)	ಬಾರದ (Bārada)
+ಹೋಗು (Hōgu)	To go	ಹೋಗುವ (Hōguva)	ಹೋದ (Hōda)	ಹೋಗದ (Hōgada)
+ಇರು (Iru)	To be	ಇರುವ (Iruva)	ಇದ್ದ (Idda)	ಇಲ್ಲದ (Illada)*
+ನೋಡು (Nōḍu)	To see	ನೋಡುವ (Nōḍuva)	ನೋಡಿದ (Nōḍida)	ನೋಡದ (Nōḍada)
+*Note: "Illada" is the negative relative participle of "Iru" (To be).
+
+3. Basic Sentence Examples
+
+
+Present/Future (The "-uva" Clause)
+
+●	English: The bus that goes to the office.
+●	Logic: [Office-to going] + bus.
+●	Kannada: ಕಚೇರಿಗೆ ಹೋಗುವ ಬಸ್. (Kacērige hōguva bas.)
+
+Past (The "-da" Clause)
+
+●	English: The food (that) you cooked.
+●	Logic: [You cooked] + food.
+●	Kannada: ನೀವು ಮಾಡಿದ ಊಟ. (Nīvu māḍida ūṭa.)
+
+Negative (The "-ada" Clause)
+
+●	English: The song (that) she did not sing.
+●	Logic: [She not-singing] + song.
+●	Kannada: ಅವಳು ಹಾಡದ ಹಾಡು. (Avaḷu hāḍada hāḍu.)
+
+4. The Participial Noun ("The One Who...")
+
+If you remove the noun and replace it with a pronoun suffix, you create a noun meaning "The person who does X" or "The thing that did X."
+Formula: Relative Participle + Pronoun Suffix
+Gender	Suffix	Example (Past Tense of Baru)	Meaning
+Male	-avanu	ಬಂದವನು (Bandavanu)	The man who came / The guest (M)
+Female	-avaḷu	ಬಂದವಳು (Bandavaḷu)	The woman who came / The guest (F)
+Plural	-avaru	ಬಂದವರು (Bandavaru)	Those who came / The guests
+Neuter	-addu	ಬಂದದ್ದು (Bandaddu)	That which came / The arrival
+Usage Example:
+●	"I don't know the person who is going."
+●	ಹೋಗುವವನು ನನಗೆ ಗೊತ್ತಿಲ್ಲ. (Hōguvavanu nanage gottilla.)
+
+ 
+5. Advanced: Nested & Complex Clauses
+
+You can stack these clauses to describe complex relationships.
+
+A. The "Possession" Clause
+
+When describing an object someone has with them:
+●	English: The book that is with you.
+●	Kannada: ನಿಮ್ಮ ಹತ್ತಿರ ಇರುವ ಪುಸ್ತಕ. (Nimma hattira iruva pustaka.)
+
+B. The "Comparison" Clause
+
+When comparing one object to another described object:
+●	English: A man who has a bottle like the one you have.
+●	Kannada: [ನಿಮ್ಮ ಹತ್ತಿರ ಇರುವ] ಬಾಟಲ್ [ಥರದ್ದೇ ಬಾಟಲ್ ಇಟ್ಟಿರುವ] ಮನುಷ್ಯ.
+●	([Nimma hattira iruva] bāṭal [tharaddē bāṭal iṭṭiruva] manuṣya.)
+
+C. Nominalizing "What I did..."
+
+To talk about an action as a concept (e.g., "My writing," "What I wrote"):
+1.	Take the Past Participle (Bareda).
+2.	Add Addu (Thing).
+3.	Add Case Suffix (e.g., Accusative -annu).
+●	Example: "Translating what I wrote."
+●	Kannada: ನಾನು ಬರೆದದ್ದನ್ನು ಅನುವಾದಿಸುವುದು. (Nānu baredaddannu anuvādisuvudu.)
+
+ 
+6. Common Pitfalls to Avoid
+
+1. Don't use "Endu/Anta" for Relative Clauses
+
+●	Endu/Anta means "that" only for quotes or names (e.g., "He said that...", "The city called Mysore").
+●	For descriptions ("The car that is red"), use the iruva participle.
+
+2. Adjective vs. Noun Form
+
+●	Bareda (Adjective): Must be followed by a noun. (Bareda pustaka - Written book).
+●	Baredaddu (Noun): Stands alone. (Nānu baredaddu - What I wrote).
+●	Error: Do not say "Baredaddu pustaka."
+
+3. Possession: Nimage vs. Hattira
+
+●	Use Nimage for feelings, body parts, or relatives. (Nimage kopa ide - You have anger).
+●	Use Hattira + Iruva for portable objects used in relative clauses. (Nimma hattira iruva phone - The phone that is with you).

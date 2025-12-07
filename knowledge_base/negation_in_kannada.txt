@@ -1,0 +1,161 @@
+Comprehensive Guide to Kannada Negation (ಕನ್ನಡದಲ್ಲಿ ನಿಷೇಧ)
+
+
+1. The Core Distinction: Alla (ಅಲ್ಲ) vs. Illa (ಇಲ್ಲ)
+
+This is the most important rule in Kannada negation.
+
+A. ಅಲ್ಲ (Alla) - Negation of Identity / Quality
+
+Use ಅಲ್ಲ (alla) to negate nouns or adjectives. It means "is not this/that." It's used when you are correcting a fact about what something is.
+●	Rule: (Subject) + (Noun/Adjective) + ಅಲ್ಲ (alla)
+●	Example 1: ಇದು ನನ್ನ ಮನೆ ಅಲ್ಲ. (Idu nanna mane alla.)
+○	"This is not my house." (It is some other house).
+●	Example 2: ನಾನು ಎಪಿಡೆಮಿಯಾಲೊಜಿಸ್ಟ ಅಲ್ಲ. (Nānu epidemiologist alla.)
+○	"I am not an epidemiologist." (I am some other profession).
+●	Example 3: ಆಹಾರ ಖಾರ ಅಲ್ಲ. (Āhāra khāra alla.)
+○	"The food is not spicy." (It is some other flavor, like mild or sweet).
+
+B. ಇಲ್ಲ (Illa) - Negation of Existence / Action
+
+Use ಇಲ್ಲ (illa) to negate verbs or existence. It means "is not present," "does not exist," or "does not do."
+●	Rule: (Subject) + (Location/Verb) + ಇಲ್ಲ (illa)
+●	Example 1: ಮನೆಯಲ್ಲಿ ಯಾರೂ ಇಲ್ಲ. (Maneyalli yārū illa.)
+○	"There is no one in the house." (Existence).
+●	Example 2: ನನಗೆ ಸಮಯ ಇಲ್ಲ. (Nanage samaya illa.)
+○	"I don't have time." (Literally: "To me, time does not exist").
+●	Example 3: ಅವನು ಕೆಲಸ ಮಾಡಲ್ಲ. (Avanu kelasa māḍalla.)
+○	"He does not work." (Action - see Section 2).
+
+2. Negating Verbs (Simple Tenses)
+
+The best part of simple negative tenses is that the verb form does not change for any pronoun (I, you, he, she, we, they).
+
+A. Simple Present & Future Tense ("don't do" / "won't do")
+
+In conversation, the present and future negatives are the same. Context (like ನಾಳೆ - tomorrow) clarifies the tense.
+●	Rule (Formal): Verb Root + ಉವುದಿಲ್ಲ (-uvudilla)
+●	Rule (Colloquial): Verb Root + ಅಲ್ಲ (-alla)
+●	Example 1 (māḍu - to do): ನಾನು ಕಾಫಿ ಮಾಡಲ್ಲ. (Nānu coffee māḍalla.)
+○	"I don't make / won't make coffee."
+●	Example 2 (baru - to come): ಅವರು ನಾಳೆ ಬರಲ್ಲ. (Avaru nāḷe baralla.)
+○	"They will not come tomorrow."
+
+B. Simple Past Tense ("did not do")
+
+This form is also universal for all pronouns.
+●	Rule: Verb Root + ಲಿಲ್ಲ (-lilla) (Note: The li is added to a stem, e.g., māḍu -> māḍa-lilla, baru -> bara-lilla, tinnu -> tinna-lilla)
+●	Example 1 (kēḷu - to ask): ಅವಳು ನನ್ನನ್ನು ಕೇಳಲಿಲ್ಲ. (Avaḷu nannannu kēḷalilla.)
+○	"She did not ask me."
+●	Example 2 (kalahisu - to send): ನಾವು ಈಮೇಲ್ ಕಳುಹಿಸಲಿಲ್ಲ. (Nāvu email kaḷuhisalilla.)
+○	"We did not send the email."
+
+3. Negating Verbs (Aspects: Continuous & Perfect)
+
+
+A. Present Continuous Tense ("is not doing")
+
+Used for actions not happening right now.
+●	Rule: Verb Root + ಉತ್ತಾ ಇಲ್ಲ (-uttā illa) or (colloquial) + ತಾ ಇಲ್ಲ (-tā illa)
+●	Example 1 (maḷe baru - to rain): ಈಗ ಮಳೆ ಬರ್ತಾ ಇಲ್ಲ. (Īga maḷe bartā illa.)
+○	"It is not raining right now."
+●	Example 2 (malagu - to sleep): ಬೆಕ್ಕು ಮಲಗ್ತಾ ಇಲ್ಲ. (Bekku malagtā illa.)
+○	"The cat is not sleeping."
+
+B. Past Continuous Tense ("was not doing")
+
+Used for actions that were not in progress at a specific time in the past.
+●	Rule: Verb Root + ಉತ್ತಾ ಇರಲಿಲ್ಲ (-uttā iralilla) or (colloquial) + ತಾ ಇರಲಿಲ್ಲ (-tā iralilla)
+●	Example 1 (kelasa māḍu - to work): ನಿನ್ನೆ ಈ ಸಮಯದಲ್ಲಿ ನಾನು ಕೆಲಸ ಮಾಡ್ತಾ ಇರಲಿಲ್ಲ. (Ninne ī samayadalli nānu kelasa māḍtā iralilla.)
+○	"I was not working at this time yesterday."
+
+C. Present Perfect Tense ("have not done")
+
+This is a very common and important form. It's different from the Simple Past. ಮಾಡಲಿಲ್ಲ (māḍalilla) means "I didn't do it" (at a specific time). ಮಾಡಿಲ್ಲ (māḍilla) means "I haven't done it" (yet, or as a state).
+●	Rule: Past Participle Stem (ends in i or e) + ಇಲ್ಲ (illa)
+●	Example 1 (māḍu - to do): ನಾನು ಇನ್ನೂ ನನ್ನ ಕೆಲಸ ಮಾಡಿಲ್ಲ. (Nānu innū nanna kelasa māḍilla.)
+○	"I have not done my work yet."
+●	Example 2 (hōgu - to go): ಅವಳು ಬೆಂಗಳೂರಿಗೆ ಹೋಗಿಲ್ಲ. (Avaḷu Beṅgaḷūrige hōgilla.)
+○	"She has not been (gone) to Bangalore."
+
+D. Past Perfect Tense ("had not done")
+
+Used to show something had not happened before another past event.
+●	Rule: Past Participle Stem + ಇರಲಿಲ್ಲ (iralilla)
+●	Example 1 (baru - to come): ನಾನು ಮನೆಗೆ ಬರುವ ಮುಂಚೆ, ಅವರು ಬಂದಿರಲಿಲ್ಲ. (Nānu manege baruva mun̄ce, avaru bandiralilla.)
+○	"Before I came home, they had not come."
+
+4. Negating Moods & Common Constructions
+
+
+A. Imperative ("Don't...")
+
+Used for commands.
+●	Rule (Informal/Singular): Verb Root + ಬೇಡ (bēḍa)
+●	Rule (Formal/Plural): Verb Root + ಬೇಡಿ (bēḍi)
+●	Example 1: ಅಲ್ಲಿಗೆ ಹೋಗಬೇಡ! (Allige hōgabēḍa!) - "Don't go there!"
+●	Example 2: ಚಿಂತೆ ಮಾಡಬೇಡಿ. (Cinte māḍabēḍi.) - "Don't worry." (polite)
+
+B. Prohibitive ("Should not...")
+
+Used for general rules or moral prohibitions.
+●	Rule: Verb Root + ಬಾರದು (bāradu)
+●	Example 1: ಸುಳ್ಳು ಹೇಳಬಾರದು. (Suḷḷu hēḷabāradu.)
+○	"One should not tell lies."
+●	Example 2: ಆ ರೀತಿ ಮಾತಾಡಬಾರದು. (Ā rīti mātāḍabāradu.)
+○	"One should not speak like that."
+
+C. Potential / Ability ("Cannot...")
+
+Used to express inability.
+●	Rule: Infinitive (Root + ಅಲು or ಅಕ್ಕೆ) + ಆಗಲ್ಲ (āgalla) / ಆಗುವುದಿಲ್ಲ (āguvudilla)
+●	Example 1 (arthamāḍiko - to understand): ನನಗೆ ಇದು ಅರ್ಥಮಾಡಿಕೊಳ್ಳಲು ಆಗಲ್ಲ. (Nanage idu arthamāḍikoḷḷalu āgalla.)
+○	"I cannot understand this."
+●	Example 2 (baru - to come): ಅವನಿಗೆ ಪಾರ್ಟಿಗೆ ಬರಕ್ಕೆ ಆಗಲ್ಲ. (Avanige pārṭige barakke āgalla.)
+○	"He cannot come to the party."
+
+D. Desire ("Don't want...")
+
+●	Rule: Dative Subject (e.g., ನನಗೆ) + Noun/Verb + ಬೇಡ (bēḍa)
+●	Example 1 (Noun): ನನಗೆ ಕಾಫಿ ಬೇಡ. (Nanage coffee bēḍa.)
+○	"I don't want coffee."
+●	Example 2 (Verb): ನನಗೆ ಹೋಗಲು ಬೇಡ. (Nanage hōgalu bēḍa.)
+○	"I don't want to go." (Less common than "hōgabēḍa" - don't go)
+
+E. Obligation ("Don't have to..." / "Not necessary")
+
+●	Rule: ...ಬೇಕಾಗಿಲ್ಲ (bēkāgilla) or ಬೇಕಿಲ್ಲ (bēkilla)
+●	Example 1: ನೀವು ಬರಬೇಕಾಗಿಲ್ಲ. (Nīvu barabēkāgilla.)
+○	"You don't have to come."
+
+5. Negating "To Be" and "To Have"
+
+
+A. Negating "To Be" (State / Existence)
+
+●	Present: ಇಲ್ಲ (illa)
+○	ಅವನು ಮನೆಯಲ್ಲಿ ಇಲ್ಲ. (Avanu maneyalli illa.) - "He is not at home."
+●	Past: ಇರಲಿಲ್ಲ (iralilla)
+○	ನೆನ್ನೆ ನಾನು ಚೆನ್ನಾಗಿ ಇರಲಿಲ್ಲ. (Nenne nānu cennāgi iralilla.) - "I was not well yesterday."
+●	Future: ಇರಲ್ಲ (iralla) / ಇರುವುದಿಲ್ಲ (iruvudilla)
+○	ನಾಳೆ ನಾನು ಕಚೇರಿಯಲ್ಲಿ ಇರಲ್ಲ. (Nāḷe nānu kaceriyalli iralla.) - "I will not be in the office tomorrow."
+
+B. Negating "To Have" (Possession)
+
+Kannada uses the dative case for possession. The negation is simply ಇಲ್ಲ (illa).
+●	Rule: Dative Subject + Noun + ಇಲ್ಲ (illa)
+●	Example 1: ನನಗೆ ಸಮಯ ಇಲ್ಲ. (Nanage samaya illa.) - "I don't have time."
+●	Example 2: ಅವರಿಗೆ ಮಕ್ಕಳು ಇಲ್ಲ. (Avarige makkaḷu illa.) - "They don't have children."
+
+6. Other Important Negative Forms
+
+
+A. "Without" (Negative Gerund)
+
+This form is equivalent to "without doing..."
+●	Rule: Verb Root + ಅದೆ (-ade)
+●	Example 1: ಅವಳು ಹೇಳದೆ ಹೋದಳು. (Avaḷu hēḷade hōdaḷu.)
+○	"She left without telling."
+●	Example 2: ನಿಲ್ಲದೆ ಮಳೆ ಬರ್ತಾ ಇದೆ. (Nillade maḷe bartā ide.)
+○	"Rain is coming without stopping."
+

@@ -1,0 +1,92 @@
+A Grammar Guide to Impersonal Verbs: Infinitives and Verbal Nouns
+This guide covers the two most important ways to use verbs when they are not the main action of the sentence, but rather the subject, object, or purpose of the sentence.
+1. Overview and Distinction
+In Kannada, as in Latin or Hindi, there is a strict difference between the "Purpose" form of a verb and the "Noun" form of a verb.
+1. The Infinitive (Purpose)
+●	Suffix: -alu
+●	English Equivalent: To write, To go, To eat
+●	Hindi Equivalent: Likhne (as in "Likhne ke liye" or "Likhne gaya")
+●	Function: Used to express purpose, intent, or ability. It answers the question "Why?" or "For what?"
+2. The Verbal Noun / Gerund (The Act)
+●	Suffix: -uvudu
+●	English Equivalent: Writing, Going, Eating
+●	Hindi Equivalent: Likhna (as in "Likhna accha hai")
+●	Function: Turns the verb into a noun. It answers the question "What?"
+2. The Infinitive: -alu
+Formation
+Formula: Verb Root + alu
+Sandhi Rules (Spelling Changes):
+1.	If Root ends in -u: Drop the 'u' and add 'alu'.
+○	Maadu + alu = Maadalu
+2.	If Root ends in -e or -i: Add a 'y' sound (y-insertion).
+○	Bare + alu = Bareyalu
+○	Kudi + alu = Kudiyalu
+3.	Irregular Roots: Shorten the root (similar to Past Tense stems).
+○	Baru (Come) -> Baralu
+○	Taru (Bring) -> Taralu
+Usage Cases
+A. Purpose (Going somewhere to do something)
+●	I went to see him.
+●	Nanu avanannu nodalu hode.
+●	(Derived from rules on Potential/Ability negation structures)
+B. Capability (Can / Cannot)
+●	I cannot do this. (Literally: To me, to do this, it is not possible).
+●	Nanage idu maadalu aagalla. *
+C. Permission (To allow)
+●	Give (me) permission to go.
+●	Hogalu bidi. (Literally: Leave/Allow to go).
+3. The Verbal Noun (Gerund): -uvudu
+Formation
+Formula: Verb Root + uvudu
+Grammar Logic: This form is actually a combination of the Future/Habitual Participle (-uva) and the Neuter Pronoun (-du). It literally means "That which does X."
+Usage Cases
+A. As the Subject (General Statements)
+●	Swimming is good for health.
+●	Ijuvudu aarogyakke olliyadu.
+●	Writing in Kannada is difficult.
+●	Kannadadalli bareyuvudu kashta.
+B. As the Object (What you like/learn/know)
+●	I want to practice writing.
+●	Nanu bareyuvudannu abhyasa maadabeku.
+○	Note: Because it is an object, strictly speaking, it takes the Accusative suffix (-annu). However, in conversation, dropping (-annu) is common.
+C. Nominalizing a Thought
+●	Coming to Bangalore is easy.
+●	Bengalurige baruvudu sulabha.
+4. Reference Table: Common Verbs
+Use this table to practice converting roots.
+Verb Root	Meaning	Infinitive (To do...)	Verbal Noun (Doing...)
+Maadu	To Do	Maadalu	Maaduvudu
+Bare	To Write	Bareyalu	Bareyuvudu
+Odu	To Read	Odalu	Oduvudu
+Kudi	To Drink	Kudiyalu	Kudiyuvudu
+Tinnu	To Eat	Tinnalu	Tinnuvudu
+Nodu	To See	Nodalu	Noduvudu
+Kelu	To Ask/Hear	Kelalu	Keluvudu
+Hogu	To Go	Hogalu	Hoguvudu
+Baru	To Come	Baralu	Baruvudu
+Iru	To Be	Iralu	Iruvudu
+Agu	To Become	Agalu	Aguvudu
+5. Advanced Note: Case Suffixes with Verbal Nouns
+Since the Verbal Noun (-uvudu) acts exactly like a noun, you can attach Case Suffixes to it. This allows for complex sentence structures.
+1. Dative Case (-akke): "For doing"
+●	Formula: -uvudu + akke = -uvudakke
+●	Example: I came for working (to work).
+●	Kannada: Nanu kelsamaaduvudakke bande.
+●	Usage: This is often interchangeable with the Infinitive (-alu). "Maadalu" and "Maaduvudakke" both mean "in order to do."
+2. Instrumental Case (-inda): "By doing"
+●	Formula: -uvudu + inda = -uvudarinda
+●	Example: You learn by speaking.
+●	Kannada: Nivu maataduvudarinda kalitiri.
+3. Accusative Case (-annu): "The doing" (Object)
+●	Formula: -uvudu + annu = -uvudannu
+●	Example: Stop the talking.
+●	Kannada: Maataduvudannu nillisi.
+6. Summary Checklist
+When you are about to speak, ask yourself:
+1.	Is the verb the goal? (I went to eat)
+○	Use -alu.
+2.	Is the verb the subject? (Eating is fun)
+○	Use -uvudu.
+3.	Is the verb the object? (I like eating)
+○	Use -uvudu.
+Would you like me to generate a short quiz (5 questions) based on this primer to test your understanding before we move on?

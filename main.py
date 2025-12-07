@@ -86,15 +86,12 @@ def main():
 
     # --- SIDEBAR SETTINGS (Language Toggle) ---
     st.sidebar.header("SETTINGS")
-    # This variable controls the language for the whole app
-    # logic.py uses this to decide whether to show English, Script, or Roman
     lang_mode = st.sidebar.radio("App Language / ಭಾಷೆ:",
                                  ["English", "Kannada (Roman)", "Kannada (Script)"])
 
     st.sidebar.markdown("---")
     st.sidebar.header("NAVIGATION")
 
-    # Mapping internal logic keys to the translation keys in config.py
     nav_options = {
         "Home": "NAV_HOME",
         "Send Email Lesson": "NAV_EMAIL",
@@ -103,8 +100,6 @@ def main():
         "Reading Comprehension": "NAV_READ"
     }
 
-    # The radio button returns the English Key (e.g., "Home"),
-    # but displays the translated text using format_func
     mode = st.sidebar.radio(
         "Go to:",
         options=list(nav_options.keys()),
@@ -115,13 +110,8 @@ def main():
     if mode == "Home":
         st.subheader(logic.get_ui_text("TITLE_HOME", lang_mode))
 
-        st.markdown("""
-        Welcome. You are here because you want to learn Kannada, and presumably, you have realized that smiling and nodding is not a viable long-term communication strategy in Bengaluru.
-
-        This application utilizes a Large Language Model to simulate a strict but arguably fair Kannada tutor. It does not sleep, it does not judge (much), and it will not ask you why you aren't married yet.
-
-        **Select a torture method from the sidebar to begin.**
-        """)
+        # Display the translated welcome message
+        st.markdown(logic.get_ui_text("WELCOME_MSG", lang_mode))
 
         file_count = len(glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.txt')))
         st.info(f"System Status: {file_count} grammar modules loaded.")
@@ -130,7 +120,9 @@ def main():
     elif mode == "Send Email Lesson":
         st.subheader(logic.get_ui_text("TITLE_EMAIL", lang_mode))
 
-        st.write("This will check your Google Sheet for the next topic and dispatch a lesson to your inbox.")
+        # Display the translated description
+        st.write(logic.get_ui_text("DESC_EMAIL", lang_mode))
+
         if st.button(logic.get_ui_text("BTN_SEND", lang_mode)):
             with st.spinner("Compiling lesson..."):
                 result = logic.send_email_lesson(st.session_state.context)
@@ -179,7 +171,6 @@ def main():
             if st.session_state.quiz_history:
                 st.markdown("### Previous Answers")
                 for i, item in enumerate(st.session_state.quiz_history):
-                    # Toggle script for history
                     display_q = logic.toggle_script(item['question'], lang_mode)
                     with st.expander(f"Q{i + 1}: {display_q}", expanded=False):
                         st.write(f"**Your Answer:** {item['user_answer']}")
@@ -199,7 +190,6 @@ def main():
                 q_idx = st.session_state.current_q_index
                 q_text = st.session_state.quiz_questions[q_idx]
 
-                # Apply toggle to the question text
                 display_q = logic.toggle_script(q_text, lang_mode)
 
                 st.progress(q_idx / total)
@@ -224,7 +214,7 @@ def main():
                             if res['is_correct']: st.session_state.quiz_score += 1
                             st.rerun()
                 else:
-                    # Result Phase (Waiting for Next)
+                    # Result Phase
                     last_result = st.session_state.quiz_history[-1]
                     feed_text = logic.toggle_script(last_result['feedback'], lang_mode)
 
@@ -240,10 +230,10 @@ def main():
                 score = st.session_state.quiz_score
                 st.markdown(f"## Score: {score}/{total}")
                 if score >= (total * 0.9):
-                    st.success("Topic Mastered! Sheet updated.")
+                    st.success("Topic Mastered!")
                     logic.update_mastery(st.session_state.quiz_sheet_row)
                 else:
-                    st.warning("Score insufficient for mastery. Keep practicing.")
+                    st.warning("Keep practicing.")
 
                 if st.button(logic.get_ui_text("BTN_BACK", lang_mode)):
                     st.session_state.quiz_questions = []
@@ -256,10 +246,22 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             st.write(logic.get_ui_text("LBL_STYLE", lang_mode))
-            style = st.selectbox("Style", ["Formal", "Colloquial"], label_visibility="collapsed")
+            # Translate options using keys "OPT_Formal" and "OPT_Colloquial"
+            style = st.selectbox(
+                "Style",
+                ["Formal", "Colloquial"],
+                label_visibility="collapsed",
+                format_func=lambda x: logic.get_ui_text(f"OPT_{x}", lang_mode)
+            )
         with col2:
             st.write(logic.get_ui_text("LBL_INPUT", lang_mode))
-            method = st.radio("Input", ["Paste Text", "Get Prompt"], label_visibility="collapsed")
+            # Translate options using keys "OPT_Paste Text" and "OPT_Get Prompt"
+            method = st.radio(
+                "Input",
+                ["Paste Text", "Get Prompt"],
+                label_visibility="collapsed",
+                format_func=lambda x: logic.get_ui_text(f"OPT_{x}", lang_mode)
+            )
 
         if method == "Get Prompt":
             st.write(logic.get_ui_text("LBL_TOPIC", lang_mode))
@@ -282,7 +284,6 @@ def main():
                     if "overall_summary" in res:
                         st.info(logic.toggle_script(res.get('overall_summary'), lang_mode))
                         for item in res.get('analysis', []):
-                            # Display sentence with toggle
                             orig = logic.toggle_script(item.get('original', ''), lang_mode)
                             with st.expander(f"{orig[:40]}..."):
                                 if item.get('status') != 'CORRECT':
@@ -298,7 +299,13 @@ def main():
         st.subheader(logic.get_ui_text("TITLE_READ", lang_mode))
 
         st.write(logic.get_ui_text("LBL_INPUT", lang_mode))
-        input_method = st.radio("Method", ("Paste Kannada Text", "Generate (AI)"), label_visibility="collapsed")
+        # Translate options using keys "OPT_Paste Kannada Text" and "OPT_Generate (AI)"
+        input_method = st.radio(
+            "Method",
+            ("Paste Kannada Text", "Generate (AI)"),
+            label_visibility="collapsed",
+            format_func=lambda x: logic.get_ui_text(f"OPT_{x}", lang_mode)
+        )
 
         if input_method == "Paste Kannada Text":
             st.write(logic.get_ui_text("LBL_PASTE", lang_mode))
@@ -318,7 +325,14 @@ def main():
                 topic = st.selectbox("Topic", config.WRITING_TOPICS, key="rc_topic", label_visibility="collapsed")
             with col2:
                 st.write(logic.get_ui_text("LBL_STYLE", lang_mode))
-                style = st.selectbox("Style", ["Formal", "Colloquial"], key="rc_style", label_visibility="collapsed")
+                # Translate styles here too
+                style = st.selectbox(
+                    "Style",
+                    ["Formal", "Colloquial"],
+                    key="rc_style",
+                    label_visibility="collapsed",
+                    format_func=lambda x: logic.get_ui_text(f"OPT_{x}", lang_mode)
+                )
 
             if st.button(logic.get_ui_text("BTN_GEN_TEXT", lang_mode)):
                 with st.spinner("Generating..."):
@@ -329,7 +343,6 @@ def main():
 
         if 'current_article' in st.session_state and st.session_state['current_article']:
             st.markdown("### Article")
-            # Apply toggle to article text
             st.info(logic.toggle_script(st.session_state['current_article'], lang_mode))
             st.markdown("---")
 
@@ -345,7 +358,6 @@ def main():
                 else:
                     st.markdown("### Questions")
                     for i, item in enumerate(st.session_state['qa_content']):
-                        # Apply toggle to question
                         q_text = logic.toggle_script(item.get('question'), lang_mode)
                         st.markdown(f"**Q{i + 1}: {q_text}**")
 
@@ -360,7 +372,6 @@ def main():
                                                                  st.session_state['current_article'], user_ans,
                                                                  st.session_state.context)
 
-                                    # Apply toggle to feedback
                                     feed = logic.toggle_script(res['feedback'], lang_mode)
                                     expl = logic.toggle_script(res['detailed_explanation'], lang_mode)
 

@@ -60,6 +60,37 @@ UI_TEXT = {
     "TITLE_WRITE": {"EN": "Writing Critique", "KN": "ಬರವಣಿಗೆ ವಿಮರ್ಶೆ"},
     "TITLE_READ": {"EN": "Reading Comprehension", "KN": "ಓದುವ ಗ್ರಹಿಕೆ"},
 
+    # NEW: Descriptions & Long Text
+    "WELCOME_MSG": {
+        "EN": """
+        Welcome. You are here because you want to learn Kannada, and presumably, you have realized that smiling and nodding is not a viable long-term communication strategy in Bengaluru.
+
+        This application utilizes a Large Language Model to simulate a strict but arguably fair Kannada tutor. It does not sleep, it does not judge (much), and it will not ask you why you aren't married yet.
+
+        **Select a torture method from the sidebar to begin.**
+        """,
+        "KN": """
+        ಸ್ವಾಗತ. ಬೆಂಗಳೂರಿನಲ್ಲಿ ಕೇವಲ ನಗುತ್ತಾ ತಲೆ ಆಡಿಸಿದರೆ ಸಾಲದು, ಅದರಿಂದ ಸಂವಹನ ಸಾಧ್ಯವಿಲ್ಲ ಎಂದು ನಿಮಗೆ ಅರ್ಥವಾಗಿರಬೇಕು.
+
+        ಈ ಆ್ಯಪ್ ಒಬ್ಬ ಖಡಕ್ ಕನ್ನಡ ಮೇಷ್ಟ್ರಂತೆ. ಇದು ನಿದ್ರಿಸುವುದಿಲ್ಲ, ನಿಮ್ಮನ್ನು ಹೆಚ್ಚಾಗಿ ನಿರ್ಣಯಿಸುವುದಿಲ್ಲ, ಮತ್ತು 'ಯಾಕೆ ಇನ್ನೂ ಮದುವೆಯಾಗಿಲ್ಲ?' ಎಂದು ಖಂಡಿತ ಕೇಳುವುದಿಲ್ಲ.
+
+        **ಪ್ರಾರಂಭಿಸಲು ಪಕ್ಕದ ಪಟ್ಟಿಯಿಂದ ಒಂದು 'ಹಿಂಸೆಯ ವಿಧಾನ'ವನ್ನು ಆರಿಸಿ.**
+        """
+    },
+    "DESC_EMAIL": {
+        "EN": "This will check your Google Sheet for the next topic and dispatch a lesson to your inbox.",
+        "KN": "ಇದು ನಿಮ್ಮ ಗೂಗಲ್ ಶೀಟ್ ಅನ್ನು ಪರಿಶೀಲಿಸಿ, ಮುಂದಿನ ವಿಷಯದ ಕುರಿತು ಪಾಠವನ್ನು ನಿಮ್ಮ ಇನ್‌ಬಾಕ್ಸ್‌ಗೆ ಕಳುಹಿಸುತ್ತದೆ."
+    },
+
+    # NEW: Dropdown & Radio Options
+    # Keys match the internal logic values (e.g. "Formal")
+    "OPT_Formal": {"EN": "Formal (Literary)", "KN": "ಗ್ರಾಂಥಿಕ"},
+    "OPT_Colloquial": {"EN": "Colloquial (Spoken)", "KN": "ಆಡುಮಾತು"},
+    "OPT_Paste Text": {"EN": "Paste Text", "KN": "ಪಠ್ಯ ಅಂಟಿಸಿ"},
+    "OPT_Get Prompt": {"EN": "Get Prompt", "KN": "ಪ್ರಾಪ್ಟ್ ಪಡೆಯಿರಿ"},
+    "OPT_Paste Kannada Text": {"EN": "Paste Kannada Text", "KN": "ಕನ್ನಡ ಪಠ್ಯ ಅಂಟಿಸಿ"},
+    "OPT_Generate (AI)": {"EN": "Generate (AI)", "KN": "ರಚಿಸಿ (AI)"},
+
     # Buttons
     "BTN_SEND": {"EN": "Generate & Send", "KN": "ರಚಿಸಿ ಮತ್ತು ಕಳುಹಿಸಿ"},
     "BTN_START_QUIZ": {"EN": "Start Quiz", "KN": "ರಸಪ್ರಶ್ನೆ ಪ್ರಾರಂಭಿಸಿ"},
@@ -73,7 +104,7 @@ UI_TEXT = {
     "BTN_CHECK": {"EN": "Check Answer", "KN": "ಉತ್ತರ ಪರಿಶೀಲಿಸಿ"},
     "BTN_BACK": {"EN": "Back to Menu", "KN": "ಹಿಂದಕ್ಕೆ"},
 
-    # Labels & Instructions
+    # Labels
     "LBL_TOPIC": {"EN": "Select Topic:", "KN": "ವಿಷಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ:"},
     "LBL_STYLE": {"EN": "Style", "KN": "ಶೈಲಿ"},
     "LBL_INPUT": {"EN": "Input Method", "KN": "ವಿಧಾನ"},

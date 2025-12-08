@@ -76,21 +76,34 @@ def main():
     st.set_page_config(page_title="Kannada Bhasheya Guru", page_icon="🪔", layout="wide")
     local_css()
 
-    st.title("Kannada Bhasheya Guru")
-    st.markdown("---")
-
     # 1. Load Context
     if "context" not in st.session_state:
         with st.spinner("Loading Knowledge Base..."):
             st.session_state.context = logic.load_knowledge_base()
 
     # --- SIDEBAR SETTINGS (Language Toggle) ---
-    st.sidebar.header("SETTINGS")
+
+    # 1. Create a placeholder at the TOP of the sidebar
+    # This reserves space visually before the radio button
+    settings_header = st.sidebar.empty()
+
+    # 2. Render the Radio Button to get the current language choice
     lang_mode = st.sidebar.radio("App Language / ಭಾಷೆ:",
-                                 ["English", "Kannada (Roman)", "Kannada (Script)"])
+                                 [
+                                     "English",
+                                     "Kannada (Roman - Natural)",
+                                     "Kannada (Roman - Strict)",
+                                     "Kannada (Script)"
+                                 ])
+
+    # 3. Now that we have 'lang_mode', write the translated text
+    # into the placeholder we created in Step 1.
+    settings_header.header(logic.get_ui_text("HDR_SETTINGS", lang_mode))
 
     st.sidebar.markdown("---")
-    st.sidebar.header("NAVIGATION")
+
+    # UPDATED: Translate "NAVIGATION" Header
+    st.sidebar.header(logic.get_ui_text("HDR_NAV", lang_mode))
 
     nav_options = {
         "Home": "NAV_HOME",
@@ -100,17 +113,21 @@ def main():
         "Reading Comprehension": "NAV_READ"
     }
 
+    # UPDATED: Translate "Go to:" Label
     mode = st.sidebar.radio(
-        "Go to:",
+        logic.get_ui_text("LBL_GOTO", lang_mode),
         options=list(nav_options.keys()),
         format_func=lambda x: logic.get_ui_text(nav_options[x], lang_mode)
     )
 
+    # --- MAIN APP TITLE (UPDATED) ---
+    # Now that we have lang_mode, we can translate the main title
+    st.title(logic.get_ui_text("APP_TITLE", lang_mode))
+    st.markdown("---")
+
     # --- MODE: HOME ---
     if mode == "Home":
         st.subheader(logic.get_ui_text("TITLE_HOME", lang_mode))
-
-        # Display the translated welcome message
         st.markdown(logic.get_ui_text("WELCOME_MSG", lang_mode))
 
         file_count = len(glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.txt')))
@@ -119,8 +136,6 @@ def main():
     # --- MODE: SEND LESSON ---
     elif mode == "Send Email Lesson":
         st.subheader(logic.get_ui_text("TITLE_EMAIL", lang_mode))
-
-        # Display the translated description
         st.write(logic.get_ui_text("DESC_EMAIL", lang_mode))
 
         if st.button(logic.get_ui_text("BTN_SEND", lang_mode)):
@@ -214,7 +229,7 @@ def main():
                             if res['is_correct']: st.session_state.quiz_score += 1
                             st.rerun()
                 else:
-                    # Result Phase
+                    # Result Phase (Waiting for Next)
                     last_result = st.session_state.quiz_history[-1]
                     feed_text = logic.toggle_script(last_result['feedback'], lang_mode)
 
@@ -230,10 +245,10 @@ def main():
                 score = st.session_state.quiz_score
                 st.markdown(f"## Score: {score}/{total}")
                 if score >= (total * 0.9):
-                    st.success("Topic Mastered!")
+                    st.success("Topic Mastered! Sheet updated.")
                     logic.update_mastery(st.session_state.quiz_sheet_row)
                 else:
-                    st.warning("Keep practicing.")
+                    st.warning("Score insufficient for mastery. Keep practicing.")
 
                 if st.button(logic.get_ui_text("BTN_BACK", lang_mode)):
                     st.session_state.quiz_questions = []
@@ -246,7 +261,6 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             st.write(logic.get_ui_text("LBL_STYLE", lang_mode))
-            # Translate options using keys "OPT_Formal" and "OPT_Colloquial"
             style = st.selectbox(
                 "Style",
                 ["Formal", "Colloquial"],
@@ -255,7 +269,6 @@ def main():
             )
         with col2:
             st.write(logic.get_ui_text("LBL_INPUT", lang_mode))
-            # Translate options using keys "OPT_Paste Text" and "OPT_Get Prompt"
             method = st.radio(
                 "Input",
                 ["Paste Text", "Get Prompt"],
@@ -299,7 +312,6 @@ def main():
         st.subheader(logic.get_ui_text("TITLE_READ", lang_mode))
 
         st.write(logic.get_ui_text("LBL_INPUT", lang_mode))
-        # Translate options using keys "OPT_Paste Kannada Text" and "OPT_Generate (AI)"
         input_method = st.radio(
             "Method",
             ("Paste Kannada Text", "Generate (AI)"),
@@ -325,7 +337,6 @@ def main():
                 topic = st.selectbox("Topic", config.WRITING_TOPICS, key="rc_topic", label_visibility="collapsed")
             with col2:
                 st.write(logic.get_ui_text("LBL_STYLE", lang_mode))
-                # Translate styles here too
                 style = st.selectbox(
                     "Style",
                     ["Formal", "Colloquial"],

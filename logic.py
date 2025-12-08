@@ -3,6 +3,7 @@ import glob
 import json
 import re
 import smtplib
+import unicodedata
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -89,10 +90,55 @@ def generate_content(user_prompt, context_override=None):
 
 # --- TEXT & TRANSLATION HANDLERS ---
 
+def humanize_transliteration(iast_text):
+    """
+    Converts strict academic IAST (e.g., 'grāṃthika')
+    to natural colloquial spelling (e.g., 'granthika').
+    """
+    if not iast_text:
+        return ""
+
+    # 1. Normalize unicode characters (decomposes 'ā' into 'a' + macron)
+    normalized = unicodedata.normalize('NFKD', iast_text)
+
+    # 2. Filter out non-spacing mark characters (the dots and macrons)
+    clean_text = "".join([c for c in normalized if not unicodedata.category(c).startswith('Mn')])
+
+    # 3. Manual Fixes for specific IAST quirks
+    clean_text = clean_text.replace("ṃ", "n")  # Anusvara -> n
+    clean_text = clean_text.replace("ṛ", "ru")
+    clean_text = clean_text.replace("r̥", "ru")
+
+    return clean_text
+
+
+def toggle_script(text, lang_mode):
+    """
+    Helper for dynamic content (like AI output).
+    Handles both 'Natural' and 'Strict' Roman modes.
+    """
+    if not text:
+        return ""
+
+    # Check if we are in EITHER Roman mode ("Kannada (Roman - Natural)" or "Kannada (Roman - Strict)")
+    if "Roman" in lang_mode:
+        # Step 1: Get Strict Academic Transliteration (IAST)
+        raw_iast = sanscript.transliterate(text, sanscript.KANNADA, sanscript.IAST)
+
+        # Step 2: Check specifically for "Natural"
+        if "Natural" in lang_mode:
+            return humanize_transliteration(raw_iast)
+        else:
+            # If Strict (or unspecified Roman), return the raw IAST with diacritics
+            return raw_iast
+
+    return text
+
+
 def get_ui_text(key, lang_mode):
     """
     Retrieves UI text based on the selected language mode.
-    Modes: 'English', 'Kannada (Roman)', 'Kannada (Script)'
+    Modes: 'English', 'Kannada (Roman - Natural)', 'Kannada (Roman - Strict)', 'Kannada (Script)'
     """
     # 1. Default to English if key missing
     if key not in config.UI_TEXT:
@@ -108,31 +154,16 @@ def get_ui_text(key, lang_mode):
     if lang_mode == "Kannada (Script)":
         return entry["KN"]
 
-    # 4. Return Kannada Roman (Transliterated)
-    if lang_mode == "Kannada (Roman)":
-        # Convert the Kannada script entry to Roman (IAST)
-        # Note: IAST is the academic standard (e.g., 'Kannaḍa')
-        return sanscript.transliterate(entry["KN"], sanscript.KANNADA, sanscript.IAST)
+    # 4. Return Roman (Strict OR Natural)
+    if "Roman" in lang_mode:
+        raw_iast = sanscript.transliterate(entry["KN"], sanscript.KANNADA, sanscript.IAST)
+
+        if "Natural" in lang_mode:
+            return humanize_transliteration(raw_iast)
+        else:
+            return raw_iast
 
     return entry["EN"]
-
-
-def toggle_script(text, lang_mode):
-    """
-    Helper for dynamic content (like AI output).
-    Converts to Roman only if mode is 'Kannada (Roman)'.
-    """
-    if not text:
-        return ""
-
-    # We check if the specific mode is Roman.
-    # If it is 'Kannada (Script)' or 'English', we generally leave the AI output (which is usually Kannada) alone
-    # UNLESS the user wants English UI, in which case we still show the Kannada text as Kannada script.
-
-    if lang_mode == "Kannada (Roman)":
-        return sanscript.transliterate(text, sanscript.KANNADA, sanscript.IAST)
-
-    return text
 
 
 # --- FEATURE FUNCTIONS ---

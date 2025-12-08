@@ -1,23 +1,37 @@
 import os
+import streamlit as st
 from dotenv import load_dotenv
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
-# Load environment variables
+# Load environment variables (for local testing)
 load_dotenv()
 
+
+# --- HELPER: GET SECRET ---
+def get_secret(key):
+    """
+    Tries to get a secret from Streamlit Cloud Secrets first.
+    If not found, falls back to local environment variables.
+    """
+    if key in st.secrets:
+        return st.secrets[key]
+    return os.getenv(key)
+
+
 # --- API KEYS & CREDENTIALS ---
-GENAI_API_KEY = os.getenv("GENAI_API_KEY")
-SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME")
+GENAI_API_KEY = get_secret("GENAI_API_KEY")
+SHEET_NAME = get_secret("GOOGLE_SHEET_NAME")
+# Note: CREDENTIALS_FILE is only used locally.
+# On the cloud, we will read the JSON content directly from secrets.
 CREDENTIALS_FILE = "service_account.json"
-SENDER_EMAIL = os.getenv("GMAIL_USER")
-SENDER_PASSWORD = os.getenv("GMAIL_PASSWORD")
-RECEIVER_EMAIL = os.getenv("GMAIL_USER")
+SENDER_EMAIL = get_secret("GMAIL_USER")
+SENDER_PASSWORD = get_secret("GMAIL_PASSWORD")
+RECEIVER_EMAIL = get_secret("GMAIL_USER")
 
 # --- PATHS ---
 KNOWLEDGE_DIR = "knowledge_base"
 
 # --- MODEL SETTINGS ---
-# UPDATED: Switched to 1.5-flash to fix the Rate Limit (Error 429) issue
 MODEL_NAME = "models/gemini-1.5-flash"
 
 SAFETY_SETTINGS = {
@@ -44,32 +58,34 @@ WRITING_TOPICS = [
 
 # --- UI TRANSLATION DICTIONARY ---
 UI_TEXT = {
-    # NEW: App Structure & Sidebar
+    # App Structure & Sidebar
     "APP_TITLE": {"EN": "Kannada Bhasheya Guru", "KN": "ಕನ್ನಡ ಭಾಷೆಯ ಗುರು"},
-    "HDR_SETTINGS": {"EN": "SETTINGS", "KN": "ಅಮರಿಕೆಗಳು"},  # Amarikegalu (Settings)
-    "HDR_NAV": {"EN": "NAVIGATION", "KN": "ಪರಿವಿಡಿ"},  # Parividi (Menu/Index)
-    "LBL_GOTO": {"EN": "Go to:", "KN": "ತೆರಳಿ:"},  # Terali (Navigate to)
+    "HDR_SETTINGS": {"EN": "SETTINGS", "KN": "ಅಮರಿಕೆಗಳು"},
+    "HDR_NAV": {"EN": "NAVIGATION", "KN": "ಪರಿವಿಡಿ"},
+    "LBL_GOTO": {"EN": "Go to:", "KN": "ತೆರಳಿ:"},
 
-    # Existing Keys...
+    # Navigation
     "NAV_HOME": {"EN": "Home", "KN": "ಮುಖಪುಟ"},
     "NAV_EMAIL": {"EN": "Send Email Lesson", "KN": "ಇಮೇಲ್ ಪಾಠ ಕಳುಹಿಸಿ"},
     "NAV_QUIZ": {"EN": "Mastery Quiz", "KN": "ಪಾಂಡಿತ್ಯ ಪರೀಕ್ಷೆ"},
     "NAV_WRITE": {"EN": "Writing Critique", "KN": "ಬರವಣಿಗೆ ವಿಮರ್ಶೆ"},
     "NAV_READ": {"EN": "Reading Comprehension", "KN": "ಓದುವ ಗ್ರಹಿಕೆ"},
 
+    # Headers & Titles
     "TITLE_HOME": {"EN": "Overview", "KN": "ಅವಲೋಕನ"},
     "TITLE_EMAIL": {"EN": "Send Next Lesson", "KN": "ಮುಂದಿನ ಪಾಠವನ್ನು ಕಳುಹಿಸಿ"},
     "TITLE_QUIZ": {"EN": "Mastery Quiz", "KN": "ಪಾಂಡಿತ್ಯ ಪರೀಕ್ಷೆ"},
     "TITLE_WRITE": {"EN": "Writing Critique", "KN": "ಬರವಣಿಗೆ ವಿಮರ್ಶೆ"},
     "TITLE_READ": {"EN": "Reading Comprehension", "KN": "ಓದುವ ಗ್ರಹಿಕೆ"},
 
+    # Descriptions & Long Text
     "WELCOME_MSG": {
         "EN": """
-        Welcome. You are here because you want to learn Kannada and, presumably, you have realised that smiling and nodding is not a viable long-term communication strategy in Bengaluru.
+        Welcome. You are here because you want to learn Kannada, and presumably, you have realized that smiling and nodding is not a viable long-term communication strategy in Bengaluru.
 
         This application utilizes a Large Language Model to simulate a strict but arguably fair Kannada tutor. It does not sleep, it does not judge (much), and it will not ask you why you aren't married yet.
 
-        **Select a path from the sidebar to begin.**
+        **Select a torture method from the sidebar to begin.**
         """,
         "KN": """
         ಸ್ವಾಗತ. ಬೆಂಗಳೂರಿನಲ್ಲಿ ಕೇವಲ ನಗುತ್ತಾ ತಲೆ ಆಡಿಸಿದರೆ ಸಾಲದು, ಅದರಿಂದ ಸಂವಹನ ಸಾಧ್ಯವಿಲ್ಲ ಎಂದು ನಿಮಗೆ ಅರ್ಥವಾಗಿರಬೇಕು.
@@ -84,6 +100,7 @@ UI_TEXT = {
         "KN": "ಇದು ನಿಮ್ಮ ಗೂಗಲ್ ಶೀಟ್ ಅನ್ನು ಪರಿಶೀಲಿಸಿ, ಮುಂದಿನ ವಿಷಯದ ಕುರಿತು ಪಾಠವನ್ನು ನಿಮ್ಮ ಇನ್‌ಬಾಕ್ಸ್‌ಗೆ ಕಳುಹಿಸುತ್ತದೆ."
     },
 
+    # Options
     "OPT_Formal": {"EN": "Formal (Literary)", "KN": "ಗ್ರಾಂಥಿಕ"},
     "OPT_Colloquial": {"EN": "Colloquial (Spoken)", "KN": "ಆಡುಮಾತು"},
     "OPT_Paste Text": {"EN": "Paste Text", "KN": "ಪಠ್ಯ ಅಂಟಿಸಿ"},
@@ -91,6 +108,7 @@ UI_TEXT = {
     "OPT_Paste Kannada Text": {"EN": "Paste Kannada Text", "KN": "ಕನ್ನಡ ಪಠ್ಯ ಅಂಟಿಸಿ"},
     "OPT_Generate (AI)": {"EN": "Generate (AI)", "KN": "ರಚಿಸಿ (AI)"},
 
+    # Buttons
     "BTN_SEND": {"EN": "Generate & Send", "KN": "ರಚಿಸಿ ಮತ್ತು ಕಳುಹಿಸಿ"},
     "BTN_START_QUIZ": {"EN": "Start Quiz", "KN": "ರಸಪ್ರಶ್ನೆ ಪ್ರಾರಂಭಿಸಿ"},
     "BTN_SUBMIT": {"EN": "Submit Answer", "KN": "ಉತ್ತರ ಸಲ್ಲಿಸಿ"},
@@ -103,6 +121,7 @@ UI_TEXT = {
     "BTN_CHECK": {"EN": "Check Answer", "KN": "ಉತ್ತರ ಪರಿಶೀಲಿಸಿ"},
     "BTN_BACK": {"EN": "Back to Menu", "KN": "ಹಿಂದಕ್ಕೆ"},
 
+    # Labels
     "LBL_TOPIC": {"EN": "Select Topic:", "KN": "ವಿಷಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ:"},
     "LBL_STYLE": {"EN": "Style", "KN": "ಶೈಲಿ"},
     "LBL_INPUT": {"EN": "Input Method", "KN": "ವಿಧಾನ"},

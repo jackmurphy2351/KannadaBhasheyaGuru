@@ -1,3 +1,4 @@
+import streamlit as st
 import os
 import glob
 import json
@@ -56,7 +57,17 @@ def load_knowledge_base():
 
 def get_sheet_client():
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name(config.CREDENTIALS_FILE, scope)
+
+    # 1. Try to load from Streamlit Cloud Secrets
+    if "gcp_service_account" in st.secrets:
+        # We need to convert the st.secrets object to a standard python dict
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+
+    # 2. Fallback to local file (for when you run on laptop)
+    else:
+        creds = ServiceAccountCredentials.from_json_keyfile_name(config.CREDENTIALS_FILE, scope)
+
     client = gspread.authorize(creds)
     return client.open(config.SHEET_NAME).sheet1
 

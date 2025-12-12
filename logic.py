@@ -257,7 +257,7 @@ def grade_answer_ai(question, answer, context):
     prompt = f"""
     English: "{question}"
     User Kannada: "{answer}"
-    Task: Grade accuracy. Output JSON: {{ "is_correct": boolean, "feedback": "string", "correct_translation": "string" }}
+    Task: Grade accuracy. Allow minor spelling mistakes but otherwise be pedantic. Note that the user may respond in Granthika (formal/literary) OR Āḍumātu (colloquial/spoken) Kannada; both registers may be correct, as long as the user displays correct grammar within them. Output JSON: {{ "is_correct": boolean, "feedback": "string", "correct_translation": "string" }}
     """
     res = generate_content(prompt, context)
     data = clean_json(res)

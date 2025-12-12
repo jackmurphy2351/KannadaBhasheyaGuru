@@ -1,0 +1,112 @@
+Dative Constructions and Modals in Kannada
+(Need, Desire, Knowledge, and Possibility)
+Overview: The "Dative Experience"
+In English, you are the doer of your feelings ("I want," "I like," "I know"). In Kannada (and Hindi), you are the recipient of your feelings. Experiences happen to you.
+Therefore, for words indicating Need, Desire, Liking, or Knowledge, the Subject must be in the Dative Case (-ge / -ige / -kke).
+English Logic: I want coffee.
+Kannada Logic: To me, coffee is wanted. (Nanage coffee bēku).
+Grammar Note: These verbs are often called "Defective Verbs" because they do not conjugate for person, gender, or number. Whether the subject is "I", "You", or "She", the word remains exactly the same.
+The Big Four Dative Verbs
+These four words never change form based on the person.
+ Bēku (ಬೇಕು) - Want / Need / Must
+Hindi Equivalent: Chahiye
+Usage 1: With Nouns (Want/Need)
+Formula: (Person)+ge + (Item) + Bēku
+Example: Nanage nīru bēku. (I want water / To me water is needed).
+Usage 2: With Verbs (Must / Should / Have to)
+Formula: (Verb Root + a) + Bēku
+Example: Nānu ūrige hōgabēku. (I have to go to town).
+Changing Tense (Past and Future)
+While Bēku does not change for person, it does change for time:
+Past: Bēkāgittu (Was needed / Wanted).
+Nanage nīru bēkāgittu. (I wanted water).
+Nānu hōgabēkāgittu. (I should have gone / I needed to go).
+Future: Usually remains Bēku, or uses Bēkāgutte (will be needed).
+Negative: Bēḍa (ಬೇಡ) - Don't want / Don't need.
+ Ishta (ಇಷ್ಟ) - Like
+Hindi Equivalent: Pasand
+Note: Ishta is actually a noun meaning "pleasure" or "wish."
+Example: Nanage bekkugaḷu ishta. (I like cats).
+Negative: Ishta illa (ಇಷ್ಟ ಇಲ್ಲ).
+ Gottu (ಗೊತ್ತು) - Know
+Hindi Equivalent: Maalum / Pata
+Nuance: Used for static knowledge of facts, places, or people.
+Example: Nanage Kannaḍa gottu. (I know Kannada).
+Negative: Gottilla (ಗೊತ್ತಿಲ್ಲ).
+Nuance Alert: Gottu is for static knowledge. If you want to say "I understood" (process), use the verb Tiḷi (to know/grasp) or Artha āgu (to be understood).
+ Sāku (ಸಾಕು) - Enough
+Hindi Equivalent: Bas / Kaafi
+Usage: Crucial for dining contexts.
+Example: Nanage ūṭa sāku. (I have had enough food).
+Negative: Sāladu (ಸಾಲದು) (Not enough) - rare. Usually, we say Innu bēku (Want more).
+3. The Modal Verbs (Possibility and Capability)
+These modify the main verb to show what can or might happen.
+ Bahudu (ಬಹುದು) - May / Might / Can (Possibility)
+Hindi Equivalent: Sakta hai (as in "Ho sakta hai").
+Grammar Change: This takes a Nominative Subject (I, You, He), not Dative.
+Formula: Verb Root + a + bahudu (or directly to root depending on sandhi).
+Example: Nāḷe maḷe barabahudu. (Rain might come tomorrow).
+Negative: The "Prohibition" Distinction
+The negative of Bahudu changes depending on if you mean "cannot" or "should not."
+Prohibition (Should Not): Use Bāradu.
+Nīnu hōga bāradu. (You should not go).
+Inability (Cannot): Use Āgalla (see below).
+B. Āgalla (ಆಗಲ್ಲ) - Cannot (Inability)
+Hindi Equivalent: Nahi ho payega / Nahi banta.
+Grammar: Returns to Dative Subject.
+Formula: Infinitive (-alu / -akke) + Āgalla.
+Example: Nanage naḍeyalu āgalla. (I cannot walk / To me, walking is not possible).
+C. Balla (ಬಲ್ಲ) - Can (Capability) - Literary/Formal
+In spoken Kannada, we rarely use specific "Can" words for capability. We simply use "I know" (Gottu) or "It is possible" (Sādhyavide).
+4. Advanced: Alternative "Standard" Verbs
+These verbs are more formal but very useful for precision. Unlike the "Defective Verbs" above, these conjugate fully for person and tense.
+ Bayasu (To Desire/Wish) vs. Bēku
+Bēku: "It is wanted to me" (Passive feel).
+Bayasu: "I desire" (Active feel).
+Conjugation: Nānu bayasuttēne (I desire), Nīnu bayasuttīya (You desire).
+Example: Nānu badalāvaṇeyannu bayasuttēne. (I desire change).
+ Sādhyavāgu (To Become Possible) vs. Bahudu
+Sādhya: Means "Possible." Constructed using the "Noun + Āgu" or "Noun + Iru" method.
+Usage (Can): Nanage baralu sādhyavide. (It is possible for me to come).
+Note: Uses "ide" (exists) to show current ability.
+Usage (Could): Nanage baralu sādhyavāyitu. (It became possible for me to come).
+Note: Uses "āyitu" (happened) to show it turned out that way.
+5. Summary Table
+English
+Kannada Keyword
+Subject Case
+Example
+Want / Need
+Bēku
+Dative (-ge)
+Nanage nīru bēku.
+Must / Should
+(Verb)+bēku
+Nominative
+Nānu hōgabēku.
+Like
+Ishta
+Dative (-ge)
+Nanage idu ishta.
+Know
+Gottu
+Dative (-ge)
+Nanage avaru gottu.
+Might / May
+Bahudu
+Nominative
+Nānu barabahudu.
+Should Not
+Bāradu
+Nominative
+Nīnu māḍabāradu.
+Cannot
+Āgalla
+Dative (-ge)
+Nanage baralu āgalla.
+Desire (Formal)
+Bayasu
+Nominative
+Nānu bayasuttēne.
+
+

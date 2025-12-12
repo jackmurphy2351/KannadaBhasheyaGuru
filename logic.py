@@ -283,7 +283,9 @@ def critique_text_ai(text, style, context):
 
 def generate_kannada_article_ai(topic, style, context):
     p_style = "Literary" if style == "Formal" else "Colloquial"
-    prompt = f"Write a short Kannada paragraph about {topic} in {p_style} style suitable for a learner."
+    prompt = (f"Write a short Kannada paragraph about {topic} in {p_style} style suitable for a learner. "
+              f"Do **not** return any text *besides* the paragraph itself. The paragraph should be "
+              f"engaging and thought-provoking with a light-hearted tone.")
     return generate_content(prompt, context)
 
 
@@ -314,7 +316,7 @@ def grade_reading_ai(question, text, answer, context):
     Text: "{text}"
     Question: "{question}"
     User Answer: "{answer}"
-    Task: Grade the user's answer for factual and grammatical accuracy based on the text.
+    Task: Grade the user's answer for factual and grammatical accuracy based on the text. Require that the user respond in *full sentences*. If the user answers by copying and pasting verbatim text from the passage, grade their response as wrong and politely chide them for their laziness! 
     Output JSON: {{ "is_correct": boolean, "feedback": "string", "detailed_explanation": "string" }}
     """
     res = generate_content(prompt, context)

@@ -255,16 +255,23 @@ def generate_quiz(topic, context):
 
 def grade_answer_ai(question, answer, context):
     prompt = f"""
-    English: "{question}"
+    English Source: "{question}"
     User Kannada: "{answer}"
-    Task: Grade accuracy. Allow minor spelling mistakes but otherwise be pedantic. Note that the user may respond in Granthika (formal/literary) OR Āḍumātu (colloquial/spoken) Kannada; both registers may be correct, as long as the user displays correct grammar within them. Output JSON: {{ "is_correct": boolean, "feedback": "string", "correct_translation": "string" }}
+
+    TASK: Grade the user's translation.
+
+    RULES:
+    1. MEANING: If the user conveys the correct meaning but has small spelling/suffix mistakes (e.g. writing 'ಬಾಟಲ್‌ದಲ್ಲಿ' instead of 'ಬಾಟಲಿನಲ್ಲಿ'), mark 'is_correct' as TRUE.
+    2. PEDANTRY: You MUST explicitly point out every spelling or grammar mistake in the 'feedback', even if you marked it correct. Explain the rule (e.g. "You missed the 'in' connector before 'alli'").
+    3. CORRECTION: Always provide the perfect, standard Kannada translation in 'correct_translation'.
+
+    Output JSON: {{ "is_correct": boolean, "feedback": "string", "correct_translation": "string" }}
     """
     res = generate_content(prompt, context)
     data = clean_json(res)
     if data:
         return data
     return {"is_correct": False, "feedback": "AI Error", "correct_translation": "Unknown"}
-
 
 def critique_text_ai(text, style, context):
     style_rule = "Strict Literary (Granthike)" if style == "Formal" else "Colloquial (Aadumaatu)"

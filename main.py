@@ -84,7 +84,6 @@ def main():
     # --- SIDEBAR SETTINGS (Language Toggle) ---
 
     # 1. Create a placeholder at the TOP of the sidebar
-    # This reserves space visually before the radio button
     settings_header = st.sidebar.empty()
 
     # 2. Render the Radio Button to get the current language choice
@@ -97,7 +96,6 @@ def main():
                                  ])
 
     # 3. Now that we have 'lang_mode', write the translated text
-    # into the placeholder we created in Step 1.
     settings_header.header(logic.get_ui_text("HDR_SETTINGS", lang_mode))
 
     st.sidebar.markdown("---")
@@ -121,7 +119,6 @@ def main():
     )
 
     # --- MAIN APP TITLE (UPDATED) ---
-    # Now that we have lang_mode, we can translate the main title
     st.title(logic.get_ui_text("APP_TITLE", lang_mode))
     st.markdown("---")
 
@@ -195,6 +192,8 @@ def main():
 
                         if item['correct']:
                             st.success(feed)
+                            # Show standard answer even if correct, so they can compare spelling
+                            st.info(f"Standard Kannada: {corr}")
                         else:
                             st.error(feed)
                             st.write(f"**Correct:** {corr}")
@@ -211,6 +210,7 @@ def main():
                 st.markdown(f"### Q{q_idx + 1}: {display_q}")
 
                 if len(st.session_state.quiz_history) == q_idx:
+                    # --- INPUT PHASE ---
                     st.write(logic.get_ui_text("LBL_TRANS", lang_mode))
                     user_ans = st.text_input("Answer", key=f"input_{q_idx}", label_visibility="collapsed")
 
@@ -228,34 +228,30 @@ def main():
                             st.session_state.quiz_history.append(history_item)
                             if res['is_correct']: st.session_state.quiz_score += 1
                             st.rerun()
-                            else:
-                            # Result Phase (Waiting for Next)
-                            last_result = st.session_state.quiz_history[-1]
-                            feed_text = logic.toggle_script(last_result['feedback'], lang_mode)
+                else:
+                    # --- RESULT PHASE (Indentation Fixed) ---
+                    last_result = st.session_state.quiz_history[-1]
+                    feed_text = logic.toggle_script(last_result['feedback'], lang_mode)
+                    corr_text = logic.toggle_script(last_result['correct_translation'], lang_mode)
 
-                            # ALWAYS show the correct answer now, as requested
-                            corr_text = logic.toggle_script(last_result['correct_translation'], lang_mode)
+                    if last_result['correct']:
+                        st.success(f"Correct! {feed_text}")
+                        st.info(f"Standard Kannada: {corr_text}")
+                    else:
+                        st.error(f"Incorrect. {feed_text}")
+                        st.write(f"**Correct Answer:** {corr_text}")
 
-                            if last_result['correct']:
-                                st.success(f"Correct! {feed_text}")
-                                # Even if correct, show the standard answer so they can compare spelling
-                                st.info(f"Standard Kannada: {corr_text}")
-                            else:
-                                st.error(f"Incorrect. {feed_text}")
-                                st.write(f"**Correct Answer:** {corr_text}")
+                    # LOGIC: Check if this is the last question
+                    is_last_question = (st.session_state.current_q_index == total - 1)
 
-                            # LOGIC: Check if this is the last question
-                            is_last_question = (st.session_state.current_q_index == total - 1)
+                    if is_last_question:
+                        btn_label = "See Results 🏁"
+                    else:
+                        btn_label = logic.get_ui_text("BTN_NEXT", lang_mode)
 
-                            # Dynamic Button Label
-                            if is_last_question:
-                                btn_label = "See Results 🏁"  # No need to translate emoji, but you could add a key if you want
-                            else:
-                                btn_label = logic.get_ui_text("BTN_NEXT", lang_mode)
-
-                            if st.button(btn_label):
-                                st.session_state.current_q_index += 1
-                                st.rerun()
+                    if st.button(btn_label):
+                        st.session_state.current_q_index += 1
+                        st.rerun()
             else:
                 score = st.session_state.quiz_score
                 st.markdown(f"## Score: {score}/{total}")

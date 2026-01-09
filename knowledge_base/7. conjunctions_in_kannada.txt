@@ -1,121 +1,97 @@
-A Grammar Guide to Conjunctions
-(Connecting Your Thoughts)
-1. Overview
-In Kannada, connectors usually come between two full sentences.
-2. The Basic Connectors: And, Or, But
-A. And: ಮತ್ತು (Mattu) / ಹಾಗೂ (Hāgū)
-Mattu: The standard word for "And." Used to connect nouns or sentences.
-Hāgū: Means "As well as" or "Also." It is slightly more formal or emphatic.
-Spoken Tip: In fast conversation, people often drop Mattu. instead, they use Jotege (With/Along with) or just pause.
-Context
-Kannada
-English
-Nouns
-ಕಾಫಿ ಮತ್ತು ಟೀ.
 
-(Coffee mattu tea.)
-Coffee and tea.
-Sentences
-ನಾನು ಬಂದೆ ಮತ್ತು ಅವಳು ಹೋದಳು.
+# A Grammar Guide to Conjunctions
+**(Connecting Your Thoughts)**
 
-(Nānu bande mattu avaḷu hōdaḷu.)
-I came and she left.
+## 1. Overview
 
-B. Or: ಅಥವಾ (Athavā)
-Hindi Equivalent: Ya / Athva.
-Usage: Used to present choices.
-Context
-Kannada
-English
-Choice
-ಕಾಫಿ ಅಥವಾ ಟೀ ಬೇಕಾ?
+In Kannada, connectors usually come between two full sentences to link ideas together.
 
-(Coffee athavā tea bēkā?)
-Do you want Coffee or Tea?
-Plan
-ನಾಳೆ ಅಥವಾ ನಾಡಿದ್ದು.
+---
 
-(Nāḷe athavā nāḍiddu.)
-Tomorrow or day-after.
+## 2. The Basic Connectors: And, Or, But
 
-C. But: ಆದರೆ (Ādare)
-Hindi Equivalent: Lekin / Par.
-Note: As mentioned in the Conditional guide, Ādare technically means "If it becomes," but it is the standard word for "But."
-Context
-Kannada
-English
-Contrast
-ನನಗೆ ಇಷ್ಟ, ಆದರೆ ಸಮಯ ಇಲ್ಲ.
+### A. And: ಮತ್ತು (Mattu) / ಹಾಗೂ (Hāgū)
+* **Mattu:** The standard word for "And." Used to connect nouns or sentences.
+* **Hāgū:** Means "As well as" or "Also." It is slightly more formal or emphatic.
 
-(Nanage ishta, ādare samaya illa.)
-I like it, but I don't have time.
-Fact
-ಇದು ಹಳೆಯದು, ಆದರೆ ಚೆನ್ನಾಗಿದೆ.
+**Spoken Tip:** In fast conversation, people often drop *Mattu*. Instead, they use **Jotege** (With/Along with) or just pause.
 
-(Idu haḷeyadu, ādare chennāgide.)
-This is old, but it is nice.
+| Context | Kannada | Transliteration | Meaning |
+| :--- | :--- | :--- | :--- |
+| **Nouns** | ಕಾಫಿ ಮತ್ತು ಟೀ. | **Kāphi mattu ṭī.** | Coffee and tea. |
+| **Sentences** | ನಾನು ಬಂದೆ ಮತ್ತು ಅವಳು ಹೋದಳು. | **Nānu bande mattu avaḷu hōdaḷu.** | I came and she left. |
 
-3. The Logic Loop: Reason and Result
-This is the most important section for daily conversation (explaining why you did something).
-A. Because: ಯಾಕೆಂದರೆ (Yākendare)
-Spoken Variations: Yākandre / Yāke-andre.
-Literal Meaning: "Why... means..." (Why -> Yāke, Means -> Andare).
-Structure: [Result Sentence] + [Yākandre] + [Reason Sentence].
-Kannada Sentence
-Breakdown
-English
-ನಾನು ಲೇಟ್, ಯಾಕೆಂದರೆ ಟ್ರಾಫಿಕ್ ಇತ್ತು.
+### B. Or: ಅಥವಾ (Athavā)
+* **Hindi Equivalent:** *Ya / Athva*
+* **Usage:** Used to present choices.
 
-(Nānu late, yākandre traffic ittu.)
-I am late, why-means traffic was there.
-I am late because there was traffic.
-ಅವನು ಬರಲ್ಲ, ಯಾಕೆಂದರೆ ಅವನಿಗೆ ಹುಷಾರಿಲ್ಲ.
+| Context | Kannada | Transliteration | Meaning |
+| :--- | :--- | :--- | :--- |
+| **Choice** | ಕಾಫಿ ಅಥವಾ ಟೀ ಬೇಕಾ? | **Kāphi athavā ṭī bēkā?** | Do you want Coffee or Tea? |
+| **Plan** | ನಾಳೆ ಅಥವಾ ನಾಡಿದ್ದು. | **Nāḷe athavā nāḍiddu.** | Tomorrow or day-after. |
 
-(Avanu baralla, yākandre avanige hushārilla.)
-He won't come, why-means he is unwell.
-He won't come because he is unwell.
+### C. But: ಆದರೆ (Ādare)
+* **Hindi Equivalent:** *Lekin / Par*
+* **Grammar Note:** Technically, *Ādare* means "If it becomes" (Conditional of *Āgu*), but it is the standard word for "But."
 
-B. So / Therefore: ಅದಕ್ಕೆ (Adakkē)
-Formal Version: Āddarinda (Therefore).
-Spoken Version: Adakkē (To that / For that reason).
-Structure: [Reason Sentence] + [Adakkē] + [Result Sentence].
-Kannada Sentence
-Breakdown
-English
-ಟ್ರಾಫಿಕ್ ಇತ್ತು, ಅದಕ್ಕೆ ನಾನು ಲೇಟ್.
+| Context | Kannada | Transliteration | Meaning |
+| :--- | :--- | :--- | :--- |
+| **Contrast** | ನನಗೆ ಇಷ್ಟ, ಆದರೆ ಸಮಯ ಇಲ್ಲ. | **Nanage iṣṭa, ādare samaya illa.** | I like it, but I don't have time. |
+| **Fact** | ಇದು ಹಳೆಯದು, ಆದರೆ ಚೆನ್ನಾಗಿದೆ. | **Idu haḷeyadu, ādare cennāgide.** | This is old, but it is nice. |
 
-(Traffic ittu, adakkē nānu late.)
-Traffic was there, to-that I am late.
-There was traffic, so/that's why I am late.
-ನನಗೆ ಹಸಿವು, ಅದಕ್ಕೆ ಊಟ ಮಾಡಿದೆ.
+---
 
-(Nanage hasivu, adakkē ūṭa māḍide.)
-Hunger to me, that's why I did meal.
-I was hungry, so I ate.
+## 3. The Logic Loop: Reason and Result
 
-4. The "If Not / Otherwise" Connector
-This is very common in Bangalore Kannada when making plans.
-ಇಲ್ಲಾಂದ್ರೆ (Illāndre)
-Literal: Illa (No) + Andre (If said/meant).
-Meaning: Otherwise / If not / Or else.
-Hindi Equivalent: Nahi toh.
-Context
-Kannada
-English
-Warning
-ಈಗ ಬನ್ನಿ, ಇಲ್ಲಾಂದ್ರೆ ನಾವು ಹೋಗ್ತೀವಿ.
+This is the most important section for daily conversation (explaining *why* you did something).
 
-(Īga banni, illāndre nāvu hōgtīvi.)
-Come now, otherwise we will go.
-Alternative
-ನಾಳೆ ಸಿಗೋಣ, ಇಲ್ಲಾಂದ್ರೆ ಫೋನ್ ಮಾಡಿ.
+### A. Because: ಯಾಕೆಂದರೆ (Yākendare)
+* **Spoken Variations:** *Yākandre / Yāke-andre*.
+* **Literal Meaning:** "Why... means..." (*Yāke* + *Endare*).
+* **Structure:** `[Result Sentence]` + `[Yākandre]` + `[Reason Sentence]`
 
-(Nāḷe sigōṇa, illāndre phone māḍi.)
-Let's meet tomorrow, if not, call me.
+| Kannada Sentence | Breakdown | Meaning |
+| :--- | :--- | :--- |
+| **ನಾನು ಲೇಟ್, ಯಾಕೆಂದರೆ ಟ್ರಾಫಿಕ್ ಇತ್ತು.**<br>(Nānu lēṭ, yākandre ṭrāphik ittu.) | I am late, why-means traffic was there. | I am late because there was traffic. |
+| **ಅವನು ಬರಲ್ಲ, ಯಾಕೆಂದರೆ ಅವನಿಗೆ ಹುಷಾರಿಲ್ಲ.**<br>(Avanu baralla, yākandre avanige huṣārilla.) | He won't come, why-means he is unwell. | He won't come because he is unwell. |
 
-5. Summary: The Conversation Flow
+### B. So / Therefore: ಅದಕ್ಕೆ (Adakke)
+* **Formal Version:** *Āddarinda* (Therefore).
+* **Spoken Version:** *Adakke* (To that / For that reason).
+* **Structure:** `[Reason Sentence]` + `[Adakke]` + `[Result Sentence]`
+
+| Kannada Sentence | Breakdown | Meaning |
+| :--- | :--- | :--- |
+| **ಟ್ರಾಫಿಕ್ ಇತ್ತು, ಅದಕ್ಕೆ ನಾನು ಲೇಟ್.**<br>(Ṭrāphik ittu, adakke nānu lēṭ.) | Traffic was there, to-that I am late. | There was traffic, so/that's why I am late. |
+| **ನನಗೆ ಹಸಿವು, ಅದಕ್ಕೆ ಊಟ ಮಾಡಿದೆ.**<br>(Nanage hasivu, adakke ūṭa māḍide.) | Hunger to me, that's why I did meal. | I was hungry, so I ate. |
+
+---
+
+## 4. The "If Not / Otherwise" Connector
+
+This is very common in Bengaluru Kannada when making plans.
+
+### ಇಲ್ಲಾಂದ್ರೆ (Illāndre)
+* **Literal:** *Illa* (No) + *Andre* (If said/meant).
+* **Meaning:** Otherwise / If not / Or else.
+* **Hindi Equivalent:** *Nahi toh*.
+
+| Context | Kannada | Transliteration | Meaning |
+| :--- | :--- | :--- | :--- |
+| **Warning** | ಈಗ ಬನ್ನಿ, ಇಲ್ಲಾಂದ್ರೆ ನಾವು ಹೋಗ್ತೀವಿ. | **Īga banni, illāndre nāvu hōgtīvi.** | Come now, otherwise we will go. |
+| **Alternative** | ನಾಳೆ ಸಿಗೋಣ, ಇಲ್ಲಾಂದ್ರೆ ಫೋನ್ ಮಾಡಿ. | **Nāḷe sigōṇa, illāndre phōn māḍi.** | Let's meet tomorrow, if not, call me. |
+
+---
+
+## 5. Summary: The Conversation Flow
+
 Here is how you string it all together.
-Step 1: Start a thought. -> Nanage bekkugaḷu ishta. (I like cats.)
-Step 2 (Contrast): Use Ādare. -> ...ādare nanage bekku illa. (...but I don't have a cat.)
-Step 3 (Reason): Use Yākandre. -> ...yākandre nanna apārṭmeṇṭ chikkadu. (...because my apartment is small.)
-Step 4 (Result): Use Adakkē. -> ...adakkē nānu sadhyakke tagonḍilla. (...so/that's why I haven't taken one for now.)
+
+1.  **Start a thought:**
+    * *Nanage bekkugaḷu iṣṭa.* (I like cats.)
+2.  **Contrast (Ādare):**
+    * *...ādare nanage bekku illa.* (...but I don't have a cat.)
+3.  **Reason (Yākandre):**
+    * *...yākandre nanna apārṭmeṇṭ cikkadu.* (...because my apartment is small.)
+4.  **Result (Adakke):**
+    * *...adakke nānu sadyakke tagoṇḍilla.* (...so I haven't taken one **for now**.)

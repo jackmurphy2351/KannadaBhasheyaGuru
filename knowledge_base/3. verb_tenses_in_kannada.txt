@@ -1,124 +1,142 @@
-A Grammar Guide to Kannada Verb Conjugation (ಕಾಲಗಳು ಮತ್ತು ಕ್ರಿಯಾಪದಗಳು)
+# A Grammar Guide to Kannada Verb Conjugation (ಕಾಲಗಳು ಮತ್ತು ಕ್ರಿಯಾಪದಗಳು)
 
-Overview
+## Overview
 
 In Kannada, mastering the verb is 80% of the battle. Once you know the root and the ending, you can construct almost any sentence.
-The Golden Formula:
+
+**The Golden Formula:**
+`Verb Root` + `Tense Marker` + `Pronominal Ending` = **Conjugated Verb**
+
+---
+
+## 1. The Pronominal Endings (The "Tail")
+
+These are the suffixes that tell you *who* is doing the action. They attach to the end of the verb. Because these endings are unique to the person, you can technically drop the pronoun (Subject) and still be understood.
+
+| Person | Pronoun | Meaning | Ending (Formal/Written) | Ending (Colloquial/Spoken) |
+| :--- | :--- | :--- | :--- | :--- |
+| **1st Sing** | **Nānu** (ನಾನು) | I | **-ēne** (-ಏನೆ) | **-īni** (-ಈನಿ) |
+| **2nd Sing** | **Nīnu** (ನೀನು) | You (informal) | **-iya** (-ಇಯ) | **-ya** / **-i** (-ಯ/-ಇ) |
+| **2nd Hon** | **Nīvu** (ನೀವು) | You (polite/pl) | **-iri** (-ಇರಿ) | **-tīri** (-ತೀರಿ) |
+| **3rd Masc** | **Avanu** (ಅವನು) | He | **-āne** (-ಆನೆ) | **-āne** (-ಆನೆ) |
+| **3rd Fem** | **Avaḷu** (ಅವಳು) | She | **-āḷe** (-ಆಳೆ) | **-āḷe** (-ಆಳೆ) |
+| **3rd Neut** | **Adu** (ಅದು) | It | **-ade** (-ಅದೆ) | **-utte** (-ಉತ್ತೆ) |
+| **1st Pl** | **Nāvu** (ನಾವು) | We | **-ēve** (-ಏವೆ) | **-tīvi** (-ತೀವಿ) |
+| **3rd Pl** | **Avaru** (ಅವರು) | They (human) | **-āre** (-ಆರೆ) | **-tāre** (-ತಾರೆ) |
+
+---
 
 
-$$\text{Verb Root} + \text{Tense Marker} + \text{Pronominal Ending} = \text{Conjugated Verb}$$
+## 2. The Present Tense (Non-Past)
 
-1. The Pronominal Endings (The "Tail")
+**Usage:** Used for habits, general truths, and future actions.
+*Note: In spoken Kannada, we rarely use a separate "Future Tense." If you say "I go to the shop" (Hōgtīni), it implies you will go.*
 
-These are the suffixes that tell you who is doing the action. They attach to the end of the verb. Because these endings are unique to the person, you can technically drop the pronoun (Subject) and still be understood (just like in Latin Amo vs. Ego amo).
-Person	Pronoun	Meaning	Ending (Formal/Written)	Ending (Colloquial/Spoken)
-1st Sing	ನಾನು (Nānu)	I	-ಏನೆ (-ēne)	-ಈನಿ (-īni)
-2nd Sing	ನೀನು (Nīnu)	You (informal)	-ಇಯ (-iya)	-ಯ / -ಇ (-ya / -i)
-2nd Hon	ನೀವು (Nīvu)	You (polite/pl)	-ಇರಿ (-iri)	-ತೀರಿ (-tīri)
-3rd Masc	ಅವನು (Avanu)	He	-ಆನೆ (-āne)	-ಆನೆ (-āne)
-3rd Fem	ಅವಳು (Avaḷu)	She	-ಆಳೆ (-āḷe)	-ಆಳೆ (-āḷe)
-3rd Neut	ಅದು (Adu)	It	-ಅದೆ (-ade)	-ಅದೆ (-ade) / -ಉತ್ತೆ (-utte)
-1st Pl	ನಾವು (Nāvu)	We	-ಏವೆ (-ēve)	-ತೀವಿ (-tīvi)
-3rd Pl	ಅವರು (Avaru)	They (human)	-ಆರೆ (-āre)	-ತಾರೆ (-tāre)
+* **The Marker:** **-utta** (-ಉತ್ತ)
+* **Structure:** `Root` + `utta` + `Ending`
 
-2. The Present Tense (Non-Past)
+**Example: Māḍu (ಮಾಡು - To do)**
 
-Usage: Used for habits, general truths, and future actions.
-Note: In spoken Kannada, we rarely use a separate "Future Tense." If you say "I go to the shop," it implies you will go.
-The Marker: -ಉತ್ತ (-utta)
-Structure:
+| Pronoun | Written/Formal | Spoken/Conversational | Meaning |
+| :--- | :--- | :--- | :--- |
+| **Nānu** | **Māḍuttēne** | **Māḍtīni** | I do / I will do |
+| **Nīnu** | **Māḍuttīya** | **Māḍtiya** | You do |
+| **Nīvu** | **Māḍuttīri** | **Māḍtīri** | You (resp) do |
+| **Avanu** | **Māḍuttāne** | **Māḍtāne** | He does |
+| **Avaḷu** | **Māḍuttāḷe** | **Māḍtāḷe** | She does |
+| **Adu** | **Māḍuttade** | **Māḍutte** | It does |
+| **Nāvu** | **Māḍuttēve** | **Māḍtīvi** | We do |
+| **Avaru** | **Māḍuttāre** | **Māḍtāre** | They do |
 
+**Quick Tip for Hindi Speakers:**
+* **Habitual (*-ta*):** Just as Hindi uses **-tā** for habits (*Main kar**tā** hoon*), Kannada uses **-utta** (*Nānu māḍ**utta** ēne* $\rightarrow$ *Māḍuttēne* $\rightarrow$ *Māḍtīni*).
+* **Continuous (*-rahā*):** Be careful! If you elongate the sound to **-uttā** and add *iddīni*, it becomes Continuous (*Main kar **rahā** hoon*). See Section 4 below for an explication of the Continuous.
+    * *Māḍtīni* = *Kartā hoon* (I do)
+    * *Māḍtā iddīni* = *Kar rahā hoon* (I am doing)
 
-$$\text{Root} + \text{utta} + \text{Ending}$$
-Example: ಮಾಡು (Māḍu - To do)
-Pronoun	Written/Formal	Spoken/Conversational	Meaning
-ನಾನು	ಮಾಡಉತ್ತಏನೆ (Māḍuttēne)	ಮಾಡ್ತೀನಿ (Māḍtīni)	I do / I will do
-ನೀನು	ಮಾಡಉತ್ತೀಯ (Māḍuttīya)	ಮಾಡ್ತಿಯ (Māḍtiya)	You do
-ನೀವು	ಮಾಡಉತ್ತೀರಿ (Māḍuttīri)	ಮಾಡ್ತೀರಿ (Māḍtīri)	You (resp) do
-ಅವನು	ಮಾಡಉತ್ತಆನೆ (Māḍuttāne)	ಮಾಡ್ತಾನೆ (Māḍtāne)	He does
-ಅವಳು	ಮಾಡಉತ್ತಆಳೆ (Māḍuttāḷe)	ಮಾಡ್ತಾಳೆ (Māḍtāḷe)	She does
-ಅದು	ಮಾಡಉತ್ತಅದೆ (Māḍuttade)	ಮಾಡುತ್ತೆ (Māḍutte)	It does
-ನಾವು	ಮಾಡಉತ್ತಏವೆ (Māḍuttēve)	ಮಾಡ್ತೀವಿ (Māḍtīvi)	We do
-ಅವರು	ಮಾಡಉತ್ತಆರೆ (Māḍuttāre)	ಮಾಡ್ತಾರೆ (Māḍtāre)	They do
-🚀 Quick Tip for Hindi Speakers:
-Think of the Kannada -utta marker as the Hindi -ta (karta, jata).
-●	Hindi: Main karta hoon.
-●	Kannada: Nānu māḍutta ēne (Maḍtini).
+---
 
-3. The Past Tense
+## 3. The Past Tense
 
-Usage: Completed actions.
-The Marker: usually -ದ (-da), but irregulars exist.
+**Usage:** Completed actions.
+* **The Marker:** Usually **-da** (-ದ), but irregulars exist.
 
-Group A: Regular Verbs (The 'u' verbs)
-Most verbs ending in 'u' take a -d- sound.
-●	ಮಾಡು (māḍu) → ಮಾಡಿದ (māḍida) + ending
-Group B: Irregular / Strong Verbs
+### Group A: Regular Verbs (The 'u' verbs)
+Most verbs ending in 'u' take a **-d-** sound.
+* **Māḍu** (māḍu) $\rightarrow$ **Māḍida** (māḍida) + ending
+
+### Group B: Irregular / Strong Verbs
 These must be memorized, but they are the most common verbs.
-Verb Root	Meaning	Past Stem	Example (I did...)
-ಮಾಡು (māḍu)	To do	ಮಾಡಿದ (māḍida)	ನಾನು ಮಾಡಿದೆ (Nānu māḍide)
-ಬರು (baru)	To come	ಬಂದ (banda)	ನಾನು ಬಂದೆ (Nānu bande)
-ಹೋಗು (hōgu)	To go	ಹೋದ (hōda)	ನಾನು ಹೋದೆ (Nānu hōde)
-ತಿನ್ನು (tinnu)	To eat	ತಿಂದ (tinda)	ನಾನು ತಿಂದೆ (Nānu tinde)
-ಇರು (iru)	To be	ಇದ್ದ (idda)	ನಾನು ಇದ್ದೆ (Nānu idde)
-ಕಾಣು (kāṇu)	To see	ಕಂಡ (kaṇḍa)	ನಾನು ಕಂಡೆ (Nānu kaṇḍe)
-ಕೊಡು (koḍu)	To give	ಕೊಟ್ಟ (koṭṭa)	ನಾನು ಕೊಟ್ಟೆ (Nānu koṭṭe)
-Structure:
 
+| Verb Root | Meaning | Past Stem | Example (I did...) |
+| :--- | :--- | :--- | :--- |
+| **Māḍu** | To do | **Māḍida** | **Nānu māḍide** (I did) |
+| **Baru** | To come | **Banda** | **Nānu bande** (I came) |
+| **Hōgu** | To go | **Hōda** | **Nānu hōde** (I went) |
+| **Tinnu** | To eat | **Tinda** | **Nānu tinde** (I ate) |
+| **Iru** | To be | **Idda** | **Nānu idde** (I was) |
+| **Kāṇu** | To see | **Kaṇḍa** | **Nānu kaṇḍe** (I saw) |
+| **Koḍu** | To give | **Koṭṭa** | **Nānu koṭṭe** (I gave) |
 
-$$\text{Past Stem} + \text{Ending (Short form)}$$
+**Structure:** `Past Stem` + `Ending (Short form)`
+*(Note: In Past tense, the 'I' ending is usually just 'e', not 'ēne')*
 
-(Note: In Past tense, the 'I' ending is usually just 'e' not 'ene')
-Example: ಹೋಗು (Hōgu - To go) → Stem: ಹೋದ (Hōda)
-●	ನಾನು ಹೋದೆ (Nānu hōde) - I went
-●	ನೀವು ಹೋದ್ರಿ (Nīvu hōdri) - You went (Plural/Resp)
-●	ಅವನು ಹೋದ (Avanu hōda) - He went
-●	ಅವಳು ಹೋದಳು (Avaḷu hōdaḷu) - She went
-●	ಅದು ಹೋಯಿತು (Adu hōyitu) - It went (Irregular neuter ending)
+**Example: Hōgu (To go) $\rightarrow$ Stem: Hōda**
+* **Nānu hōde** - I went
+* **Nīvu hōdri** - You went (Plural/Resp)
+* **Avanu hōda** - He went
+* **Avaḷu hōdaḷu** - She went
+* **Adu hōyitu** - It went (*Irregular neuter ending*)
 
-4. The Present Continuous (Right Now)
+---
 
-Usage: Actions happening at this very moment.
-Structure:
+## 4. The Present Continuous (Right Now)
 
+**Usage:** Actions happening at this very moment.
+* **Structure:** `Root` + `tā` + `iru (conjugated)`
 
-$$\text{Root} + \text{tā} + \text{iru (conjugated)}$$
+**The Formula:**
+1.  Take Verb Root (e.g., **Baru**)
+2.  Add **-tā** (**Bartā** - coming)
+3.  Add "To Be" (**Iddīni** / **Iddāne** / etc.)
 
-The Formula:
-1.	Take Verb Root (e.g., ಬರು - Baru)
-2.	Add -tā (Barta - coming)
-3.	Add "To Be" (Iddīni / Iddāne / etc.)
-Person	Kannada (Spoken)	Meaning
-I am...	ನಾನು ಬರ್ತಾ ಇದ್ದೀನಿ (Nānu bartā iddīni)	I am coming.
-You are...	ನೀವು ಬರ್ತಾ ಇದ್ದೀರಿ (Nīvu bartā iddīri)	You are coming.
-He is...	ಅವನು ಬರ್ತಾ ಇದ್ದಾನೆ (Avanu bartā iddāne)	He is coming.
-She is...	ಅವಳು ಬರ್ತಾ ಇದ್ದಾಳೆ (Avaḷu bartā iddāḷe)	She is coming.
-It is...	ಮಳೆ ಬರ್ತಾ ಇದೆ (Maḷe bartā ide)	It is raining (Rain is coming).
+| Person | Kannada (Spoken) | Meaning |
+| :--- | :--- | :--- |
+| **I am...** | **Nānu bartā iddīni** | I am coming. |
+| **You are...** | **Nīvu bartā iddīri** | You are coming. |
+| **He is...** | **Avanu bartā iddāne** | He is coming. |
+| **She is...** | **Avaḷu bartā iddāḷe** | She is coming. |
+| **It is...** | **Maḷe bartā ide** | It is raining (*Rain is coming*). |
 
-5. Important Verbs: To Be (Iru) vs. To Become (Āgu)
+---
+
+## 5. Important Verbs: To Be (Iru) vs. To Become (Āgu)
 
 These two confuse everyone.
-A. ಇರು (Iru) - Existence / Location
+
+### A. Iru (ಇರು) - Existence / Location
 Used for "I am here," "I have," "It is in the box."
-●	Present: ನಾನು ಇಲ್ಲೇ ಇದ್ದೀನಿ (Nānu illē iddīni) - I am right here.
-●	Past: ನಾನು ನೆನ್ನೆ ಊರಲ್ಲಿ ಇದ್ದೆ (Nānu nenne ūralli idde) - I was in town yesterday.
-B. ಆಗು (Āgu) - To Happen / To Become
+* **Present:** Nānu illē **iddīni**. (I am right here.)
+* **Past:** Nānu nenne ūralli **idde**. (I was in town yesterday.)
+
+### B. Āgu (ಆಗು) - To Happen / To Become
 Used for events, feelings, or finishing things.
-●	Present/Future: ಅದು ಆಗುತ್ತೆ (Adu āgutte) - It will happen / It happens.
-●	Past: ಅದು ಆಯ್ತು (Adu āytu) - It happened / It is finished.
-Conversational Gem:
+* **Present/Future:** Adu **āgutte**. (It will happen / It happens.)
+* **Past:** Adu **āytu**. (It happened / It is finished.)
+
+**Conversational Gem:**
 When you finish a task (like eating or working), Kannadigas don't say "I finished." They say "It happened."
-●	ಊಟ ಆಯ್ತಾ? (Ūṭa āytā?) - Literal: Did meal happen? (Meaning: Have you eaten?)
-●	ಹೂ, ಆಯ್ತು. (Hū, āytu.) - Yes, it happened. (Meaning: Yes, I ate.)
+* **Ūṭa āytā?** - *Literal: Did meal happen?* (Meaning: Have you eaten?)
+* **Hū, āytu.** - *Yes, it happened.* (Meaning: Yes, I ate.)
 
-6. Summary Table for "To Drink" (Kuḍi)
+---
 
-Tense	Kannada	Transliteration	English
-Past	ನಾನು ಕುಡಿದೆ	Nānu kuḍide	I drank
-Present Continuous	ನಾನು ಕುಡಿತಾ ಇದ್ದೀನಿ	Nānu kuḍitā iddīni	I am drinking
-Habitual/Future	ನಾನು ಕುಡಿತೀನಿ	Nānu kuḍitīni	I drink / I will drink
-Negative (Any time)	ನಾನು ಕುಡಿಯಲ್ಲ	Nānu kuḍiyalla	I don't/won't drink 3
+## 6. Summary Table for "To Drink" (Kuḍi)
 
-Past Negative	ನಾನು ಕುಡಿಯಲಿಲ್ಲ	Nānu kuḍiyalilla	I didn't drink 4
-
-
+| Tense | Kannada | Transliteration | English |
+| :--- | :--- | :--- | :--- |
+| **Past** | ನಾನು ಕುಡಿದೆ | **Nānu kuḍide** | I drank |
+| **Present Continuous** | ನಾನು ಕುಡಿತಾ ಇದ್ದೀನಿ | **Nānu kuḍitā iddīni** | I am drinking |
+| **Habitual/Future** | ನಾನು ಕುಡಿತೀನಿ | **Nānu kuḍitīni** | I drink / I will drink |
+| **Negative (Any time)** | ನಾನು ಕುಡಿಯಲ್ಲ | **Nānu kuḍiyalla** | I don't/won't drink |
+| **Past Negative** | ನಾನು ಕುಡಿಯಲಿಲ್ಲ | **Nānu kuḍiyalilla** | I didn't drink |

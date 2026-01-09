@@ -1,92 +1,106 @@
-A Grammar Guide to Impersonal Verbs: Infinitives and Verbal Nouns
-This guide covers the two most important ways to use verbs when they are not the main action of the sentence, but rather the subject, object, or purpose of the sentence.
-1. Overview and Distinction
-In Kannada, as in Latin or Hindi, there is a strict difference between the "Purpose" form of a verb and the "Noun" form of a verb.
-1. The Infinitive (Purpose)
-●	Suffix: -alu
-●	English Equivalent: To write, To go, To eat
-●	Hindi Equivalent: Likhne (as in "Likhne ke liye" or "Likhne gaya")
-●	Function: Used to express purpose, intent, or ability. It answers the question "Why?" or "For what?"
-2. The Verbal Noun / Gerund (The Act)
-●	Suffix: -uvudu
-●	English Equivalent: Writing, Going, Eating
-●	Hindi Equivalent: Likhna (as in "Likhna accha hai")
-●	Function: Turns the verb into a noun. It answers the question "What?"
-2. The Infinitive: -alu
-Formation
-Formula: Verb Root + alu
-Sandhi Rules (Spelling Changes):
-1.	If Root ends in -u: Drop the 'u' and add 'alu'.
-○	Maadu + alu = Maadalu
-2.	If Root ends in -e or -i: Add a 'y' sound (y-insertion).
-○	Bare + alu = Bareyalu
-○	Kudi + alu = Kudiyalu
-3.	Irregular Roots: Shorten the root (similar to Past Tense stems).
-○	Baru (Come) -> Baralu
-○	Taru (Bring) -> Taralu
-Usage Cases
-A. Purpose (Going somewhere to do something)
-●	I went to see him.
-●	Nanu avanannu nodalu hode.
-●	(Derived from rules on Potential/Ability negation structures)
-B. Capability (Can / Cannot)
-●	I cannot do this. (Literally: To me, to do this, it is not possible).
-●	Nanage idu maadalu aagalla. *
-C. Permission (To allow)
-●	Give (me) permission to go.
-●	Hogalu bidi. (Literally: Leave/Allow to go).
-3. The Verbal Noun (Gerund): -uvudu
-Formation
-Formula: Verb Root + uvudu
-Grammar Logic: This form is actually a combination of the Future/Habitual Participle (-uva) and the Neuter Pronoun (-du). It literally means "That which does X."
-Usage Cases
-A. As the Subject (General Statements)
-●	Swimming is good for health.
-●	Ijuvudu aarogyakke olliyadu.
-●	Writing in Kannada is difficult.
-●	Kannadadalli bareyuvudu kashta.
-B. As the Object (What you like/learn/know)
-●	I want to practice writing.
-●	Nanu bareyuvudannu abhyasa maadabeku.
-○	Note: Because it is an object, strictly speaking, it takes the Accusative suffix (-annu). However, in conversation, dropping (-annu) is common.
-C. Nominalizing a Thought
-●	Coming to Bangalore is easy.
-●	Bengalurige baruvudu sulabha.
-4. Reference Table: Common Verbs
-Use this table to practice converting roots.
-Verb Root	Meaning	Infinitive (To do...)	Verbal Noun (Doing...)
-Maadu	To Do	Maadalu	Maaduvudu
-Bare	To Write	Bareyalu	Bareyuvudu
-Odu	To Read	Odalu	Oduvudu
-Kudi	To Drink	Kudiyalu	Kudiyuvudu
-Tinnu	To Eat	Tinnalu	Tinnuvudu
-Nodu	To See	Nodalu	Noduvudu
-Kelu	To Ask/Hear	Kelalu	Keluvudu
-Hogu	To Go	Hogalu	Hoguvudu
-Baru	To Come	Baralu	Baruvudu
-Iru	To Be	Iralu	Iruvudu
-Agu	To Become	Agalu	Aguvudu
-5. Advanced Note: Case Suffixes with Verbal Nouns
-Since the Verbal Noun (-uvudu) acts exactly like a noun, you can attach Case Suffixes to it. This allows for complex sentence structures.
-1. Dative Case (-akke): "For doing"
-●	Formula: -uvudu + akke = -uvudakke
-●	Example: I came for working (to work).
-●	Kannada: Nanu kelsamaaduvudakke bande.
-●	Usage: This is often interchangeable with the Infinitive (-alu). "Maadalu" and "Maaduvudakke" both mean "in order to do."
-2. Instrumental Case (-inda): "By doing"
-●	Formula: -uvudu + inda = -uvudarinda
-●	Example: You learn by speaking.
-●	Kannada: Nivu maataduvudarinda kalitiri.
-3. Accusative Case (-annu): "The doing" (Object)
-●	Formula: -uvudu + annu = -uvudannu
-●	Example: Stop the talking.
-●	Kannada: Maataduvudannu nillisi.
-6. Summary Checklist
-When you are about to speak, ask yourself:
-1.	Is the verb the goal? (I went to eat)
-○	Use -alu.
-2.	Is the verb the subject? (Eating is fun)
-○	Use -uvudu.
-3.	Is the verb the object? (I like eating)
-○	Use -uvudu.
-Would you like me to generate a short quiz (5 questions) based on this primer to test your understanding before we move on?
+# Impersonal Verbs in Kannada: Infinitives and Verbal Nouns
+
+## Overview
+In Kannada, verbs can be modified to function not just as actions, but as nouns or abstract concepts. This module covers two essential forms:
+1. **The Infinitive:** "To do," "To eat" (Ending in *-alu*)
+2. **The Verbal Noun:** "Doing," "Eating" (Ending in *-uvudu*)
+
+These are called "Impersonal" because they do not change based on who is speaking (I, You, He, She). They remain constant regardless of gender or number.
+
+---
+
+## Part 1: The Infinitive Form (*-alu*)
+
+The infinitive form corresponds to the English "To [verb]" (e.g., to go, to see). It is used to express purpose, permission, or capability.
+
+### Formation Rule
+Take the verb root and add the suffix **-alu**.
+* If the root ends in *u*, replace the *u* with **-alu**.
+* If the root ends in *e* or *i*, add **-yalu**.
+
+### Common Examples
+
+| Verb Root | Meaning | Infinitive (To...) |
+| :--- | :--- | :--- |
+| **Māḍu** | To Do | **Māḍalu** |
+| **Bare** | To Write | **Bareyalu** |
+| **Ōdu** | To Read | **Ōdalu** |
+| **Kuḍi** | To Drink | **Kuḍiyalu** |
+| **Tinnu** | To Eat | **Tinnalu** |
+| **Nōḍu** | To See | **Nōḍalu** |
+| **Kēḷu** | To Ask/Hear | **Kēḷalu** |
+| **Hōgu** | To Go | **Hōgalu** |
+| **Baru** | To Come | **Baralu** |
+| **Iru** | To Be | **Iralu** |
+| **Āgu** | To Become | **Āgalu** |
+
+### Usage Examples
+
+**1. Expressing Purpose (Why did you do it?)**
+* **English:** I went to see him.
+* **Kannada:** Nānu avanannu **nōḍalu** hōde.
+    * *(Lit: I him to-see went.)*
+
+**2. Expressing Capability (With 'Āgu')**
+* **English:** I cannot do this. (Lit: To do this is not possible for me.)
+* **Kannada:** Nanage idu **māḍalu** āgalla.
+
+**3. Expressing Permission (With 'Biḍi' or 'Koḍi')**
+* **English:** Let me go. (Lit: Leave me to go.)
+* **Kannada:** Nanna **hōgalu** biḍi.
+
+---
+
+## Part 2: The Verbal Noun (*-uvudu*)
+
+The verbal noun turns an action into a concept or an object. It corresponds to the English gerund (verb + ing), such as "Swimming," "Running," or "Reading."
+
+### Formation Rule
+Take the verb root and add the suffix **-uvudu**.
+* If the root ends in *e* or *i*, add **-yuvudu**.
+
+### Common Examples
+
+| Verb Root | Meaning | Verbal Noun (Doing...) |
+| :--- | :--- | :--- |
+| **Māḍu** | To Do | **Māḍuvudu** |
+| **Bare** | To Write | **Bareyuvudu** |
+| **Ōdu** | To Read | **Ōduvudu** |
+| **Kuḍi** | To Drink | **Kuḍiyuvudu** |
+| **Tinnu** | To Eat | **Tinnuvudu** |
+| **Nōḍu** | To See | **Nōḍuvudu** |
+| **Hōgu** | To Go | **Hōguvudu** |
+
+### Usage Examples
+
+**1. As the Subject of a Sentence**
+* **English:** Swimming is good for health.
+* **Kannada:** **Ījuvudu** ārōgyakke oḷḷeyadu.
+* **English:** Writing in Kannada is difficult.
+* **Kannada:** Kannaḍadalli **bareyuvudu** kaṣṭa.
+
+**2. As the Object of a Sentence**
+* **English:** I must practice writing.
+* **Kannada:** Nānu **bareyuvudannu** abhyāsa māḍabēku.
+    * *(Note: 'Bareyuvudu' takes the accusative suffix 'annu' here.)*
+
+**3. With Case Suffixes (Advanced Usage)**
+Because these are nouns, you can attach case endings (dative, ablative, etc.) to them.
+
+* **For doing (Dative -kke):**
+    * **English:** I came for working (to work).
+    * **Kannada:** Nānu kelasa **māḍuvudakke** bande.
+* **From doing (Ablative -inda):**
+    * **English:** You learn by (from) speaking.
+    * **Kannada:** Nīvu **mātāḍuvudarinda** kalitīri.
+
+---
+
+## Summary Table
+
+| Root | Infinitive (Purpose) | Verbal Noun (Concept) |
+| :--- | :--- | :--- |
+| **Māḍu** | Māḍalu (To do) | Māḍuvudu (Doing) |
+| **Hōgu** | Hōgalu (To go) | Hōguvudu (Going) |
+| **Kuḍi** | Kuḍiyalu (To drink) | Kuḍiyuvudu (Drinking) |
+| **Bare** | Bareyalu (To write) | Bareyuvudu (Writing) |

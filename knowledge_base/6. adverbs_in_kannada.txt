@@ -1,124 +1,96 @@
-A Grammar Guide to Kannada Adverbs
-(The "-āgi" Rule)
-1. The "Magic Suffix": -āgi (-ಆಗಿ)
-In English, we often turn an Adjective into an Adverb by adding -ly (Quick -> Quickly).
-In Kannada, we do the exact same thing by adding -āgi (-ಆಗಿ) to a Noun or Adjective.
-Origin: This suffix comes from the past participle of ಆಗು (Āgu - to become).
-Literal Logic: "Having become [Adjective], do [Action]."
-Sandhi Rules: Just like with Adjectives, we insert a glide letter to connect the words:
-If the word ends in -a, add -v- (vāgi).
-If the word ends in -i or -e, add -y- (yāgi).
-The Core Transformation Table
-Root Word (Adj/Noun)
-Meaning
-+ āgi (Adverb)
-Meaning
-Usage Example
-ಚೆನ್ನ (Chenna)
-Fine / Good
-ಚೆನ್ನಾಗಿ (Chennāgi)
-Nicely / Well
-ಚೆನ್ನಾಗಿ ಓದಿ.
+# A Grammar Guide to Kannada Adverbs
+**(The "-āgi" Rule)**
 
-(Study well.)
-ಸುಲಭ (Sulabha)
-Easy
-ಸುಲಭವಾಗಿ (Sulabhavāgi)
-Easily
-ನಾನು ಸುಲಭವಾಗಿ ಗೆದ್ದೆ.
+## 1. The "Magic Suffix": -āgi (-ಆಗಿ)
 
-(I won easily.)
-ಖುಷಿ (Khushi)
-Happy
-ಖುಷಿಯಾಗಿ (Khushiyāgi)
-Happily
-ಅವರು ಖುಷಿಯಾಗಿ ಇದ್ದಾರೆ.
+In English, we often turn an Adjective into an Adverb by adding **-ly** (Quick $\rightarrow$ Quickly).
+In Kannada, we do the exact same thing by adding **-āgi** (-ಆಗಿ) to a Noun or Adjective.
 
-(They are [living] happily.)
-ಜೋರು (Jōru)
-Loud / Fast
-ಜೋರಾಗಿ (Jōrāgi)
-Loudly / Forcefully
-ಜೋರಾಗಿ ಮಾತನಾಡಿ.
+* **Origin:** This suffix comes from the past participle of **Āgu** (To become).
+* **Literal Logic:** "Having become [Adjective], do [Action]."
 
-(Speak loudly.)
-ನಿಧಾನ (Nidhāna)
-Slow
-ನಿಧಾನವಾಗಿ (Nidhānavāgi)
-Slowly
-ನಿಧಾನವಾಗಿ ಹೋಗಿ.
+### Sandhi Rules (Connecting the Words)
+Just like with Adjectives, we insert a "glide letter" to connect the words to avoid a vowel clash.
 
-(Go slowly.)
-ಸ್ಪಷ್ಟ (Spashta)
-Clear
-ಸ್ಪಷ್ಟವಾಗಿ (Spashtavāgi)
-Clearly
-ನನಗೆ ಸ್ಪಷ್ಟವಾಗಿ ಕೇಳಿಸಿಲ್ಲ.
+1.  **The 'V' Glide:** If the word ends in **-a**, add **-v-** (*-vāgi*).
+2.  **The 'Y' Glide:** If the word ends in **-i** or **-e**, add **-y-** (*-yāgi*).
 
-(I didn't hear clearly.)
+### The Core Transformation Table
 
-2. The "How Are You?" Exception
+| Root Word | Meaning | + āgi (Adverb) | Meaning | Usage Example |
+| :--- | :--- | :--- | :--- | :--- |
+| **Cenna** | Fine / Good | **Cennāgi** | Nicely / Well | **Cennāgi ōdi.**<br>(Study well.) |
+| **Sulabha** | Easy | **Sulabhavāgi** | Easily | **Nānu sulabhavāgi gedde.**<br>(I won easily.) |
+| **Khuṣi** | Happy | **Khuṣiyāgi** | Happily | **Avaru khuṣiyāgi iddāre.**<br>(They are [living] happily.) |
+| **Jōru** | Loud / Fast | **Jōrāgi** | Loudly / Forcefully | **Jōrāgi mātāḍi.**<br>(Speak loudly.) |
+| **Nidhāna** | Slow | **Nidhānavāgi** | Slowly | **Nidhānavāgi hōgi.**<br>(Go slowly.) |
+| **Spaṣṭa** | Clear | **Spaṣṭavāgi** | Clearly | **Nanage spaṣṭavāgi kēḷisilla.**<br>(I didn't hear clearly.) |
+
+---
+
+## 2. The "How Are You?" Exception
+
 This is a critical conversational point.
-In English, "I am well" is the grammatically correct way to describe your health or state, though "I am good" is extremely common in casual conversation.
-Kannada strictly enforces the "Well" logic. You cannot use the adjective "Good" (Chenna) to describe your state; you must use the adverb "Well" (Chennāgi).
-Question: Hēgidīra? (How are you?)
-Wrong Answer: Nānu chenna iddīni. (I am good person existing.)
-Correct Answer: ನಾನು ಚೆನ್ನಾಗಿ ಇದ್ದೀನಿ. (Nānu chennāgi iddīni.)
-Literal Meaning: I am existing in a fine way / I am doing well.
-Note: If you are describing an object (like a movie or food), you use the Adjective + Āgide rule.
-Coffee chennāgide. (The coffee is good).
-Nānu chennāgi iddīni. (I am well).
-3. Essential "Native" Adverbs
-Not all adverbs need the -āgi suffix. Some words are born as adverbs.
-Adverb
-Meaning
-Example
-ಬೇಗ (Bēga)
-Fast / Early / Quick
-ಬೇಗ ಬನ್ನಿ. (Come fast/early.)
-ತುಂಬಾ (Tumbā)
-Very / Too much
-ತುಂಬಾ ಧನ್ಯವಾದಗಳು. (Many thanks.)
-ಬಹಳ (Bahaḷa)
-Very (Formal)
-ಇದು ಬಹಳ ಮುಖ್ಯ. (This is very important.)
-ಸುಮ್ಮನೆ (Summane)
-Simply / Quietly / Just like that
-ಸುಮ್ಮನೆ ಕುಳಿತುಕೊಳ್ಳಿ. (Sit quietly / Just sit.)
-ಮಾತ್ರ (Mātra)
-Only
-ನನಗೆ ಕಾಫಿ ಮಾತ್ರ ಬೇಕು. (I want only coffee.)
 
-4. Time Adverbs (Temporal Markers)
+In English, "I am well" is the grammatically correct way to describe your health or state, though "I am good" is extremely common.
+Kannada **strictly** enforces the "Well" logic. You cannot use the adjective "Good" (*Cenna*) to describe your state; you **must** use the adverb "Well" (*Cennāgi*).
+
+* **Question:** Hēgiddīra? (How are you?)
+* **Wrong Answer:** ~~Nānu cenna iddīni.~~ (I am good person existing.)
+* **Correct Answer:** **Nānu cennāgi iddīni.**
+    * *Literal Meaning:* I am existing **in a fine way** / I am doing well.
+    * *Sandhi Note:* In spoken Kannada, this often contracts to **Nānu cennāgiddīni.**
+
+**Note:** If you are describing an object (like a movie or food), you use the **Adjective + Āgide** rule.
+* **Kāphi cennāgide.** (The coffee is good.)
+* **Nānu cennāgi iddīni.** (I am well.)
+
+---
+
+## 3. Essential "Native" Adverbs
+
+Not all adverbs need the *-āgi* suffix. Some words are born as adverbs.
+
+| Adverb | Meaning | Example |
+| :--- | :--- | :--- |
+| **Bēga** | Fast / Early | **Bēga banni.** (Come fast/early.) |
+| **Tuṃbā** | Very / Too much | **Tuṃbā dhanyavādagaḷu.** (Many thanks.) |
+| **Bahaḷa** | Very (Formal) | **Idu bahaḷa mukhya.** (This is very important.) |
+| **Summane** | Simply / Quietly | **Summane kuḷitukoḷḷi.** (Sit quietly / Just sit.) |
+| **Mātra** | Only | **Nanage kāphi mātra bēku.** (I want only coffee.) |
+
+---
+
+## 4. Time Adverbs (Temporal Markers)
+
 These are crucial for storytelling (sequencing events).
-Adverb
-Meaning
-Context
-ಈಗ (Īga)
-Now
-ಈಗ ಹೋಗೋಣ. (Let's go now.)
-ಆಗ (Āga)
-Then
-ಆಗ ಕರೆಂಟ್ ಇರಲಿಲ್ಲ. (Then, there was no power.)
-ಆಮೇಲೆ (Āmēle)
-Afterwards / Later
-ಆಮೇಲೆ ಫೋನ್ ಮಾಡುತ್ತೇನೆ. (I will phone later.)
-ಮುಂಚೆ (Munche)
-Before / Earlier
-ಊಟಕ್ಕೆ ಮುಂಚೆ. (Before the meal.)
-ಯಾವಾಗಲೂ (Yāvāgalū)
-Always
-ಅವನು ಯಾವಾಗಲೂ ತಡವಾಗಿ ಬರುತ್ತಾನೆ. (He always comes late.)
 
-5. Turning Nouns into Feelings with -āgi
-You can use -āgi to describe how you feel physically or emotionally.
-Noun: Husu (Smile/Lightness) -> Husiyāgi (Smilingly).
-Noun: Sustu (Tiredness) -> Sustāgi (Tiredly).
-Example: Nanage sustāgi ide. (It is existing tiredly to me -> I feel tired).
-Noun: Huchchu (Madness) -> Huchchāgi (Madly).
-Example: Avaru huchchāgi preetistāre. (They love madly).
-6. Summary Checklist
+| Adverb | Meaning | Context |
+| :--- | :--- | :--- |
+| **Īga** | Now | **Īga hōgōṇa.** (Let's go now.) |
+| **Āga** | Then | **Āga kareṇṭ iralilla.** (Then, there was no power.) |
+| **Āmēle** | Afterwards / Later | **Āmēle phōn māḍuttēne.** (I will phone later.) |
+| **Muñce** | Before / Earlier | **Ūṭakke muñce.** (Before the meal.) |
+| **Yāvāgalū** | Always | **Avanu yāvāgalū taḍavāgi baruttāne.** (He always comes late.) |
+
+---
+
+## 5. Turning Nouns into Feelings with -āgi
+
+You can use *-āgi* to describe **how** you feel physically or emotionally.
+
+* **Noun:** **Kōpa** (Anger) $\rightarrow$ **Kōpavāgi** (Angrily).
+    * *Avaru kōpavāgi nōḍidaru.* (He looked [at me] angrily.)
+* **Noun:** **Sustu** (Tiredness) $\rightarrow$ **Sustāgi** (Tiredly/Tired).
+    * *Nanage sustāgide.* (To me, it is existing tiredly $\rightarrow$ I feel tired). (*Sustāgi* + *ide* = **Sustāgide**)
+* **Noun:** **Huccu** (Madness) $\rightarrow$ **Huccāgi** (Madly).
+    * *Avaru huccāgi prītistāre.* (They love madly.)
+
+---
+
+## 6. Summary Checklist
+
 When speaking, ask yourself:
-Am I describing a Thing (Noun)? -> Use Adjective (e.g., Doḍḍa mane).
-Am I describing an Action (Verb)? -> Use -āgi (e.g., Jōrāgi mātanāḍu).
-Am I saying "I am well"? -> Use Chennāgi (not Chenna).
+1.  Am I describing a **Thing** (Noun)? $\rightarrow$ Use **Adjective** (e.g., *Doḍḍa mane*).
+2.  Am I describing an **Action** (Verb)? $\rightarrow$ Use **-āgi** (e.g., *Jōrāgi mātāḍu*).
+3.  Am I saying "**I am well**"? $\rightarrow$ Use **Cennāgi** (not *Cenna*).

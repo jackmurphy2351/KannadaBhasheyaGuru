@@ -1,123 +1,108 @@
-A Grammar Guide to Conditional Sentences in Kannada
-(ಷರತ್ತುಬದ್ಧ ವಾಕ್ಯಗಳು)
+# A Grammar Guide to Conditional Sentences in Kannada
+**(The "If... Then..." Construction)**
 
-Overview
+## 1. Overview
 
-In Kannada, conditional "if... then..." statements are not formed with a separate word for "if." Instead, the "if" clause is created by adding a specific suffix directly to the verb.
-The "then" clause is simply the result, and its tense (present, future, or past) determines the meaning of the entire conditional statement.
-There are two primary conditional suffixes:
-1.	-ರೆ (-re): The Positive Conditional ("If...")
-2.	-ದಿದ್ದರೆ (-diddare): The Negative Conditional ("If... not...")
+In Kannada, there is no separate word for "if." Instead, the "if" clause is created by adding a specific suffix directly to the verb.
 
-1. The Positive Conditional ("If..."): The -ರೆ Suffix
+There are two primary conditional forms:
+1.  **Positive Conditional:** "If it happens" $\rightarrow$ Suffix **-are** (added to Past Stem).
+2.  **Negative Conditional:** "If it does not happen" $\rightarrow$ Suffix **-adiddare**.
 
-This is the most common way to say "If [something happens]."
-How to Form:
-Take the Past Tense Verb Stem and add the suffix -ರೆ (-re).
-●	The Past Tense Stem is the form of the verb you use to build the past tense (e.g., ಮಾಡಿದ - māḍida, "did").
-Examples of Formation:
-Verb Root	Past Tense Stem	Conditional Form (+ರೆ)	Meaning
-ಮಾಡು (māḍu) - to do	ಮಾಡಿದ (māḍida)	ಮಾಡಿದರೆ (māḍidare)	If (one) does
-ಬರು (baru) - to come	ಬಂದ (banda)	ಬಂದರೆ (bandare)	If (one) comes
-ಹೋಗು (hōgu) - to go	ಹೋದ (hōda)	ಹೋದರೆ (hōdare)	If (one) goes
-ಕುಡಿ (kuḍi) - to drink	ಕುಡಿದ (kuḍida)	ಕುಡಿದರೆ (kuḍidare)	If (one) drinks
-ಇರು (iru) - to be	ಇದ್ದ (idda)	ಇದ್ದರೆ (iddare)	If (one) is
-Key Feature: This conditional form (ಮಾಡಿದರೆ, ಬಂದರೆ, etc.) is universal. It does not change for the person (I, you, he, she, they), number, or gender.
+---
 
-2. The Negative Conditional ("If... not..."): The -ದಿದ್ದರೆ Suffix
+## 2. The Positive Conditional ("If...")
 
-This form is used to say "If [something does not happen]."
-How to Form:
-Take the Verb Root and add the suffix -ದಿದ್ದರೆ (-diddare).
-Examples of Formation:
-Verb Root	Negative Conditional (+ದಿದ್ದರೆ)	Meaning
-ಮಾಡು (māḍu)	ಮಾಡದಿದ್ದರೆ (māḍadiddare)	If (one) does not do
-ಬರು (baru)	ಬರದಿದ್ದರೆ (baradiddare)	If (one) does not come
-ಹೋಗು (hōgu)	ಹೋಗದಿದ್ದರೆ (hōgadiddare)	If (one) does not go
-ತಿನ್ನು (tinnu) - to eat	ತಿನ್ನದಿದ್ದರೆ (tinnadiddare)	If (one) does not eat
-ಇರು (iru) - to be	ಇರದಿದ್ದರೆ (iradiddare)	If (one) is not
+**The Golden Rule:**
+Take the **Past Tense Stem** of the verb and add **-are** (often written as **-re** if the stem ends in a vowel).
 
-3. Understanding Tense in Conditional Sentences
+* *Note:* Since most Past Stems end in 'a', adding *-are* simply changes the final 'a' to 'are'.
 
-The "if" clause (with -ರೆ or -ದಿದ್ದರೆ) remains constant. The tense of the main (consequence) clause defines the type of condition.
+| Verb Root | Past Stem | + Suffix | Conditional Form | Meaning |
+| :--- | :--- | :--- | :--- | :--- |
+| **Māḍu** (Do) | Māḍida | + are | **Māḍidare** | If (one) does |
+| **Baru** (Come) | Banda | + are | **Bandare** | If (one) comes |
+| **Hōgu** (Go) | Hōda | + are | **Hōdare** | If (one) goes |
+| **Kuḍi** (Drink) | Kuḍida | + are | **Kuḍidare** | If (one) drinks |
+| **Iru** (Be) | Idda | + are | **Iddare** | If (one) is / exists |
+| **Sigu** (Get) | Sikka | + are | **Sikkare** | If (one) gets/finds |
 
-A. General Truth / Habitual Action (If... then...)
+**Key Feature:** This form (*Māḍidare*, *Bandare*) is **universal**. It does not change for person, gender, or number.
 
-●	Structure: [Conditional Clause] + [Main Clause in Simple Present Tense]
-●	Use: To express habits, scientific facts, or general truths.
-●	Example:
-○	ಬೆಕ್ಕಿಗೆ ಹಸಿವು ಆದರೆ, ಅದು ಮ್ಯಾಕ್ ಮಾಡುತ್ತದೆ.
-○	(Bekkige hasivu ādare, adu myāc māḍuttade.)
-○	If the cat is hungry, it meows.
+---
 
-B. Future Possibility (If... then...)
+## 3. The Negative Conditional ("If... not...")
 
-●	Structure: [Conditional Clause] + [Main Clause in Future Tense]
-●	Use: This is the most common use, discussing future possibilities.
-●	Example:
-○	ನಾಳೆ ಮಳೆ ಬಂದರೆ, ನಾನು ಮನೆಯಲ್ಲಿ ಇರುತ್ತೇನೆ.
-○	(Nāḷe maḷe bandare, nānu maneyalli iruttēne.)
-○	If it rains tomorrow, I will stay at home.
+This form is constructed by taking the **Negative Stem** (Root + a) and adding the conditional of "To Be" (*Iddare*).
 
-C. Command or Suggestion (If... then...)
+**Formula:** `Verb Root` + `a` + `diddare`
+*(Literally: "If it is [in the state of] not doing.")*
 
-●	Structure: [Conditional Clause] + [Main Clause in Imperative (Command) or Hortative (Let's...)]
-●	Use: Giving advice, instructions, or making suggestions.
-●	Example (Command):
-○	ನಿನಗೆ ಸುಸ್ತು ಆದರೆ, ವಿಶ್ರಾಂತಿ ತೆಗೆದುಕೊ.
-○	(Ninage sustu ādare, viśrānti tegeduko.)
-○	If you are tired, take rest.
-●	Example (Suggestion):
-○	ಹವಾಮಾನ ಚೆನ್ನಾಗಿ ಇದ್ದರೆ, ಪಾರ್ಕಿಗೆ ಹೋಗೋಣ.
-○	(Havāmāna cennāgi iddare, pārkige hōgōṇa.)
-○	If the weather is good, let's go to the park.
+| Verb Root | Negative Stem | Conditional Form | Meaning |
+| :--- | :--- | :--- | :--- |
+| **Māḍu** | Māḍa | **Māḍadiddare** | If (one) does not do |
+| **Baru** | Bara | **Baradiddare** | If (one) does not come |
+| **Hōgu** | Hōga | **Hōgadiddare** | If (one) does not go |
+| **Tinnu** | Tinna | **Tinnadiddare** | If (one) does not eat |
+| **Iru** | Ira | **Iradiddare** | If (one) is not |
 
-D. Past Unreal / Counterfactual ("If... had... then... would have...")
+---
 
-●	Structure: [Conditional Clause] + [Main Clause in Past Conditional Tense (e.g., ...ತ್ತಿದ್ದೆ, ...ತ್ತಿತ್ತು)]
-●	Use: To talk about things that did not happen in the past (hypotheticals).
-●	Example (Positive):
-○	ನೀನು ನನಗೆ ಹೇಳಿದ್ದರೆ, ನಾನು ಸಹಾಯ ಮಾಡುತ್ತಿದ್ದೆ.
-○	(Nīnu nanage hēḷidare, nānu sahāya māḍuttidde.)
-○	If you had told me, I would have helped.
-●	Example (Negative):
-○	ನೀನು ಓದದಿದ್ದರೆ, ಪರೀಕ್ಷೆಯಲ್ಲಿ ಫೇಲ್ ಆಗುತ್ತಿದ್ದೆ.
-○	(Nīnu ōdadiddare, parīkṣeyalli phēl āguttidde.)
-○	If you hadn't studied, you would have failed the exam.
+## 4. Understanding Tense in "Then" Clauses
 
-E. Present Unreal / Subjunctive ("If... were... then... would...")
+The "if" clause (*-are*) remains constant. The meaning changes based on the **Main Verb** in the second half of the sentence.
 
-●	Structure: (Often same as Past Unreal) [Conditional Clause] + [Main Clause in Past Conditional Tense]
-●	Use: To talk about a present situation that is hypothetical or untrue.
-●	Example:
-○	ನಾನು ನೀನು ಆಗಿದ್ದರೆ, ನಾನು ಅದನ್ನು ಮಾಡುತ್ತಿರಲಿಲ್ಲ.
-○	(Nānu nīnu āgiddare, nānu adannu māḍuttiralilla.)
-○	If I were you, I would not be doing that.
+### A. General Truth (If X, then Y happens)
+* **Structure:** Conditional + Simple Present/Future
+* **Example:** ಬೆಕ್ಕಿಗೆ ಹಸಿವು ಆದರೆ, ಅದು ಮ್ಯಾವ್ ಮಾಡುತ್ತದೆ.
+    * **Bekkige hasivu ādare, adu myāv māḍuttade.**
+    * (If the cat becomes hungry, it meows.)
 
-4. Special Verbs: ಇರು (to be) and ಆಗು (to become)
+### B. Future Possibility (If X, then I will Y)
+* **Structure:** Conditional + Future Tense
+* **Example:** ನಾಳೆ ಮಳೆ ಬಂದರೆ, ನಾನು ಮನೆಯಲ್ಲಿ ಇರುತ್ತೇನೆ.
+    * **Nāḷe maḷe bandare, nānu maneyalli iruttēne.**
+    * (If it rains tomorrow, I will stay at home.)
 
-These two verbs are extremely common in conditional sentences.
-Verb	Positive Conditional	Meaning	Negative Conditional	Meaning
-ಇರು (iru)	ಇದ್ದರೆ (iddare)	"if (it) is..."	ಇರದಿದ್ದರೆ (iradiddare)	"if (it) is not..."
-ಆಗು (āgu)	ಆದರೆ (ādare)	"if (it) becomes..."	ಆಗದಿದ್ದರೆ (āgadiddare)	"if (it) does not become..."
-Example (ಇರು):
-●	ಡೇಟಾ ಸರಿ ಇದ್ದರೆ, ವಿಶ್ಲೇಷಣೆ ಸರಿಯಾಗಿರುತ್ತದೆ.
-●	(Ḍēṭā sari iddare, viślēṣaṇe sariyāgiruttade.)
-●	If the data is correct, the analysis will be correct.
-Example (ಆಗು):
-●	ನನಗೆ ಸಮಯ ಸಿಕ್ಕರೆ, ನಾನು ನಿಮ್ಮನ್ನು ಭೇಟಿ ಮಾಡುತ್ತೇನೆ.
-●	(Nanage samaya sikkare...) - Wait, this is ಸಿಗು (sigu).
-●	ನನಗೆ ಹಸಿವು ಆದರೆ, ನಾನು ತಿನ್ನುತ್ತೇನೆ.
-●	(Nanage hasivu ādare, nānu tinnuttēne.)
-●	If I become hungry (lit: if hunger happens to me), I will eat.
+### C. Command/Suggestion (If X, then do Y)
+* **Structure:** Conditional + Imperative
+* **Example:** ನಿನಗೆ ಸುಸ್ತು ಆದರೆ, ವಿಶ್ರಾಂತಿ ತೆಗೆದುಕೊ.
+    * **Ninage sustu ādare, viśrānti tegeduko.**
+    * (If you get tired, take rest.)
+* **Example:** ಹವಾಮಾನ ಚೆನ್ನಾಗಿ ಇದ್ದರೆ, ಪಾರ್ಕಿಗೆ ಹೋಗೋಣ.
+    * **Havāmāna cennāgi iddare, pārkige hōgōṇa.**
+    * (If the weather is good, let's go to the park.)
 
-5. Important Note: ಆದರೆ (ādare) — A Dual-Meaning Word
+### D. Past Unreal / Regret (If I had X, I would have Y)
+To express things that *didn't* happen, use the **Past Continuous** form (*-uttidde*) in the main clause.
 
-This is a critical point that can confuse learners. The word ಆದರೆ (ādare) has two distinct meanings, but context makes them easy to separate.
-1.	Conditional ಆದರೆ (ādare): "if it becomes"
-○	This is the conditional form of ಆಗು (āgu), as we learned above.
-○	Example: ಮಳೆ **ಆದರೆ**, ನಾವು ಬರುವುದಿಲ್ಲ. (Maḷe ādare, nāvu baruvudilla.) - "If it becomes rain (i.e., if it rains), we will not come."
-2.	Conjunction ಆದರೆ (ādare): "but"
-○	This is used to connect two contrasting sentences.
-○	Example: ಮಳೆ ಬರುತ್ತಿದೆ, **ಆದರೆ** ನಾವು ಹೋಗುತ್ತೇವೆ. (Maḷe baruttide, ādare nāvu hōguttēve.) - "It is raining, but we are going."
-You will almost never confuse these in a real sentence. The conditional ಆದರೆ is part of the "if" clause, while the conjunction ಆದರೆ separates two complete thoughts.
+* **Positive Example:**
+    * ನೀನು ನನಗೆ ಹೇಳಿದ್ದರೆ, ನಾನು ಸಹಾಯ ಮಾಡುತ್ತಿದ್ದೆ.
+    * **Nīnu nanage hēḷiddare, nānu sahāya māḍuttidde.**
+    * (If you **had told** me, I **would have helped**.)
+* **Negative Example:**
+    * ನೀನು ಓದದಿದ್ದರೆ, ಪರೀಕ್ಷೆಯಲ್ಲಿ ಫೇಲ್ ಆಗುತ್ತಿದ್ದೆ.
+    * **Nīnu ōdadiddare, parīkṣeyalli phēl āguttidde.**
+    * (If you **hadn't studied**, you **would have failed**.)
+
+---
+
+## 5. Important Note: The Two "Ādare"s
+
+Learners often get confused because **Ādare** appears in two very different contexts.
+
+### 1. The Conditional "If"
+* **Origin:** *Āgu* (to become) + *are* = *Ādare*.
+* **Meaning:** If it happens / If it becomes.
+* **Usage:** ಮಳೆ **ಆದರೆ**, ನಾವು ಹೋಗುವುದಿಲ್ಲ.
+    * *Maḷe **ādare**, nāvu hōguvudilla.* (If rain happens, we won't go.)
+
+### 2. The Conjunction "But"
+* **Origin:** Same etymology, but frozen as a connector.
+* **Meaning:** However / But.
+* **Usage:** ಮಳೆ ಬರುತ್ತಿದೆ, **ಆದರೆ** ನಾವು ಹೋಗುತ್ತೇವೆ.
+    * *Maḷe baruttide, **ādare** nāvu hōguttēve.* (It is raining, **but** we are going.)
+
+**How to tell them apart?**
+* If *Ādare* is attached to the first clause ("If X..."), it is a Conditional.
+* If *Ādare* separates two contradictory facts ("X is true, BUT..."), it is a Conjunction.

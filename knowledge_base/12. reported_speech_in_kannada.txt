@@ -1,135 +1,136 @@
-A Grammar Guide to Reported Speech
-(The "Anta" and "Emba" Particles)
-1. Overview: The "Quotative" Marker
-In English, we use the word "That" to connect a speech tag to a sentence ("He said that he is coming").
-In Hindi, you use "Ki" ("Usne kaha ki...").
-In Kannada, the word is ಅಂತ (Anta).
-Formal Written Form: ಎಂದು (Endu) - You will see this in newspapers.
-Spoken Form: ಅಂತ (Anta) - You will hear this everywhere.
-The Golden Rule: The "Reverse" Order
-Unlike English or Hindi, where the connector comes before the quote, Kannada places Anta after the quote.
-Structure: [The Quote] + Anta + [The Verb]
-Logic: "[I am coming] thus he said."
-2. Scenario A: "He said that..." (Reporting Speech)
-Kannada prefers Direct Speech. You repeat exactly what the person said, followed by Anta.
-Example: Rahul said, "I am busy."
-Step 1 (The Quote): "ನಾನು ಬ್ಯುಸಿ ಇದ್ದೀನಿ." (Nānu busy iddīni.)
-Step 2 (Add Anta): ...ಅಂತ... (...anta...)
-Step 3 (The Verb): ...ಹೇಳಿದ. (...hēḷida. - He said.)
-Full Sentence:
+
+# A Grammar Guide to Reported Speech
+**(The "Anta" and "Emba" Particles)**
+
+## 1. Overview: The "Quotative" Marker
+
+In English, we use the word "That" to connect a speech tag to a sentence ("He said **that** he is coming").
+In Hindi, you use "Ki" (*Usne kahā **ki**...*).
+In Kannada, the word is **ಅಂತ (Anta)**.
+
+* **Formal Written Form:** **ಎಂದು (Endu)** - You will see this in newspapers/literature.
+* **Spoken Form:** **ಅಂತ (Anta)** - You will hear this everywhere.
+
+### The Golden Rule: The "Reverse" Order
+Unlike English or Hindi, where the connector comes *before* the quote, Kannada places *Anta* **after** the quote.
+
+**Structure:** `[The Quote]` + **anta** + `[The Verb]`
+**Logic:** "[I am coming]—thus he said."
+
+---
+
+## 2. Scenario A: "He said that..." (Reporting Speech)
+
+Kannada prefers **Direct Speech**. You repeat exactly what the person said, followed by *Anta*.
+
+**Example: Rahul said, "I am busy."**
+
+1.  **The Quote:** "ನಾನು ಬ್ಯುಸಿ ಇದ್ದೀನಿ." (*Nānu byusi iddīni.*)
+2.  **Add Anta:** ...ಅಂತ... (*...anta...*)
+3.  **The Verb:** ...ಹೇಳಿದ. (*...hēḷida.* - He said.)
+
+**Full Sentence:**
 ರಾಹುಲ್ "ನಾನು ಬ್ಯುಸಿ ಇದ್ದೀನಿ" ಅಂತ ಹೇಳಿದ.
-(Rahul "nānu busy iddīni" anta hēḷida.)
-Pro Tip: In English, you change the pronoun ("He said that he was busy"). In Kannada, you often keep the original pronoun ("He said that I am busy") because you are quoting him directly.
-Context
-Kannada Sentence
-Meaning
-Did he say?
-ಅವನು ಬರುತ್ತಾನೆ ಅಂತ ಹೇಳಿದನಾ?
+* **Rāhul "nānu byusi iddīni" anta hēḷida.**
 
-(Avanu baruttāne anta hēḷidanā?)
-Did he say that he will come?
-She said no
-ಅವಳು ಇಲ್ಲ ಅಂತ ಹೇಳಿದಳು.
+**Pro Tip:**
+In English, you change the pronoun ("He said that **he** was busy").
+In Kannada, you often keep the original pronoun ("He said that **I** am busy") because you are quoting him directly.
 
-(Avaḷu illa anta hēḷidaḷu.)
-She said "No" (She refused).
-Asking
-ಹೆಸರು ಏನು ಅಂತ ಕೇಳಿ.
+### Common Contexts
 
-(Hesaru ēnu anta kēḷi.)
-Ask what the name is.
+| Context | Kannada Sentence | Meaning |
+| :--- | :--- | :--- |
+| **Did he say?** | ಅವನು ಬರುತ್ತಾನೆ ಅಂತ ಹೇಳಿದನಾ? | Did he say that he will come? |
+| | **Avanu baruttāne anta hēḷidanā?** | |
+| **She said no** | ಅವಳು ಇಲ್ಲ ಅಂತ ಹೇಳಿದಳು. | She said "No" (She refused). |
+| | **Avaḷu illa anta hēḷidaḷu.** | |
+| **Asking** | ಹೆಸರು ಏನು ಅಂತ ಕೇಳಿ. | Ask what the name is. |
+| | **Hesaru ēnu anta kēḷi.** | *(Lit: "Name is what"—thus ask.)* |
 
-(Lit: "Name is what" thus ask.)
+---
 
-3. Scenario B: "I think that..." (Thoughts & Opinions)
-You cannot "see" a thought, so you must "quote" it inside your head using Anta.
-Verbs used:
-ಅನಿಸುತ್ತೆ (Anisutte): It feels / It seems.
-ಅಂದುಕೊಳ್ಳಿ (Andukoḷḷi): To think / To assume (Reflexive).
-Context
-Kannada Sentence
-Meaning
-Opinion
-ಇದು ಚೆನ್ನಾಗಿದೆ ಅಂತ ನನಗೆ ಅನಿಸುತ್ತೆ.
+## 3. Scenario B: "I think that..." (Thoughts & Opinions)
 
-(Idu chennāgide anta nanage anisutte.)
-I feel that this is good.
+You cannot "see" a thought, so you must "quote" it inside your head using *Anta*.
 
-(Lit: "This is good" thus it feels to me.)
-Assumption
-ಮಳೆ ಬರುತ್ತೆ ಅಂತ ಅಂದುಕೊಂಡೆ.
+**Verbs used:**
+1.  **Anisutte** (ಅನಿಸುತ್ತೆ): It feels / It seems (Impersonal).
+2.  **Andukoḷḷu** (ಅಂದುಕೊಳ್ಳು): To think / To assume (Reflexive).
 
-(Maḷe barutte anta andukonde.)
-I thought that rain would come.
-Doubt
-ಇದು ಸರಿಯಿಲ್ಲ ಅಂತ ಅನಿಸುತ್ತೆ.
+| Context | Kannada Sentence | Meaning |
+| :--- | :--- | :--- |
+| **Opinion** | ಇದು ಚೆನ್ನಾಗಿದೆ ಅಂತ ನನಗೆ ಅನಿಸುತ್ತೆ. | I feel that this is good. |
+| | **Idu cennāgide anta nanage anisutte.** | *(Lit: "This is good"—thus it feels to me.)* |
+| **Assumption** | ಮಳೆ ಬರುತ್ತೆ ಅಂತ ಅಂದುಕೊಂಡೆ. | I thought that rain would come. |
+| | **Maḷe barutte anta andukoṇḍe.** | *(Lit: "Rain comes"—thus I assumed.)* |
+| **Doubt** | ಇದು ಸರಿಯಿಲ್ಲ ಅಂತ ಅನಿಸುತ್ತೆ. | It feels like this is not right. |
+| | **Idu sariyilla anta anisutte.** | |
 
-(Idu sariyilla anta anisutte.)
-It feels like this is not right.
+---
 
-4. Scenario C: Naming Things ("The one called...")
-In English, we say "The city called Bangalore."
-In Kannada, we say "Bangalore Anta city."
+## 4. Scenario C: Naming Things ("The one called...")
+
+In English, we say "The city **called** Bangalore."
+In Kannada, we say "Bangalore **Anta** city."
+
 This is extremely common when introducing friends or places in conversation.
-Context
-Kannada Sentence
-Meaning
-Introduction
-ಇವರು ರಾಹುಲ್ ಅಂತ.
 
-(Ivaru Rahul anta.)
-This is (the person called) Rahul.
-Clarification
-ಮೈಸೂರು ಪಾಕ್ ಅಂತ ಸ್ವೀಟ್.
+| Context | Kannada Sentence | Meaning |
+| :--- | :--- | :--- |
+| **Introduction** | ಇವರು ರಾಹುಲ್ ಅಂತ. | This is (the person called) Rahul. |
+| | **Ivaru Rāhul anta.** | |
+| **Clarification** | ಮೈಸೂರು ಪಾಕ್ ಅಂತ ಸ್ವೀಟ್. | A sweet called Mysore Pak. |
+| | **Maisūru Pāk anta svīṭ.** | |
+| **Place** | ಇಂದಿರಾನಗರ ಅಂತ ಏರಿಯಾ. | An area called Indiranagar. |
+| | **Indirānagara anta ēriyā.** | |
 
-(Mysore Pak anta sweet.)
-A sweet called Mysore Pak.
-Place
-ಇಂದಿರಾನಗರ ಅಂತ ಏರಿಯಾ.
+---
 
-(Indiranagar anta area.)
-An area called Indiranagar.
+## 5. The Formal "Called" Marker: ಎಂಬ (Emba)
 
-5. The Formal "Called" Marker: ಎಂಬ (Emba)
-While Anta is perfect for speech, you will often see ಎಂಬ (Emba) in writing, textbooks, or formal speech.
-Origin: It comes from the verb Ennu (To say).
-Function: It creates an adjective meaning "Named" or "Called."
-Grammar: It connects a Proper Noun to a Common Noun.
-Comparison:
-Spoken (Anta): Kaveri anta nadi. (The river called Kaveri.)
-Formal (Emba): Kaveri emba nadi. (The river named Kaveri.)
-Context
-Kannada Sentence
-Meaning
-Titles/Works
-"ಪರ್ವ" ಎಂಬ ಕಾದಂಬರಿ.
+While *Anta* is perfect for speech, you will often see **ಎಂಬ (Emba)** in writing, textbooks, or formal speech.
 
-("Parva" emba kādambari.)
-The novel entitled "Parva."
-Concepts
-"ಪ್ರಜಾಪ್ರಭುತ್ವ" ಎಂಬ ತತ್ವ.
+* **Origin:** It comes from the verb *Ennu* (To say).
+* **Function:** It creates an adjective meaning "Named" or "Entitled."
+* **Grammar:** It connects a Proper Noun to a Common Noun.
 
-("Prajāprabhutva" emba tatva.)
-The principle called Democracy.
-Places
-ಮಲೆನಾಡು ಎಂಬ ಪ್ರದೇಶ.
+**Comparison:**
+* **Spoken (Anta):** Kāvēri **anta** nadi. (The river called Kaveri.)
+* **Formal (Emba):** Kāvēri **emba** nadi. (The river named Kaveri.)
 
-(Malenāḍu emba pradēsha.)
-The region known as Malenadu.
+| Context | Kannada Sentence | Meaning |
+| :--- | :--- | :--- |
+| **Titles/Works** | "ಪರ್ವ" ಎಂಬ ಕಾದಂಬರಿ. | The novel entitled "Parva." |
+| | **"Parva" emba kādambari.** | |
+| **Concepts** | "ಪ್ರಜಾಪ್ರಭುತ್ವ" ಎಂಬ ತತ್ವ. | The principle called Democracy. |
+| | **"Prajāprabhutva" emba tatva.** | |
+| **Places** | ಮಲೆನಾಡು ಎಂಬ ಪ್ರದೇಶ. | The region known as Malenadu. |
+| | **Malenāḍu emba pradēsha.** | |
 
-Usage Note: In daily conversation, stick to Anta. Use Emba if you are reading a news headline or quoting a book title.
-6. Advanced: The "Ante" (ಅಂತೆ) Rumor Mill
-If you change Anta to Ante (ಅಂತೆ), it adds a specific flavor: "Apparently" or "It seems."
+**Usage Note:** In daily conversation, stick to **Anta**. Use *Emba* only if you are reading a news headline or quoting a book title.
+
+---
+
+## 6. Advanced: The "Ante" (ಅಂತೆ) Rumor Mill
+
+If you change *Anta* to **Ante (ಅಂತೆ)**, it adds a specific flavor: "Apparently" or "It seems."
 This is used for gossip or things you heard from someone else (Hearsay).
-Anta: Connecting a quote.
-Ante: "I heard that..." / "People say that..."
-Example:
-Statement: Avanu hōda. (He went.)
-Report (Anta): Avanu hōda anta avaḷu hēḷidaḷu. (She said that he went.)
-Gossip (Ante): Avanu hōda ante. (Apparently, he went. / I heard he went.)
-7. Summary Checklist
-Reporting Speech: [Quote] + Anta + Hēḷu.
-Expressing Feeling: [Opinion] + Anta + Anisutte.
-Naming (Spoken): [Name] + Anta + [Noun].
-Naming (Formal): [Name] + Emba + [Noun].
-Gossip: End the sentence with Ante to mean "apparently."
+
+* **Anta:** Connecting a direct quote.
+* **Ante:** "I heard that..." / "People say that..."
+
+**Example:**
+* **Statement:** *Avanu hōda.* (He went.)
+* **Report (Anta):** *Avanu hōda **anta** avaḷu hēḷidaḷu.* (She said that he went.)
+* **Gossip (Ante):** *Avanu hōda **ante**.* (Apparently, he went. / I heard he went.)
+
+---
+
+## 7. Summary Checklist
+
+1.  **Reporting Speech:** `[Quote]` + **Anta** + *Hēḷu*.
+2.  **Expressing Feeling:** `[Opinion]` + **Anta** + *Anisutte*.
+3.  **Naming (Spoken):** `[Name]` + **Anta** + `[Noun]`.
+4.  **Naming (Formal):** `[Name]` + **Emba** + `[Noun]`.
+5.  **Gossip:** End the sentence with **Ante** to mean "apparently."

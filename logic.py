@@ -195,11 +195,12 @@ def send_email_lesson(context):
             return "No new topics found."
 
         prompt = f"""
-        TASK: Create a short, engaging email lesson about "{topic}".
+        TASK: Create an engaging email lesson about "{topic}".
         REQUIREMENTS:
         1. Use the provided context definitions/examples.
-        2. Include 5 vocab words, 1 grammar rule, and 1 practice sentence.
-        3. Output as clean HTML.
+        2. Include content from **every** section (i.e., with markdown header level of '###') of the topic.
+        3. End the email with 3 practice sentences demonstrating the major lessons of the topic.
+        4. Output as clean HTML.
         """
         lesson_html = generate_content(prompt, context)
 
@@ -243,7 +244,11 @@ def generate_quiz(topic, context):
     # CHANGED: Reverted to 10 questions to save API quota
     prompt = f"""
     TASK: Generate exactly 10 simple sentences in English based on the topic "{topic}" 
-    that the student must translate into Kannada.
+    that the student must translate into Kannada. The sentences should use a diverse range of vocabulary
+    and should increase in length and complexity following this pattern:
+    * First 3 sentences are easy (short and simple)
+    * Middle 4 sentences are intermediate (longer, slightly more complex)
+    * Final 3 sentences are hard (long and complex)
     OUTPUT: JSON list of strings. Example: ["I go", "She eats"]
     """
     res = generate_content(prompt, context)

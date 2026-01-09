@@ -259,7 +259,7 @@ def main():
                     st.success("Topic Mastered! Sheet updated.")
                     logic.update_mastery(st.session_state.quiz_sheet_row)
                 else:
-                    st.warning("Score insufficient for mastery. Keep practicing.")
+                    st.warning("Not yet! Keep trying.")
 
                 if st.button(logic.get_ui_text("BTN_BACK", lang_mode)):
                     st.session_state.quiz_questions = []

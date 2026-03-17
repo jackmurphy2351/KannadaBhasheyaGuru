@@ -158,7 +158,7 @@ def main():
                 # Trigger bot to speak first
                 with st.spinner("Connecting to Bengaluru..."):
                     init_prompt = "Hello. Please start the conversation in character. You speak first."
-                    res = logic.generate_chat_turn_ai(init_prompt, [], selected_focus, selected_role)
+                    res = logic.generate_chat_turn_ai(init_prompt, [], selected_focus, selected_role, lang_mode)
 
                     if "error" not in res:
                         # Save API formatting
@@ -190,8 +190,14 @@ def main():
                     if msg["role"] == "user":
                         st.write(msg["content"])
                     else:
-                        # Bot message: Apply transliteration toggle to Kannada output
-                        display_text = logic.toggle_script(msg["kannada"], lang_mode)
+                        # Bot message: Only apply transliteration toggle if in Script mode
+                        if "Script" in lang_mode:
+                            display_text = logic.toggle_script(msg["kannada"], lang_mode)
+                        else:
+                            # In Roman modes, the LLM is directly outputting Roman Aadumaatu.
+                            # We bypass indic-transliteration to prevent scrambling.
+                            display_text = msg["kannada"]
+
                         st.write(display_text)
                         with st.expander("Show Translation"):
                             st.write(msg["english"])
@@ -209,7 +215,8 @@ def main():
                         prompt,
                         st.session_state.chat_history,
                         st.session_state.chat_focus,
-                        st.session_state.chat_role
+                        st.session_state.chat_role,
+                        lang_mode
                     )
 
                     if "error" not in res:

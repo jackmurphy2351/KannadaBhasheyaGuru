@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import glob
 import random
+import json
 
 # Import our custom modules
 import config
@@ -105,6 +106,7 @@ def main():
 
     nav_options = {
         "Home": "NAV_HOME",
+        "Conversation Practice": "NAV_CHAT",  # ADD THIS LINE
         "Send Email Lesson": "NAV_EMAIL",
         "Mastery Quiz": "NAV_QUIZ",
         "Writing Critique": "NAV_WRITE",
@@ -129,6 +131,130 @@ def main():
 
         file_count = len(glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.txt')))
         st.info(f"System Status: {file_count} grammar modules loaded.")
+
+    # --- MODE: CONVERSATION PRACTICE ---
+    elif mode == "Conversation Practice":
+        st.subheader(logic.get_ui_text("NAV_CHAT", lang_mode))
+
+        # 1. Initialize State Variables
+        if "chat_active" not in st.session_state:
+            st.session_state.chat_active = False
+            st.session_state.show_review = False
+            st.session_state.chat_history = []  # Sent to Gemini API
+            st.session_state.chat_display = []  # Rendered on UI
+            st.session_state.user_errors = []  # Silently logged errors
+
+        # 2. STATE A: Setup Phase
+        if not st.session_state.chat_active and not st.session_state.show_review:
+            st.write("### Configure your conversational partner")
+            selected_role = st.selectbox("Persona", list(config.CHARACTER_CARDS.keys()))
+            selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
+
+            if st.button("Start Conversation"):
+                st.session_state.chat_active = True
+                st.session_state.chat_role = selected_role
+                st.session_state.chat_focus = selected_focus
+
+                # Trigger bot to speak first
+                with st.spinner("Connecting to Bengaluru..."):
+                    init_prompt = "Hello. Please start the conversation in character. You speak first."
+                    res = logic.generate_chat_turn_ai(init_prompt, [], selected_focus, selected_role)
+
+                    if "error" not in res:
+                        # Save API formatting
+                        st.session_state.chat_history.append({"role": "user", "content": init_prompt})
+                        st.session_state.chat_history.append({"role": "model", "content": json.dumps(res)})
+                        # Save UI formatting
+                        st.session_state.chat_display.append({
+                            "role": "assistant",
+                            "kannada": res.get("bot_reply_kannada", ""),
+                            "english": res.get("bot_reply_english_translation", "")
+                        })
+                st.rerun()
+
+        # 3. STATE B: Active Chat Phase
+        elif st.session_state.chat_active:
+            # End Chat Button at the top
+            col1, col2 = st.columns([4, 1])
+            with col2:
+                if st.button("End Chat & Review"):
+                    st.session_state.chat_active = False
+                    st.session_state.show_review = True
+                    st.rerun()
+
+            st.markdown("---")
+
+            # Render existing messages
+            for msg in st.session_state.chat_display:
+                with st.chat_message(msg["role"]):
+                    if msg["role"] == "user":
+                        st.write(msg["content"])
+                    else:
+                        # Bot message: Apply transliteration toggle to Kannada output
+                        display_text = logic.toggle_script(msg["kannada"], lang_mode)
+                        st.write(display_text)
+                        with st.expander("Show Translation"):
+                            st.write(msg["english"])
+
+            # Input field for new message
+            if prompt := st.chat_input("Type your reply in Kannada (Script or Roman)..."):
+                # Immediately show user input
+                st.session_state.chat_display.append({"role": "user", "content": prompt})
+                with st.chat_message("user"):
+                    st.write(prompt)
+
+                # Fetch AI response
+                with st.spinner("Typing..."):
+                    res = logic.generate_chat_turn_ai(
+                        prompt,
+                        st.session_state.chat_history,
+                        st.session_state.chat_focus,
+                        st.session_state.chat_role
+                    )
+
+                    if "error" not in res:
+                        # Append to LLM history
+                        st.session_state.chat_history.append({"role": "user", "content": prompt})
+                        st.session_state.chat_history.append({"role": "model", "content": json.dumps(res)})
+
+                        # Append to UI
+                        st.session_state.chat_display.append({
+                            "role": "assistant",
+                            "kannada": res.get("bot_reply_kannada", ""),
+                            "english": res.get("bot_reply_english_translation", "")
+                        })
+
+                        # Silently log errors
+                        errors = res.get("user_errors", [])
+                        if errors:
+                            st.session_state.user_errors.extend(errors)
+
+                        st.rerun()
+                    else:
+                        st.error(f"API Error: {res['error']}")
+
+        # 4. STATE C: Review Phase
+        elif st.session_state.show_review:
+            st.markdown("### 📝 Post-Conversation Error Log")
+
+            if not st.session_state.user_errors:
+                st.success("Great job! No grammatical errors were logged during this session.")
+            else:
+                st.warning(f"You made {len(st.session_state.user_errors)} errors to review.")
+                for i, err in enumerate(st.session_state.user_errors):
+                    with st.expander(f"Error {i + 1}: {err.get('original', '')}"):
+                        corr = logic.toggle_script(err.get('correction', ''), lang_mode)
+                        st.write(f"**Correction:** {corr}")
+                        st.write(f"**Reason:** {err.get('reason', '')}")
+
+            st.markdown("---")
+            if st.button("Start New Conversation"):
+                st.session_state.chat_active = False
+                st.session_state.show_review = False
+                st.session_state.chat_history = []
+                st.session_state.chat_display = []
+                st.session_state.user_errors = []
+                st.rerun()
 
     # --- MODE: SEND LESSON ---
     elif mode == "Send Email Lesson":

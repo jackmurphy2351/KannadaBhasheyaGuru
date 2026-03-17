@@ -336,3 +336,52 @@ def grade_reading_ai(question, text, answer, context):
     if data:
         return data
     return {"is_correct": False, "feedback": "AI Error", "detailed_explanation": "Error"}
+
+
+def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key):
+    """
+    Handles a single turn of the conversational chatbot.
+    """
+    import google.generativeai as genai
+
+    # 1. Prepare the dynamic system instruction
+    role_text = config.CHARACTER_CARDS.get(role_key, "")
+    system_instruction = config.CHAT_SYSTEM_PROMPT.replace(
+        "[INJECT_GRAMMAR_FOCUS_HERE]", grammar_focus
+    ).replace(
+        "[INJECT_SELECTED_ROLE_HERE]", role_text
+    )
+
+    # 2. Configure the specific model instance
+    genai.configure(api_key=config.GENAI_API_KEY)
+    model = genai.GenerativeModel(
+        config.MODEL_NAME,
+        system_instruction=system_instruction,
+        generation_config={"response_mime_type": "application/json"}  # Forces JSON output
+    )
+
+    # 3. Format the chat history for Gemini's start_chat method
+    gemini_history = []
+    for msg in chat_history:
+        gemini_history.append({
+            "role": msg["role"],
+            "parts": [msg["content"]]
+        })
+
+    try:
+        # 4. Initiate chat session with history and send message
+        chat_session = model.start_chat(history=gemini_history)
+        response = chat_session.send_message(user_message, safety_settings=config.SAFETY_SETTINGS)
+
+        try:
+            # Attempt to parse the JSON
+            return json.loads(response.text)
+        except json.JSONDecodeError as json_err:
+            # If parsing fails, print the raw text to the terminal for debugging!
+            print("\n--- 🚨 BAD JSON RECEIVED FROM GEMINI 🚨 ---")
+            print(response.text)
+            print("-------------------------------------------\n")
+            return {"error": f"JSON Parsing failed. Check your PyCharm terminal for the raw text."}
+
+    except Exception as e:
+        return {"error": str(e)}

@@ -38,7 +38,7 @@ RECEIVER_EMAIL = get_secret("GMAIL_USER")
 KNOWLEDGE_DIR = "knowledge_base"
 
 # --- MODEL SETTINGS ---
-MODEL_NAME = "models/gemini-2.5-pro"
+MODEL_NAME = "models/gemini-2.5-flash"
 
 SAFETY_SETTINGS = {
     HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,

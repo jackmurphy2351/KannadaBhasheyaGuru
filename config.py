@@ -42,10 +42,30 @@ MODEL_NAME = "models/gemini-2.5-flash"
 GEMINI_API_KEY = get_secret("GEMINI_API_KEY")
 MODEL_NAME = "models/gemini-2.5-flash"
 
-# --- SARVAM AI SETTINGS (NEW) ---
-# Ensure your .env file has SARVAM_API_KEY="your_key_here"
+# --- SARVAM AI SETTINGS ---
 SARVAM_API_KEY = get_secret("SARVAM_API_KEY")
-SARVAM_MODEL_NAME = "sarvam-30b" # The 30B model is highly recommended for conversational speed
+SARVAM_BASE_URL = "https://api.sarvam.ai"
+
+# STT (Speech-to-Text) config
+SARVAM_STT_MODEL = "saaras:v3"       # Latest model, supports Kannada auto-detect
+SARVAM_STT_LANGUAGE = "kn-IN"        # Kannada BCP-47 code
+
+# TTS (Text-to-Speech) config
+SARVAM_TTS_MODEL = "bulbul:v3"       # Latest TTS model with 30+ voices
+SARVAM_TTS_LANGUAGE = "kn-IN"        # Kannada output
+SARVAM_TTS_SPEAKER = "kavitha"       # Female Kannada-friendly voice (change as you like)
+SARVAM_TTS_PACE = 0.85               # Slightly slower for learners (range: 0.5-2.0)
+SARVAM_TTS_SAMPLE_RATE = 24000       # Default high-quality rate
+
+# Available speakers for user selection (subset most natural for Kannada)
+SARVAM_SPEAKERS = {
+    "Kavitha (Female)": "kavitha",
+    "Shreya (Female)": "shreya",
+    "Priya (Female)": "priya",
+    "Amit (Male)": "amit",
+    "Rohan (Male)": "rohan",
+    "Rahul (Male)": "rahul",
+}
 
 SAFETY_SETTINGS = {
     HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,

@@ -5,6 +5,9 @@ import json
 import re
 import smtplib
 import unicodedata
+import base64
+import requests
+import io
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -432,3 +435,124 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
 
     except Exception as e:
         return {"error": str(e)}
+
+
+# ============================================================================
+# SARVAM AI VOICE FUNCTIONS (STT + TTS)
+# ============================================================================
+
+
+def sarvam_speech_to_text(audio_bytes):
+    """
+    Sends recorded audio bytes to Sarvam STT REST API.
+    Returns the transcribed Kannada text, or an error string.
+
+    Args:
+        audio_bytes: Raw WAV audio bytes from st.audio_input or mic_recorder.
+
+    Returns:
+        dict with keys: {"transcript": str, "language": str} or {"error": str}
+    """
+    if not config.SARVAM_API_KEY:
+        return {"error": "SARVAM_API_KEY not configured. Add it to your .env file."}
+
+    url = f"{config.SARVAM_BASE_URL}/speech-to-text"
+    headers = {
+        "api-subscription-key": config.SARVAM_API_KEY,
+    }
+
+    # Wrap audio bytes in a file-like object for multipart upload
+    files = {
+        "file": ("recording.wav", io.BytesIO(audio_bytes), "audio/wav"),
+    }
+    data = {
+        "model": config.SARVAM_STT_MODEL,
+        "language_code": config.SARVAM_STT_LANGUAGE,
+    }
+
+    try:
+        response = requests.post(url, headers=headers, files=files, data=data, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+
+        transcript = result.get("transcript", "").strip()
+        if not transcript:
+            return {"error": "Sarvam STT returned empty transcript. Speak louder or longer."}
+
+        return {
+            "transcript": transcript,
+            "language": result.get("language_code", config.SARVAM_STT_LANGUAGE),
+        }
+
+    except requests.exceptions.HTTPError as e:
+        error_body = ""
+        try:
+            error_body = e.response.json()
+        except:
+            error_body = e.response.text
+        return {"error": f"Sarvam STT HTTP {e.response.status_code}: {error_body}"}
+    except requests.exceptions.Timeout:
+        return {"error": "Sarvam STT request timed out. Try a shorter recording (<30s)."}
+    except Exception as e:
+        return {"error": f"Sarvam STT error: {str(e)}"}
+
+
+def sarvam_text_to_speech(text, speaker=None, pace=None):
+    """
+    Sends Kannada text to Sarvam TTS REST API and returns audio bytes.
+
+    Args:
+        text:    Kannada text string (max 2500 chars for bulbul:v3).
+        speaker: Optional speaker name override (e.g., "kavitha", "amit").
+        pace:    Optional speech pace override (0.5 to 2.0).
+
+    Returns:
+        dict with keys: {"audio_bytes": bytes} or {"error": str}
+    """
+    if not config.SARVAM_API_KEY:
+        return {"error": "SARVAM_API_KEY not configured. Add it to your .env file."}
+
+    if not text or not text.strip():
+        return {"error": "No text provided for TTS."}
+
+    # Truncate to API limit (2500 chars for v3)
+    text = text.strip()[:2500]
+
+    url = f"{config.SARVAM_BASE_URL}/text-to-speech"
+    headers = {
+        "api-subscription-key": config.SARVAM_API_KEY,
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "text": text,
+        "target_language_code": config.SARVAM_TTS_LANGUAGE,
+        "model": config.SARVAM_TTS_MODEL,
+        "speaker": speaker or config.SARVAM_TTS_SPEAKER,
+        "pace": pace or config.SARVAM_TTS_PACE,
+        "speech_sample_rate": config.SARVAM_TTS_SAMPLE_RATE,
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+
+        audios = result.get("audios", [])
+        if not audios:
+            return {"error": "Sarvam TTS returned no audio data."}
+
+        # Decode base64 audio → raw WAV bytes
+        audio_bytes = base64.b64decode(audios[0])
+        return {"audio_bytes": audio_bytes}
+
+    except requests.exceptions.HTTPError as e:
+        error_body = ""
+        try:
+            error_body = e.response.json()
+        except:
+            error_body = e.response.text
+        return {"error": f"Sarvam TTS HTTP {e.response.status_code}: {error_body}"}
+    except requests.exceptions.Timeout:
+        return {"error": "Sarvam TTS request timed out. Text may be too long."}
+    except Exception as e:
+        return {"error": f"Sarvam TTS error: {str(e)}"}

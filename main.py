@@ -71,7 +71,251 @@ def local_css():
     )
 
 
-# --- STREAMLIT UI ---
+# ============================================================================
+# VOICE CHAT SUB-PAGE (Sarvam STT + Gemini + Sarvam TTS)
+# ============================================================================
+
+def render_voice_chat(lang_mode):
+    """
+    Voice Chat mode: user records audio → Sarvam STT → Gemini chatbot → Sarvam TTS.
+    Runs as a parallel feature alongside the existing text chat.
+    """
+    st.markdown("### 🎙️ Voice Conversation Practice")
+    st.caption(
+        "Speak in Kannada → AI transcribes, responds, and speaks back. "
+        "Uses Sarvam AI for speech and Google Gemini for conversation."
+    )
+
+    # --- Check API key availability ---
+    if not config.SARVAM_API_KEY:
+        st.error(
+            "**Sarvam API key not found.** "
+            "Add `SARVAM_API_KEY=your_key` to your `.env` file and restart the app."
+        )
+        return
+
+    # --- Voice Chat Session State ---
+    if "vc_active" not in st.session_state:
+        st.session_state.vc_active = False
+        st.session_state.vc_show_review = False
+        st.session_state.vc_history = []       # Gemini API history
+        st.session_state.vc_display = []       # UI display messages
+        st.session_state.vc_errors = []        # Logged grammar errors
+        st.session_state.vc_last_audio_id = None  # Dedup recordings
+
+    # --- STATE A: Setup (only when NOT active AND NOT in review) ---
+    if not st.session_state.vc_active and not st.session_state.vc_show_review:
+        st.write("#### Configure your voice partner")
+
+        vc_col1, vc_col2 = st.columns(2)
+        with vc_col1:
+            vc_role = st.selectbox(
+                "Persona", list(config.CHARACTER_CARDS.keys()), key="vc_role_sel"
+            )
+            vc_focus = st.selectbox(
+                "Grammar Focus", config.GRAMMAR_GOALS, key="vc_focus_sel"
+            )
+        with vc_col2:
+            vc_speaker = st.selectbox(
+                "AI Voice (Sarvam TTS)",
+                list(config.SARVAM_SPEAKERS.keys()),
+                key="vc_speaker_sel",
+            )
+            vc_pace = st.slider(
+                "Speech Pace", 0.5, 2.0, config.SARVAM_TTS_PACE,
+                step=0.05, key="vc_pace_sl",
+                help="Lower = slower (good for beginners). Default 0.85."
+            )
+
+        if st.button("Start Voice Chat", key="vc_start_btn"):
+            st.session_state.vc_active = True
+            st.session_state.vc_role = vc_role
+            st.session_state.vc_focus = vc_focus
+            st.session_state.vc_speaker = config.SARVAM_SPEAKERS[vc_speaker]
+            st.session_state.vc_pace = vc_pace
+
+            # Bot speaks first — generate opening line via Gemini
+            with st.spinner("Your conversation partner is getting ready..."):
+                init_prompt = "Please start the conversation in character. You speak first."
+                # Force Script mode so Gemini returns Kannada script (needed for TTS)
+                res = logic.generate_chat_turn_ai(
+                    init_prompt, [], vc_focus, vc_role, "Kannada (Script)"
+                )
+
+                if "error" not in res:
+                    # Save to Gemini history
+                    st.session_state.vc_history.append({"role": "user", "content": init_prompt})
+                    st.session_state.vc_history.append({"role": "model", "content": json.dumps(res)})
+
+                    kannada_text = res.get("bot_reply_kannada", "")
+                    english_text = res.get("bot_reply_english_translation", "")
+
+                    # Generate TTS audio for the opening line
+                    tts_result = logic.sarvam_text_to_speech(
+                        kannada_text,
+                        speaker=st.session_state.vc_speaker,
+                        pace=st.session_state.vc_pace,
+                    )
+
+                    st.session_state.vc_display.append({
+                        "role": "assistant",
+                        "kannada": kannada_text,
+                        "english": english_text,
+                        "audio": tts_result.get("audio_bytes"),
+                        "tts_error": tts_result.get("error"),
+                    })
+                else:
+                    st.error(f"Gemini error: {res['error']}")
+                    st.session_state.vc_active = False
+
+            st.rerun()
+
+    # --- STATE B: Active Voice Chat ---
+    elif st.session_state.vc_active:
+        # End button
+        col_end1, col_end2 = st.columns([4, 1])
+        with col_end2:
+            if st.button("End Chat & Review", key="vc_end_btn"):
+                st.session_state.vc_active = False
+                st.session_state.vc_show_review = True
+                st.rerun()
+
+        st.markdown("---")
+
+        # Render conversation history
+        for i, msg in enumerate(st.session_state.vc_display):
+            with st.chat_message(msg["role"]):
+                if msg["role"] == "user":
+                    # Show transcribed text
+                    st.write(msg.get("kannada", msg.get("content", "")))
+                else:
+                    # Bot: show Kannada text
+                    display_text = logic.toggle_script(msg["kannada"], lang_mode)
+                    st.write(display_text)
+
+                    # Play TTS audio if available
+                    if msg.get("audio"):
+                        st.audio(msg["audio"], format="audio/wav")
+                    elif msg.get("tts_error"):
+                        st.caption(f"🔇 TTS: {msg['tts_error']}")
+
+                    # Translation expander
+                    with st.expander("Show Translation"):
+                        st.write(msg.get("english", ""))
+
+        # --- Audio Input Widget ---
+        st.markdown("---")
+        st.write("**Record your reply in Kannada:**")
+        audio_data = st.audio_input(
+            "🎙️ Click to record",
+            key="vc_audio_input",
+        )
+
+        # Process new recording
+        if audio_data is not None:
+            # Read bytes and create a simple ID for dedup
+            audio_bytes = audio_data.getvalue()
+            audio_id = hash(audio_bytes)
+
+            if audio_id != st.session_state.vc_last_audio_id:
+                st.session_state.vc_last_audio_id = audio_id
+
+                # Step 1: STT — transcribe the user's Kannada speech
+                with st.spinner("Transcribing your speech (Sarvam STT)..."):
+                    stt_result = logic.sarvam_speech_to_text(audio_bytes)
+
+                if "error" in stt_result:
+                    st.error(f"STT Error: {stt_result['error']}")
+                else:
+                    user_text = stt_result["transcript"]
+
+                    # Show user message immediately
+                    st.session_state.vc_display.append({
+                        "role": "user",
+                        "kannada": user_text,
+                    })
+
+                    # Step 2: Send transcribed text to Gemini chatbot
+                    with st.spinner("Thinking..."):
+                        res = logic.generate_chat_turn_ai(
+                            user_text,
+                            st.session_state.vc_history,
+                            st.session_state.vc_focus,
+                            st.session_state.vc_role,
+                            "Kannada (Script)",  # Always Script for TTS compatibility
+                        )
+
+                    if "error" not in res:
+                        # Update Gemini history
+                        st.session_state.vc_history.append({"role": "user", "content": user_text})
+                        st.session_state.vc_history.append({"role": "model", "content": json.dumps(res)})
+
+                        kannada_reply = res.get("bot_reply_kannada", "")
+                        english_reply = res.get("bot_reply_english_translation", "")
+
+                        # Log errors silently
+                        errors = res.get("user_errors", [])
+                        if errors:
+                            st.session_state.vc_errors.extend(errors)
+
+                        # Step 3: TTS — convert bot reply to speech
+                        with st.spinner("Generating speech (Sarvam TTS)..."):
+                            tts_result = logic.sarvam_text_to_speech(
+                                kannada_reply,
+                                speaker=st.session_state.vc_speaker,
+                                pace=st.session_state.vc_pace,
+                            )
+
+                        st.session_state.vc_display.append({
+                            "role": "assistant",
+                            "kannada": kannada_reply,
+                            "english": english_reply,
+                            "audio": tts_result.get("audio_bytes"),
+                            "tts_error": tts_result.get("error"),
+                        })
+                    else:
+                        st.error(f"Gemini error: {res['error']}")
+
+                    st.rerun()
+
+        # --- Error log preview (collapsible) ---
+        if st.session_state.vc_errors:
+            with st.expander(f"📝 Grammar errors so far ({len(st.session_state.vc_errors)})"):
+                for i, err in enumerate(st.session_state.vc_errors):
+                    corr = logic.toggle_script(err.get('correction', ''), lang_mode)
+                    st.write(
+                        f"**{i+1}.** _{err.get('original', '')}_ → **{corr}** — {err.get('reason', '')}"
+                    )
+
+    # --- STATE C: Post-Conversation Review ---
+    elif st.session_state.vc_show_review:
+        st.markdown("### 📝 Voice Chat — Post-Conversation Error Log")
+
+        if not st.session_state.vc_errors:
+            st.success("Great job! No grammatical errors were logged during this session.")
+        else:
+            st.warning(f"You made {len(st.session_state.vc_errors)} errors to review.")
+            for i, err in enumerate(st.session_state.vc_errors):
+                with st.expander(f"Error {i + 1}: {err.get('original', '')}"):
+                    corr = logic.toggle_script(err.get('correction', ''), lang_mode)
+                    st.write(f"**Correction:** {corr}")
+                    st.write(f"**Reason:** {err.get('reason', '')}")
+
+        st.markdown("---")
+        if st.button("Start New Voice Conversation", key="vc_new_btn"):
+            # Full reset of all voice chat state
+            st.session_state.vc_active = False
+            st.session_state.vc_show_review = False
+            st.session_state.vc_history = []
+            st.session_state.vc_display = []
+            st.session_state.vc_errors = []
+            st.session_state.vc_last_audio_id = None
+            st.rerun()
+
+
+# ============================================================================
+# STREAMLIT UI (main)
+# ============================================================================
 
 def main():
     st.set_page_config(page_title="Kannada Bhasheya Guru", page_icon="🪔", layout="wide")
@@ -106,7 +350,7 @@ def main():
 
     nav_options = {
         "Home": "NAV_HOME",
-        "Conversation Practice": "NAV_CHAT",  # ADD THIS LINE
+        "Conversation Practice": "NAV_CHAT",
         "Send Email Lesson": "NAV_EMAIL",
         "Mastery Quiz": "NAV_QUIZ",
         "Writing Critique": "NAV_WRITE",
@@ -132,136 +376,135 @@ def main():
         file_count = len(glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.txt')))
         st.info(f"System Status: {file_count} grammar modules loaded.")
 
-    # --- MODE: CONVERSATION PRACTICE ---
+    # --- MODE: CONVERSATION PRACTICE (Text + Voice tabs) ---
     elif mode == "Conversation Practice":
         st.subheader(logic.get_ui_text("NAV_CHAT", lang_mode))
 
-        # 1. Initialize State Variables
-        if "chat_active" not in st.session_state:
-            st.session_state.chat_active = False
-            st.session_state.show_review = False
-            st.session_state.chat_history = []  # Sent to Gemini API
-            st.session_state.chat_display = []  # Rendered on UI
-            st.session_state.user_errors = []  # Silently logged errors
+        # ── Tab selector: Text Chat vs Voice Chat ──
+        tab_text, tab_voice = st.tabs(["💬 Text Chat", "🎙️ Voice Chat"])
 
-        # 2. STATE A: Setup Phase
-        if not st.session_state.chat_active and not st.session_state.show_review:
-            st.write("### Configure your conversational partner")
-            selected_role = st.selectbox("Persona", list(config.CHARACTER_CARDS.keys()))
-            selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
-
-            if st.button("Start Conversation"):
-                st.session_state.chat_active = True
-                st.session_state.chat_role = selected_role
-                st.session_state.chat_focus = selected_focus
-
-                # Trigger bot to speak first
-                with st.spinner("Connecting to Bengaluru..."):
-                    init_prompt = "Please start the conversation in character. You speak first."
-                    res = logic.generate_chat_turn_ai(init_prompt, [], selected_focus, selected_role, lang_mode)
-
-                    if "error" not in res:
-                        # Save API formatting
-                        st.session_state.chat_history.append({"role": "user", "content": init_prompt})
-                        st.session_state.chat_history.append({"role": "model", "content": json.dumps(res)})
-                        # Save UI formatting
-                        st.session_state.chat_display.append({
-                            "role": "assistant",
-                            "kannada": res.get("bot_reply_kannada", ""),
-                            "english": res.get("bot_reply_english_translation", "")
-                        })
-                st.rerun()
-
-        # 3. STATE B: Active Chat Phase
-        elif st.session_state.chat_active:
-            # End Chat Button at the top
-            col1, col2 = st.columns([4, 1])
-            with col2:
-                if st.button("End Chat & Review"):
-                    st.session_state.chat_active = False
-                    st.session_state.show_review = True
-                    st.rerun()
-
-            st.markdown("---")
-
-            # Render existing messages
-            for msg in st.session_state.chat_display:
-                with st.chat_message(msg["role"]):
-                    if msg["role"] == "user":
-                        st.write(msg["content"])
-                    else:
-                        # Bot message: Only apply transliteration toggle if in Script mode
-                        if "Script" in lang_mode:
-                            display_text = logic.toggle_script(msg["kannada"], lang_mode)
-                        else:
-                            # In Roman modes, the LLM is directly outputting Roman Aadumaatu.
-                            # We bypass indic-transliteration to prevent scrambling.
-                            display_text = msg["kannada"]
-
-                        st.write(display_text)
-                        with st.expander("Show Translation"):
-                            st.write(msg["english"])
-
-            # Input field for new message
-            if prompt := st.chat_input("Type your reply in Kannada (Script or Roman)..."):
-                # Immediately show user input
-                st.session_state.chat_display.append({"role": "user", "content": prompt})
-                with st.chat_message("user"):
-                    st.write(prompt)
-
-                # Fetch AI response
-                with st.spinner("Typing..."):
-                    res = logic.generate_chat_turn_ai(
-                        prompt,
-                        st.session_state.chat_history,
-                        st.session_state.chat_focus,
-                        st.session_state.chat_role,
-                        lang_mode
-                    )
-
-                    if "error" not in res:
-                        # Append to LLM history
-                        st.session_state.chat_history.append({"role": "user", "content": prompt})
-                        st.session_state.chat_history.append({"role": "model", "content": json.dumps(res)})
-
-                        # Append to UI
-                        st.session_state.chat_display.append({
-                            "role": "assistant",
-                            "kannada": res.get("bot_reply_kannada", ""),
-                            "english": res.get("bot_reply_english_translation", "")
-                        })
-
-                        # Silently log errors
-                        errors = res.get("user_errors", [])
-                        if errors:
-                            st.session_state.user_errors.extend(errors)
-
-                        st.rerun()
-                    else:
-                        st.error(f"API Error: {res['error']}")
-
-        # 4. STATE C: Review Phase
-        elif st.session_state.show_review:
-            st.markdown("### 📝 Post-Conversation Error Log")
-
-            if not st.session_state.user_errors:
-                st.success("Great job! No grammatical errors were logged during this session.")
-            else:
-                st.warning(f"You made {len(st.session_state.user_errors)} errors to review.")
-                for i, err in enumerate(st.session_state.user_errors):
-                    with st.expander(f"Error {i + 1}: {err.get('original', '')}"):
-                        corr = logic.toggle_script(err.get('correction', ''), lang_mode)
-                        st.write(f"**Correction:** {corr}")
-                        st.write(f"**Reason:** {err.get('reason', '')}")
-
-            st.markdown("---")
-            if st.button("Start New Conversation"):
+        # ================================================================
+        # TAB 1: TEXT CHAT (unchanged from original)
+        # ================================================================
+        with tab_text:
+            # 1. Initialize State Variables
+            if "chat_active" not in st.session_state:
                 st.session_state.chat_active = False
                 st.session_state.show_review = False
                 st.session_state.chat_history = []
                 st.session_state.chat_display = []
                 st.session_state.user_errors = []
-                st.rerun()
+
+            # 2. STATE A: Setup Phase
+            if not st.session_state.chat_active and not st.session_state.show_review:
+                st.write("### Configure your conversational partner")
+                selected_role = st.selectbox("Persona", list(config.CHARACTER_CARDS.keys()))
+                selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
+
+                if st.button("Start Conversation"):
+                    st.session_state.chat_active = True
+                    st.session_state.chat_role = selected_role
+                    st.session_state.chat_focus = selected_focus
+
+                    # Trigger bot to speak first
+                    with st.spinner("Connecting to Bengaluru..."):
+                        init_prompt = "Please start the conversation in character. You speak first."
+                        res = logic.generate_chat_turn_ai(init_prompt, [], selected_focus, selected_role, lang_mode)
+
+                        if "error" not in res:
+                            st.session_state.chat_history.append({"role": "user", "content": init_prompt})
+                            st.session_state.chat_history.append({"role": "model", "content": json.dumps(res)})
+                            st.session_state.chat_display.append({
+                                "role": "assistant",
+                                "kannada": res.get("bot_reply_kannada", ""),
+                                "english": res.get("bot_reply_english_translation", "")
+                            })
+                    st.rerun()
+
+            # 3. STATE B: Active Chat Phase
+            elif st.session_state.chat_active:
+                col1, col2 = st.columns([4, 1])
+                with col2:
+                    if st.button("End Chat & Review"):
+                        st.session_state.chat_active = False
+                        st.session_state.show_review = True
+                        st.rerun()
+
+                st.markdown("---")
+
+                # Render existing messages
+                for msg in st.session_state.chat_display:
+                    with st.chat_message(msg["role"]):
+                        if msg["role"] == "user":
+                            st.write(msg["content"])
+                        else:
+                            if "Script" in lang_mode:
+                                display_text = logic.toggle_script(msg["kannada"], lang_mode)
+                            else:
+                                display_text = msg["kannada"]
+
+                            st.write(display_text)
+                            with st.expander("Show Translation"):
+                                st.write(msg["english"])
+
+                # Input field
+                if prompt := st.chat_input("Type your reply in Kannada (Script or Roman)..."):
+                    st.session_state.chat_display.append({"role": "user", "content": prompt})
+                    with st.chat_message("user"):
+                        st.write(prompt)
+
+                    with st.spinner("Typing..."):
+                        res = logic.generate_chat_turn_ai(
+                            prompt,
+                            st.session_state.chat_history,
+                            st.session_state.chat_focus,
+                            st.session_state.chat_role,
+                            lang_mode
+                        )
+
+                        if "error" not in res:
+                            st.session_state.chat_history.append({"role": "user", "content": prompt})
+                            st.session_state.chat_history.append({"role": "model", "content": json.dumps(res)})
+                            st.session_state.chat_display.append({
+                                "role": "assistant",
+                                "kannada": res.get("bot_reply_kannada", ""),
+                                "english": res.get("bot_reply_english_translation", "")
+                            })
+                            errors = res.get("user_errors", [])
+                            if errors:
+                                st.session_state.user_errors.extend(errors)
+                            st.rerun()
+                        else:
+                            st.error(f"API Error: {res['error']}")
+
+            # 4. STATE C: Review Phase
+            elif st.session_state.show_review:
+                st.markdown("### 📝 Post-Conversation Error Log")
+
+                if not st.session_state.user_errors:
+                    st.success("Great job! No grammatical errors were logged during this session.")
+                else:
+                    st.warning(f"You made {len(st.session_state.user_errors)} errors to review.")
+                    for i, err in enumerate(st.session_state.user_errors):
+                        with st.expander(f"Error {i + 1}: {err.get('original', '')}"):
+                            corr = logic.toggle_script(err.get('correction', ''), lang_mode)
+                            st.write(f"**Correction:** {corr}")
+                            st.write(f"**Reason:** {err.get('reason', '')}")
+
+                st.markdown("---")
+                if st.button("Start New Conversation"):
+                    st.session_state.chat_active = False
+                    st.session_state.show_review = False
+                    st.session_state.chat_history = []
+                    st.session_state.chat_display = []
+                    st.session_state.user_errors = []
+                    st.rerun()
+
+        # ================================================================
+        # TAB 2: VOICE CHAT (NEW — Sarvam STT/TTS + Gemini)
+        # ================================================================
+        with tab_voice:
+            render_voice_chat(lang_mode)
 
     # --- MODE: SEND LESSON ---
     elif mode == "Send Email Lesson":
@@ -325,7 +568,6 @@ def main():
 
                         if item['correct']:
                             st.success(feed)
-                            # Show standard answer even if correct, so they can compare spelling
                             st.info(f"Standard Kannada: {corr}")
                         else:
                             st.error(feed)
@@ -343,7 +585,6 @@ def main():
                 st.markdown(f"### Q{q_idx + 1}: {display_q}")
 
                 if len(st.session_state.quiz_history) == q_idx:
-                    # --- INPUT PHASE ---
                     st.write(logic.get_ui_text("LBL_TRANS", lang_mode))
                     user_ans = st.text_input("Answer", key=f"input_{q_idx}", label_visibility="collapsed")
 
@@ -362,7 +603,6 @@ def main():
                             if res['is_correct']: st.session_state.quiz_score += 1
                             st.rerun()
                 else:
-                    # --- RESULT PHASE (Indentation Fixed) ---
                     last_result = st.session_state.quiz_history[-1]
                     feed_text = logic.toggle_script(last_result['feedback'], lang_mode)
                     corr_text = logic.toggle_script(last_result['correct_translation'], lang_mode)
@@ -374,7 +614,6 @@ def main():
                         st.error(f"Incorrect. {feed_text}")
                         st.write(f"**Correct Answer:** {corr_text}")
 
-                    # LOGIC: Check if this is the last question
                     is_last_question = (st.session_state.current_q_index == total - 1)
 
                     if is_last_question:

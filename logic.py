@@ -74,7 +74,7 @@ def get_sheet_client():
 
 def generate_content(user_prompt, context_override=None):
     """Helper to call Gemini."""
-    genai.configure(api_key=config.GENAI_API_KEY)
+    genai.configure(api_key=config.GEMINI_API_KEY)
 
     model = genai.GenerativeModel(
         config.MODEL_NAME,
@@ -340,10 +340,11 @@ def grade_reading_ai(question, text, answer, context):
 
 def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, lang_mode):
     """
-    Handles a single turn of the conversational chatbot.
+    Handles a single turn of the conversational chatbot using Gemini.
+    Parses the response natively in Python to prevent JSON errors.
     """
     import google.generativeai as genai
-    import json
+    import re
 
     # 1. Determine which strict instruction track to use based on UI toggle
     if "Script" in lang_mode:
@@ -364,11 +365,11 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
     )
 
     # 3. Configure the specific model instance
-    genai.configure(api_key=config.GENAI_API_KEY)
+    genai.configure(api_key=config.GEMINI_API_KEY)
     model = genai.GenerativeModel(
         config.MODEL_NAME,
-        system_instruction=system_instruction,
-        generation_config={"response_mime_type": "application/json"}  # Forces JSON output
+        system_instruction=system_instruction
+        # Note: We removed the JSON mime_type constraint here so it outputs plain text
     )
 
     # 4. Format the chat history for Gemini's start_chat method
@@ -383,15 +384,51 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
         # 5. Initiate chat session with history and send message
         chat_session = model.start_chat(history=gemini_history)
         response = chat_session.send_message(user_message, safety_settings=config.SAFETY_SETTINGS)
+        raw_text = response.text
 
-        try:
-            # Attempt to parse the JSON securely
-            return json.loads(response.text)
-        except json.JSONDecodeError as json_err:
-            print("\n--- 🚨 BAD JSON RECEIVED FROM GEMINI 🚨 ---")
-            print(response.text)
-            print("-------------------------------------------\n")
-            return {"error": "JSON Parsing failed. Check PyCharm terminal for raw output."}
+        # 6. PYTHON-NATIVE DATA STRUCTURING
+        result = {
+            "bot_reply_kannada": "",
+            "bot_reply_english_translation": "",
+            "user_errors": []
+        }
+
+        # Fallback logic if headers are missing
+        if "KANNADA:" not in raw_text and "ENGLISH:" not in raw_text:
+            print(f"\n--- ⚠️ WARNING: GEMINI IGNORED FORMATTING (FALLBACK APPLIED) ⚠️ ---\n{raw_text}\n-----------------------------------\n")
+            result["bot_reply_kannada"] = raw_text.strip()
+            result["bot_reply_english_translation"] = "[Translation missing due to model formatting error]"
+            return result
+
+        # Use Regex to extract text between the headers
+        kan_match = re.search(r'KANNADA:\s*(.*?)(?=\nENGLISH:|$)', raw_text, re.DOTALL)
+        eng_match = re.search(r'ENGLISH:\s*(.*?)(?=\nERRORS:|$)', raw_text, re.DOTALL)
+        err_match = re.search(r'ERRORS:\s*(.*)', raw_text, re.DOTALL)
+
+        if kan_match:
+            result["bot_reply_kannada"] = kan_match.group(1).strip()
+        if eng_match:
+            result["bot_reply_english_translation"] = eng_match.group(1).strip()
+
+        if err_match:
+            err_text = err_match.group(1).strip()
+            if err_text.upper() != "NONE":
+                error_blocks = err_text.split("||")
+                for block in error_blocks:
+                    parts = block.split("::")
+                    if len(parts) >= 3:
+                        result["user_errors"].append({
+                            "original": parts[0].strip(),
+                            "correction": parts[1].strip(),
+                            "reason": parts[2].strip()
+                        })
+
+        if not result["bot_reply_kannada"]:
+            error_msg = f"Parsing Failed. The model ignored instructions. Raw output received:\n\n{raw_text}"
+            print(f"\n--- 🚨 PARSING FAILED. RAW TEXT: 🚨 ---\n{raw_text}\n-----------------------------------\n")
+            return {"error": error_msg}
+
+        return result
 
     except Exception as e:
         return {"error": str(e)}

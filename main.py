@@ -157,7 +157,7 @@ def main():
 
                 # Trigger bot to speak first
                 with st.spinner("Connecting to Bengaluru..."):
-                    init_prompt = "Hello. Please start the conversation in character. You speak first."
+                    init_prompt = "Please start the conversation in character. You speak first."
                     res = logic.generate_chat_turn_ai(init_prompt, [], selected_focus, selected_role, lang_mode)
 
                     if "error" not in res:

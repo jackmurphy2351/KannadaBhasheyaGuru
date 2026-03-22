@@ -46,7 +46,7 @@ This app requires sensitive credentials. **Do not commit these to GitHub!**
 
 Create a `.env` file in the root directory:
 ```Plaintext
-GENAI_API_KEY=your_gemini_api_key_here
+SARVAM_API_KEY=your_api_key_here
 GOOGLE_SHEET_NAME=Name_Of_Your_Google_Sheet
 GMAIL_USER=your_email@gmail.com
 GMAIL_PASSWORD=your_app_password

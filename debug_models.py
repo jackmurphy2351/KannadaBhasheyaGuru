@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 # Load secrets
 load_dotenv()
-api_key = os.getenv("GENAI_API_KEY")
+api_key = os.getenv("SARVAM_API_KEY")
 
 print(f"--- DIAGNOSTIC START ---")
 if not api_key:

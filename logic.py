@@ -78,7 +78,7 @@ def get_sheet_client():
 def _sarvam_chat_client():
     """Returns an OpenAI-compatible client pointed at the Sarvam chat endpoint."""
     return OpenAI(
-        api_key=config.SARVAM_API_KEY,
+        api_key=config.SARVAM_API_KEY or config.get_secret("SARVAM_API_KEY"),
         base_url=config.SARVAM_CHAT_BASE_URL,
     )
 
@@ -420,12 +420,13 @@ def sarvam_speech_to_text(audio_bytes):
     Returns:
         dict with keys: {"transcript": str, "language": str} or {"error": str}
     """
-    if not config.SARVAM_API_KEY:
+    api_key = config.SARVAM_API_KEY or config.get_secret("SARVAM_API_KEY")
+    if not api_key:
         return {"error": "SARVAM_API_KEY not configured. Add it to your .env file."}
 
     url = f"{config.SARVAM_BASE_URL}/speech-to-text"
     headers = {
-        "api-subscription-key": config.SARVAM_API_KEY,
+        "api-subscription-key": api_key,
     }
 
     # Wrap audio bytes in a file-like object for multipart upload
@@ -476,7 +477,8 @@ def sarvam_text_to_speech(text, speaker=None, pace=None):
     Returns:
         dict with keys: {"audio_bytes": bytes} or {"error": str}
     """
-    if not config.SARVAM_API_KEY:
+    api_key = config.SARVAM_API_KEY or config.get_secret("SARVAM_API_KEY")
+    if not api_key:
         return {"error": "SARVAM_API_KEY not configured. Add it to your .env file."}
 
     if not text or not text.strip():
@@ -487,7 +489,7 @@ def sarvam_text_to_speech(text, speaker=None, pace=None):
 
     url = f"{config.SARVAM_BASE_URL}/text-to-speech"
     headers = {
-        "api-subscription-key": config.SARVAM_API_KEY,
+        "api-subscription-key": api_key,
         "Content-Type": "application/json",
     }
     payload = {

@@ -101,6 +101,7 @@ class TestSarvamSpeechToText:
 
     def test_missing_api_key_returns_error_without_network_call(self, monkeypatch):
         monkeypatch.setattr(config, "SARVAM_API_KEY", None)
+        monkeypatch.setattr(config, "get_secret", lambda key: None)
         with patch("logic.requests.post") as mock_post:
             result = sarvam_speech_to_text(FAKE_WAV)
         assert "error" in result
@@ -233,6 +234,7 @@ class TestSarvamTextToSpeech:
 
     def test_missing_api_key_returns_error_without_network_call(self, monkeypatch):
         monkeypatch.setattr(config, "SARVAM_API_KEY", None)
+        monkeypatch.setattr(config, "get_secret", lambda key: None)
         with patch("logic.requests.post") as mock_post:
             result = sarvam_text_to_speech(self.KANNADA_TEXT)
         assert "error" in result

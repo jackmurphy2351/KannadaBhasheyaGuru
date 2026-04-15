@@ -15,12 +15,12 @@ App runs at `http://localhost:8501`.
 Three-file Python/Streamlit app:
 
 - **`main.py`** — Streamlit UI (sidebar navigation, session state, custom CSS). Six modes: Home, Conversation Practice (Text + Voice Chat tabs), Send Email Lesson, Mastery Quiz, Writing Critique, Reading Comprehension.
-- **`logic.py`** — All backend logic: Gemini API calls, Sarvam STT/TTS REST calls, Google Sheets read/write, Gmail SMTP, quiz grading, text critique, transliteration.
-- **`config.py`** — Centralized config: API key loading (Streamlit Secrets or `.env`), Gemini model settings, Sarvam voice options, UI translation strings (4 language modes), character personas, grammar topics.
+- **`logic.py`** — All backend logic: Sarvam chat completions API calls, Sarvam STT/TTS REST calls, Google Sheets read/write, Gmail SMTP, quiz grading, text critique, transliteration.
+- **`config.py`** — Centralized config: API key loading (Streamlit Secrets or `.env`), Sarvam model settings, Sarvam voice options, UI translation strings (4 language modes), character personas, grammar topics.
 
 ### Key Design Decisions
 
-**LLM Output Parsing:** `generate_chat_turn_ai()` in `logic.py` has Gemini output plain text with labeled sections (`KANNADA:`, `ENGLISH:`, `ERRORS:`) instead of JSON. Python regex extracts the sections. Do not switch this to JSON — it was deliberately changed for reliability.
+**LLM Output Parsing:** `generate_chat_turn_ai()` in `logic.py` uses `response_format={"type": "json_object"}` with the Sarvam chat completions API. The model returns a JSON object with `kannada`, `english`, and `errors` keys. `clean_json()` in `logic.py` parses it deterministically (handles markdown-fenced responses). The earlier plain-text `KANNADA:`/`ENGLISH:`/`ERRORS:` label approach was abandoned because sarvam-30b frequently dropped the labels; `json_object` mode is significantly more reliable.
 
 **Voice Chat Always Uses Kannada Script:** The TTS API requires Kannada Script input, so voice chat mode forces `Kannada (Script)` internally regardless of the user's display preference.
 
@@ -32,7 +32,8 @@ Three-file Python/Streamlit app:
 
 | Service | Purpose | Notes |
 |---|---|---|
-| Google Gemini (`gemini-2.5-flash`) | All text generation and grading | Safety settings set to `BLOCK_ONLY_HIGH` |
+| Sarvam AI chat (`sarvam-30b`) | Conversation, grading, quizzes, critiques | OpenAI-compatible endpoint; `json_object` mode for chat turns |
+| Sarvam AI chat (`sarvam-105b`) | Reading comprehension | 128K context; used via `use_reading_model=True` flag in `generate_content()` |
 | Sarvam AI STT | Audio → Kannada transcript | Max 30s/request, WAV input |
 | Sarvam AI TTS | Kannada text → audio | Max 2500 chars/request, base64 WAV output |
 | Google Sheets + Drive | Lesson tracking, mastery status | Requires `service_account.json` |
@@ -41,8 +42,7 @@ Three-file Python/Streamlit app:
 ### Credentials
 
 Required in `.env` (local) or Streamlit Secrets (deployed):
-- `GEMINI_API_KEY`
-- `SARVAM_API_KEY`
+- `SARVAM_API_KEY` (covers both chat completions and STT/TTS)
 - `GOOGLE_SHEET_NAME`
 - `GMAIL_USER` / `GMAIL_PASSWORD`
 - `service_account.json` in project root (Google Cloud service account)

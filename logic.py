@@ -13,7 +13,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from indic_transliteration import sanscript
 
-import google.generativeai as genai
+from openai import OpenAI
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -75,14 +75,18 @@ def get_sheet_client():
     return client.open(config.SHEET_NAME).sheet1
 
 
-def generate_content(user_prompt, context_override=None):
-    """Helper to call Gemini."""
-    genai.configure(api_key=config.GEMINI_API_KEY)
-
-    model = genai.GenerativeModel(
-        config.MODEL_NAME,
-        system_instruction=config.SYSTEM_INSTRUCTION
+def _sarvam_chat_client():
+    """Returns an OpenAI-compatible client pointed at the Sarvam chat endpoint."""
+    return OpenAI(
+        api_key=config.SARVAM_API_KEY,
+        base_url=config.SARVAM_CHAT_BASE_URL,
     )
+
+
+def generate_content(user_prompt, context_override=None, use_reading_model=False):
+    """Helper to call Sarvam chat completions API."""
+    model = config.SARVAM_READING_MODEL if use_reading_model else config.SARVAM_CHAT_MODEL
+    client = _sarvam_chat_client()
 
     full_prompt = f"""
     [KNOWLEDGE BASE]
@@ -93,11 +97,14 @@ def generate_content(user_prompt, context_override=None):
     """
 
     try:
-        response = model.generate_content(
-            full_prompt,
-            safety_settings=config.SAFETY_SETTINGS
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": config.SYSTEM_INSTRUCTION},
+                {"role": "user", "content": full_prompt},
+            ],
         )
-        return response.text
+        return response.choices[0].message.content
     except Exception as e:
         return f"API Error: {e}"
 
@@ -318,7 +325,7 @@ def generate_comprehension_questions(text, context):
     Return a strictly valid JSON list of objects. 
     Example: [{{"question": "Question text here", "answer": "Answer text here"}}]
     """
-    res = generate_content(prompt, context)
+    res = generate_content(prompt, context, use_reading_model=True)
     data = clean_json(res)
     if data:
         return data
@@ -334,7 +341,7 @@ def grade_reading_ai(question, text, answer, context):
     Task: Grade the user's answer for factual and grammatical accuracy based on the text. Require that the user respond in *full sentences*. If the user answers by copying and pasting verbatim text from the passage, grade their response as wrong and politely chide them for their laziness! 
     Output JSON: {{ "is_correct": boolean, "feedback": "string", "detailed_explanation": "string" }}
     """
-    res = generate_content(prompt, context)
+    res = generate_content(prompt, context, use_reading_model=True)
     data = clean_json(res)
     if data:
         return data
@@ -343,17 +350,14 @@ def grade_reading_ai(question, text, answer, context):
 
 def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, lang_mode):
     """
-    Handles a single turn of the conversational chatbot using Gemini.
-    Parses the response natively in Python to prevent JSON errors.
+    Handles a single turn of the conversational chatbot using Sarvam chat completions.
+    Uses json_object response_format for deterministic structured output parsed via clean_json().
     """
-    import google.generativeai as genai
-    import re
-
     # 1. Determine which strict instruction track to use based on UI toggle
-    if "Script" in lang_mode:
-        track = config.CHAT_LANG_MODES["FORMAL_SCRIPT"]
-    else:
+    if "Roman" in lang_mode:
         track = config.CHAT_LANG_MODES["AADUMAATU_ROMAN"]
+    else:
+        track = config.CHAT_LANG_MODES["FORMAL_SCRIPT"]
 
     # 2. Prepare the dynamic system instruction
     role_text = config.CHARACTER_CARDS.get(role_key, "")
@@ -367,71 +371,34 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
         "[INJECT_SELECTED_ROLE_HERE]", role_text
     )
 
-    # 3. Configure the specific model instance
-    genai.configure(api_key=config.GEMINI_API_KEY)
-    model = genai.GenerativeModel(
-        config.MODEL_NAME,
-        system_instruction=system_instruction
-        # Note: We removed the JSON mime_type constraint here so it outputs plain text
-    )
-
-    # 4. Format the chat history for Gemini's start_chat method
-    gemini_history = []
+    # 3. Build the messages array (system prompt + full history + new user turn)
+    messages = [{"role": "system", "content": system_instruction}]
     for msg in chat_history:
-        gemini_history.append({
-            "role": msg["role"],
-            "parts": [msg["content"]]
-        })
+        messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": user_message})
 
     try:
-        # 5. Initiate chat session with history and send message
-        chat_session = model.start_chat(history=gemini_history)
-        response = chat_session.send_message(user_message, safety_settings=config.SAFETY_SETTINGS)
-        raw_text = response.text
+        # 4. Call Sarvam chat completions with JSON mode for deterministic structure
+        client = _sarvam_chat_client()
+        response = client.chat.completions.create(
+            model=config.SARVAM_CHAT_MODEL,
+            messages=messages,
+            response_format={"type": "json_object"},
+        )
+        raw_text = response.choices[0].message.content
 
-        # 6. PYTHON-NATIVE DATA STRUCTURING
-        result = {
-            "bot_reply_kannada": "",
-            "bot_reply_english_translation": "",
-            "user_errors": []
+        # 5. Deterministic JSON parsing — no regex, no fallbacks
+        data = clean_json(raw_text)
+        if not data or not data.get("kannada"):
+            print(f"\n--- 🚨 JSON PARSING FAILED. RAW TEXT: 🚨 ---\n{raw_text}\n-----------------------------------\n")
+            return {"error": f"Parsing failed. Raw output:\n\n{raw_text}"}
+
+        return {
+            "bot_reply_kannada": data.get("kannada", ""),
+            "bot_reply_english_translation": data.get("english", ""),
+            "user_errors": data.get("errors", []),
+            "raw_text": raw_text,
         }
-
-        # Fallback logic if headers are missing
-        if "KANNADA:" not in raw_text and "ENGLISH:" not in raw_text:
-            print(f"\n--- ⚠️ WARNING: GEMINI IGNORED FORMATTING (FALLBACK APPLIED) ⚠️ ---\n{raw_text}\n-----------------------------------\n")
-            result["bot_reply_kannada"] = raw_text.strip()
-            result["bot_reply_english_translation"] = "[Translation missing due to model formatting error]"
-            return result
-
-        # Use Regex to extract text between the headers
-        kan_match = re.search(r'KANNADA:\s*(.*?)(?=\nENGLISH:|$)', raw_text, re.DOTALL)
-        eng_match = re.search(r'ENGLISH:\s*(.*?)(?=\nERRORS:|$)', raw_text, re.DOTALL)
-        err_match = re.search(r'ERRORS:\s*(.*)', raw_text, re.DOTALL)
-
-        if kan_match:
-            result["bot_reply_kannada"] = kan_match.group(1).strip()
-        if eng_match:
-            result["bot_reply_english_translation"] = eng_match.group(1).strip()
-
-        if err_match:
-            err_text = err_match.group(1).strip()
-            if err_text.upper() != "NONE":
-                error_blocks = err_text.split("||")
-                for block in error_blocks:
-                    parts = block.split("::")
-                    if len(parts) >= 3:
-                        result["user_errors"].append({
-                            "original": parts[0].strip(),
-                            "correction": parts[1].strip(),
-                            "reason": parts[2].strip()
-                        })
-
-        if not result["bot_reply_kannada"]:
-            error_msg = f"Parsing Failed. The model ignored instructions. Raw output received:\n\n{raw_text}"
-            print(f"\n--- 🚨 PARSING FAILED. RAW TEXT: 🚨 ---\n{raw_text}\n-----------------------------------\n")
-            return {"error": error_msg}
-
-        return result
 
     except Exception as e:
         return {"error": str(e)}

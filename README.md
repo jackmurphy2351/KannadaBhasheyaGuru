@@ -2,7 +2,7 @@
 
 **An AI-powered personalized language tutor for Kannada learners.**
 
-Kannada Bhasheya Guru is a Python-based web application designed to assist students at the **high-beginner to high-intermediate level** in mastering Kannada grammar and vocabulary. This app acts as a strict but encouraging teacher — using Google Gemini for language intelligence and Sarvam AI for native Kannada speech — to generate lessons, grade quizzes, critique writing, and hold voice conversations grounded in a curated Knowledge Base of grammar rules.
+Kannada Bhasheya Guru is a Python-based web application designed to assist students at the **high-beginner to high-intermediate level** in mastering Kannada grammar and vocabulary. This app acts as a strict but encouraging teacher — using Sarvam AI for both language intelligence and native Kannada speech — to generate lessons, grade quizzes, critique writing, and hold voice conversations grounded in a curated Knowledge Base of grammar rules.
 
 ---
 
@@ -15,13 +15,13 @@ Automatically generates and emails structured lessons based on a learning schedu
 A dynamic quiz engine that generates 10 English sentences of increasing difficulty for a given topic. The student translates each sentence into Kannada, and the AI grades meaning, spelling, and grammar — updating the topic's "Mastery" status in Google Sheets when the student scores 90%+.
 
 ### 💬 Text Chat (Conversation Practice)
-An immersive text-based chatbot powered by Google Gemini. The student selects a **character persona** (shopkeeper, doctor, nosy neighbor, etc.) and a **grammar focus** (compound verbs, conditionals, etc.), then holds a freeform Kannada conversation. The bot responds in-character, provides English translations, and silently logs every grammar error for a post-conversation review.
+An immersive text-based chatbot powered by Sarvam AI (`sarvam-30b`). The student selects a **character persona** (shopkeeper, doctor, nosy neighbor, etc.) and a **grammar focus** (compound verbs, conditionals, etc.), then holds a freeform Kannada conversation. The bot responds in-character, provides English translations, and silently logs every grammar error for a post-conversation review.
 
 ### 🎙️ Voice Chat (Conversation Practice)
 A parallel voice-based conversation mode that chains three APIs together:
 
 1. **Sarvam AI STT** (Speech-to-Text) — transcribes the student's spoken Kannada via the Saaras v3 model.
-2. **Google Gemini** — generates an in-character conversational response (same personas and grammar focus as text chat).
+2. **Sarvam AI** (`sarvam-30b`) — generates an in-character conversational response (same personas and grammar focus as text chat).
 3. **Sarvam AI TTS** (Text-to-Speech) — speaks the bot's Kannada reply aloud using the Bulbul v3 model with a selectable voice and adjustable speech pace.
 
 The student configures a persona, grammar focus, AI voice, and speech pace, then records audio clips directly in the browser. The bot's spoken replies play back inline. Grammar errors are logged and displayed in a post-conversation review, just like text chat.
@@ -42,7 +42,8 @@ The entire interface can be toggled between four display modes: English, Kannada
 | Component | Technology |
 |-----------|------------|
 | **Frontend** | [Streamlit](https://streamlit.io/) |
-| **Conversational AI** | Google Gemini 2.5 Flash (`google-generativeai`) |
+| **Conversational AI** | Sarvam AI `sarvam-30b` (chat, quizzes, lessons, grading) |
+| **Reading Comprehension AI** | Sarvam AI `sarvam-105b` (128K context for accuracy) |
 | **Speech-to-Text** | Sarvam AI Saaras v3 (REST API) |
 | **Text-to-Speech** | Sarvam AI Bulbul v3 (REST API) |
 | **Database** | Google Sheets (`gspread`) |
@@ -56,9 +57,17 @@ The entire interface can be toggled between four display modes: English, Kannada
 ```
 Kannada_Guru/
 ├── main.py                  # Streamlit UI — pages, tabs, and state management
-├── logic.py                 # Backend: Gemini calls, Sarvam STT/TTS, grading, email
+├── logic.py                 # Backend: Sarvam chat completions, STT/TTS, grading, email
 ├── config.py                # API keys, model settings, prompts, UI translations
 ├── requirements.txt         # Python dependencies
+├── pytest.ini               # Test runner configuration
+├── tests/                   # Automated test suite (159 tests, ~1s)
+│   ├── conftest.py          # Shared fixtures
+│   ├── test_utilities.py    # Pure unit tests (clean_json, transliteration, UI text)
+│   ├── test_sarvam_chat.py  # Chat API tests (all network calls mocked)
+│   ├── test_sarvam_voice.py # STT/TTS tests (all network calls mocked)
+│   ├── test_google_sheets.py# Google Sheets integration tests
+│   └── test_email.py        # End-to-end email lesson flow tests
 ├── knowledge_base/          # Grammar modules (.txt files) used as AI context
 │   ├── 1. case_suffixes_in_kannada.txt
 │   ├── 2. adjectives_in_kannada.txt
@@ -82,8 +91,7 @@ You will need API keys/credentials from three services:
 
 | Service | What You Need | What It Powers |
 |---------|--------------|----------------|
-| **Google AI Studio** | Gemini API key | All text generation (chat, quizzes, lessons, grading) |
-| **Sarvam AI** | API subscription key ([dashboard.sarvam.ai](https://dashboard.sarvam.ai)) | Voice chat (STT + TTS) |
+| **Sarvam AI** | API subscription key ([dashboard.sarvam.ai](https://dashboard.sarvam.ai)) | All text generation (chat, quizzes, lessons, grading) + Voice STT/TTS |
 | **Google Cloud** | Service Account JSON with Sheets + Drive API access | Email lessons, quiz tracking, mastery updates |
 
 You will also need a **Google Sheet** with columns: `Topic`, `Status`, `Date Sent` — populated with the grammar topics you want to study. The service account must have edit access to this sheet.
@@ -104,7 +112,7 @@ The dependencies are:
 
 ```
 streamlit
-google-generativeai
+openai>=1.0.0
 gspread
 oauth2client
 python-dotenv
@@ -119,7 +127,6 @@ requests
 Create a `.env` file in the project root (**do not commit this file**):
 
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
 SARVAM_API_KEY=your_sarvam_api_key_here
 GOOGLE_SHEET_NAME=Name_Of_Your_Google_Sheet
 GMAIL_USER=your_email@gmail.com
@@ -140,6 +147,27 @@ The app will be available at `http://localhost:8501`.
 
 ---
 
+## 🧪 Testing
+
+The test suite covers all backend logic without requiring real API credentials — all network calls (Sarvam chat, STT, TTS, Google Sheets, Gmail) are mocked.
+
+```bash
+pip install pytest
+python -m pytest tests/ -v
+```
+
+**159 tests across 5 modules, completing in ~1 second:**
+
+| Module | What It Tests |
+|--------|--------------|
+| `test_utilities.py` | `clean_json`, `toggle_script`, `humanize_transliteration`, `get_ui_text`, `load_knowledge_base` |
+| `test_sarvam_chat.py` | Chat turns, quiz generation, answer grading, writing critique, reading comprehension |
+| `test_sarvam_voice.py` | STT/TTS success paths, error handling, timeouts, payload validation (2500-char truncation, custom speaker/pace) |
+| `test_google_sheets.py` | Credential routing (Streamlit Secrets vs local file), topic filtering, `update_mastery` cell writes |
+| `test_email.py` | Topic selection, HTML email construction, sheet status updates, SMTP/auth error handling |
+
+---
+
 ## 🎙️ Voice Chat — How It Works
 
 The voice chat feature lives under **Conversation Practice → 🎙️ Voice Chat** (a tab alongside the existing text chat). Here is the data flow for a single conversational turn:
@@ -152,8 +180,8 @@ The voice chat feature lives under **Conversation Practice → 🎙️ Voice Cha
                                                 │ Kannada text
                                                 ▼
                                        ┌──────────────────┐
-                                       │  Google Gemini    │
-                                       │  (Chat session)   │
+                                       │  Sarvam AI        │
+                                       │  (sarvam-30b)     │
                                        └────────┬─────────┘
                                                 │ Kannada reply
                                                 ▼
@@ -168,14 +196,14 @@ The voice chat feature lives under **Conversation Practice → 🎙️ Voice Cha
 - Voice chat always sends Kannada Script (ಕನ್ನಡ ಲಿಪಿ) to the TTS, regardless of the sidebar language setting.
 - The Sarvam STT REST API accepts recordings up to **30 seconds** — more than enough for conversational turns.
 - The TTS accepts up to **2500 characters** per request; the code auto-truncates if needed.
-- Grammar errors detected by Gemini are silently logged during the conversation and displayed in a **post-conversation review screen** when the student ends the chat.
+- Grammar errors detected by Sarvam AI are silently logged during the conversation and displayed in a **post-conversation review screen** when the student ends the chat.
 - The student can select from multiple TTS voices and adjust speech pace (0.5× to 2.0×) to match their listening level.
 
 ---
 
 ## 🔧 Adapting This Project for Another Language
 
-This codebase is designed to be adapted for other Indic languages supported by both Gemini and Sarvam AI. Here is what you would need to change:
+This codebase is designed to be adapted for other Indic languages supported by Sarvam AI. Here is what you would need to change:
 
 ### Knowledge Base
 Replace the `.txt` files in `knowledge_base/` with grammar guides for your target language. The AI uses these files as grounding context for all generation and grading tasks. The more structured and detailed your grammar files are, the better the AI's corrections will be.

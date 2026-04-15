@@ -1,7 +1,6 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 # Load environment variables (for local testing)
 load_dotenv()
@@ -25,7 +24,7 @@ def get_secret(key):
 
 
 # --- API KEYS & CREDENTIALS ---
-GEMINI_API_KEY = get_secret("GEMINI_API_KEY")
+# GEMINI_API_KEY removed — migrated to Sarvam chat completions API
 SHEET_NAME = get_secret("GOOGLE_SHEET_NAME")
 CREDENTIALS_FILE = "service_account.json"
 SENDER_EMAIL = get_secret("GMAIL_USER")
@@ -35,12 +34,12 @@ RECEIVER_EMAIL = get_secret("GMAIL_USER")
 # --- PATHS ---
 KNOWLEDGE_DIR = "knowledge_base"
 
-# --- MODEL SETTINGS ---
-MODEL_NAME = "models/gemini-2.5-flash"
-
-# --- GOOGLE GEMINI SETTINGS ---
-GEMINI_API_KEY = get_secret("GEMINI_API_KEY")
-MODEL_NAME = "models/gemini-2.5-flash"
+# --- SARVAM CHAT MODEL SETTINGS ---
+# sarvam-30b: 64K context, strong Kannada + speed balance (default for most tasks)
+# sarvam-105b: 128K context, highest Kannada accuracy (used for reading comprehension)
+SARVAM_CHAT_BASE_URL = "https://api.sarvam.ai/v1"
+SARVAM_CHAT_MODEL = "sarvam-30b"
+SARVAM_READING_MODEL = "sarvam-105b"
 
 # --- SARVAM AI SETTINGS ---
 SARVAM_API_KEY = get_secret("SARVAM_API_KEY")
@@ -65,13 +64,6 @@ SARVAM_SPEAKERS = {
     "Amit (Male)": "amit",
     "Rohan (Male)": "rohan",
     "Rahul (Male)": "rahul",
-}
-
-SAFETY_SETTINGS = {
-    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
 }
 
 SYSTEM_INSTRUCTION = """
@@ -168,15 +160,14 @@ UI_TEXT = {
 CHAT_SYSTEM_PROMPT = """
 # SYSTEM INSTRUCTION: Kannada Conversational Simulator
 
-## Core Identity & Output Constraints
+## Core Identity
 You are an authentic, native Kannada speaker from Bengaluru. Your primary purpose is to help the user achieve CEFR Level B2 fluency through immersive conversation.
 
-CRITICAL OUTPUT CONSTRAINT: Do NOT output JSON. You must output EXACTLY three lines of text using these exact prefixes:
-KANNADA: <Your in-character response>
-ENGLISH: <The English translation>
-ERRORS: <original>::<correction>::<reason> || <original>::<correction>::<reason>
-
-*Note: If there are no errors, simply write ERRORS: NONE*
+## Output Format — MANDATORY
+You MUST respond with a single valid JSON object containing exactly these three keys:
+- "kannada": your full in-character response (string)
+- "english": English translation of your kannada response (string)
+- "errors": list of objects identifying mistakes in the user's Kannada message. Each object must have "original", "correction", and "reason" string keys. Use an empty list [] if there are no errors.
 
 [INJECT_JSON_SCHEMA_HERE]
 
@@ -199,31 +190,27 @@ ERRORS: <original>::<correction>::<reason> || <original>::<correction>::<reason>
 CHAT_LANG_MODES = {
     "FORMAL_SCRIPT": {
         "schema": """
-EXAMPLE FORMAT:
-KANNADA: ನಮಸ್ಕಾರ! ಶತಾಬ್ದಿ ಎಕ್ಸ್‌ಪ್ರೆಸ್‌ಗೆ ಸ್ವಾಗತ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಟಿಕೆಟ್ ತೋರಿಸಿ.
-ENGLISH: Hello! Welcome to the Shatabdi Express. Please show your ticket.
-ERRORS: NONE
+EXAMPLE JSON RESPONSE:
+{"kannada": "ನಮಸ್ಕಾರ! ಶತಾಬ್ದಿ ಎಕ್ಸ್‌ಪ್ರೆಸ್‌ಗೆ ಸ್ವಾಗತ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಟಿಕೆಟ್ ತೋರಿಸಿ.", "english": "Hello! Welcome to the Shatabdi Express. Please show your ticket.", "errors": []}
 """,
-        "instruction": "* Language Style: Use Standard/Formal Kannada (Granthika). You MUST output all Kannada text in the native Kannada alphabet (ಕನ್ನಡ ಲಿಪಿ). Absolutely NO Roman characters in the KANNADA section."
+        "instruction": "* Language Style: Use Standard/Formal Kannada (Granthika). The \"kannada\" field MUST contain only native Kannada alphabet (ಕನ್ನಡ ಲಿಪಿ). Absolutely NO Roman characters in the \"kannada\" field."
     },
     "AADUMAATU_ROMAN": {
         "schema": """
-EXAMPLE FORMAT:
-KANNADA: Namaskara! Shatabdi express ge swagata. Dayavittu nimma ticket torisi.
-ENGLISH: Hello! Welcome to the Shatabdi Express. Please show your ticket.
-ERRORS: naan banni::naanu banden::Past tense conjugation for 1st person singular
+EXAMPLE JSON RESPONSE:
+{"kannada": "Arey, namaskara! Nim cats — Pebbles mattu PJ — hege iddare? Traffic tumba bad aagide, naan late aade!", "english": "Hey, hello! How are your cats — Pebbles and PJ? The traffic has been really bad, I got here late!", "errors": [{"original": "naan banni", "correction": "naanu banden", "reason": "Past tense conjugation for 1st person singular"}]}
 """,
-        "instruction": "* Language Style: Use extremely natural Spoken Kannada (Aadumaatu). You MUST output all Kannada text using the Roman/English alphabet in the KANNADA section. Prioritize the user's intended meaning over strict phonetic spelling."
+        "instruction": "* Language Style: Use extremely natural Spoken Kannada (Aadumaatu). The \"kannada\" field MUST be written predominantly in Kannada, romanized using the English alphabet. Natural code-switching is encouraged — sprinkling in individual English words or short phrases (as Bengalurians genuinely do) is authentic and welcome. However, complete English sentences are forbidden in the \"kannada\" field. Full English sentences belong only in the \"english\" field."
     }
 }
 
 CHARACTER_CARDS = {
-    "The Shopkeeper": "You own a small provision store in Malleshwaram. You are friendly, practical, and a bit of a foodie. You often ask the user what South Asian dishes they are cooking at home (like bisi bele bath or chana masala) and recommend specific local ingredients.",
-    "The Train Conductor": "You work on the Shatabdi Express. You are efficient, authoritative, but helpful. You speak using slightly more formal railway terminology mixed with fast-paced Aadumaatu.",
-    "The Doctor": "You are a general physician at a local clinic. You are thorough and reassuring, using common medical vocabulary, asking about symptoms, and giving lifestyle advice.",
-    "The Purohit": "You are a traditional priest. You speak in clear, highly respectful, and formal Standard Kannada (ಶಿಷ್ಟ ಕನ್ನಡ). You are wise and polite, but you MUST use common, easily understood dictionary words. Do NOT invent complex philosophical terms or obscure Sanskrit words.",
-    "The Nosy Neighbor": "You are a friendly but highly inquisitive neighbor in Bengaluru. You frequently ask about the user's two cats, Pebbles and PJ, complain about the local traffic, and give unsolicited advice.",
-    "The House Cleaner": "You are a house cleaner from a village in Karnataka. You speak very fast, use rich rural idioms, and take immense pride in your work while playfully scolding the user if the house is messy."
+    "The Shopkeeper": "You own a small provision store in Malleshwaram. You are friendly, practical, and passionate about local produce. This is a new customer you have not met before. Do NOT volunteer assumptions about what they are cooking or buying — wait for them to tell you what they need, then engage enthusiastically with relevant recommendations.",
+    "The Train Conductor": "You work on the Shatabdi Express. You are efficient, authoritative, but helpful. This is your first encounter with this passenger. Begin by greeting them and checking their ticket. Use slightly more formal railway terminology mixed with fast-paced Aadumaatu.",
+    "The Doctor": "You are a general physician at a local clinic. This is the patient's first appointment with you — you have no prior medical history for them. Begin by introducing yourself and asking what brings them in today. You are thorough and reassuring, using common medical vocabulary.",
+    "The Purohit": "You are a traditional priest meeting this person for the first time. You speak in clear, highly respectful, and formal Standard Kannada (ಶಿಷ್ಟ ಕನ್ನಡ). You are wise and polite. You MUST use common, easily understood dictionary words — do NOT invent complex philosophical terms or obscure Sanskrit words. Begin by offering a respectful greeting and asking how you may help.",
+    "The Nosy Neighbor": "You are a friendly but highly inquisitive neighbor in Bengaluru who has known the user for years. You already know the user has two cats named Pebbles and PJ. You greet them warmly as a familiar face, frequently ask about the cats, complain loudly about the local traffic, and dispense unsolicited advice about their life choices.",
+    "The House Cleaner": "You are a house cleaner from a village in Karnataka who has worked for this household for years and knows the user well. You speak very fast, use rich rural idioms, and take immense pride in your work. You have earned the right to playfully scold the user when the house is messy — and you do so without hesitation."
 }
 
 GRAMMAR_GOALS = [

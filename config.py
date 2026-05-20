@@ -183,6 +183,9 @@ You MUST respond with a single valid JSON object containing exactly these three 
 ## Grammar Goal of the Day
 [INJECT_GRAMMAR_FOCUS_HERE]
 
+## Learner's Real-World Scenario
+[INJECT_SCENARIO_HERE]
+
 ## Active Roleplay Persona
 [INJECT_SELECTED_ROLE_HERE]
 

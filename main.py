@@ -838,6 +838,7 @@ def render_voice_chat(lang_mode):
         st.session_state.vc_display = []       # UI display messages
         st.session_state.vc_errors = []        # Logged grammar errors
         st.session_state.vc_last_audio_id = None  # Dedup recordings
+        st.session_state.vc_scenario = ""
 
     # --- STATE A: Setup (only when NOT active AND NOT in review) ---
     if not st.session_state.vc_active and not st.session_state.vc_show_review:
@@ -863,19 +864,28 @@ def render_voice_chat(lang_mode):
                 help="Lower = slower (good for beginners). Default 0.85."
             )
 
+        vc_scenario = st.text_area(
+            "Real-world scenario (optional)",
+            placeholder="Describe a real situation you'll face this week.",
+            height=80,
+            key="vc_scenario_input",
+        )
+
         if st.button("Start Voice Chat", key="vc_start_btn"):
             st.session_state.vc_active = True
             st.session_state.vc_role = vc_role
             st.session_state.vc_focus = vc_focus
             st.session_state.vc_speaker = config.SARVAM_SPEAKERS[vc_speaker]
             st.session_state.vc_pace = vc_pace
+            st.session_state.vc_scenario = vc_scenario
 
             # Bot speaks first — generate opening line
             with st.spinner("Your conversation partner is getting ready..."):
                 init_prompt = "Please start the conversation in character. You speak first."
                 # Force Script mode so the model returns Kannada script (needed for TTS)
                 res = logic.generate_chat_turn_ai(
-                    init_prompt, [], vc_focus, vc_role, "Kannada (Script)"
+                    init_prompt, [], vc_focus, vc_role, "Kannada (Script)",
+                    scenario=st.session_state.vc_scenario,
                 )
 
                 if "error" not in res:
@@ -979,6 +989,7 @@ def render_voice_chat(lang_mode):
                             st.session_state.vc_focus,
                             st.session_state.vc_role,
                             "Kannada (Script)",  # Always Script for TTS compatibility
+                            scenario=st.session_state.vc_scenario,
                         )
 
                     if "error" not in res:
@@ -1046,6 +1057,7 @@ def render_voice_chat(lang_mode):
             st.session_state.vc_display = []
             st.session_state.vc_errors = []
             st.session_state.vc_last_audio_id = None
+            st.session_state.vc_scenario = ""
             st.rerun()
 
 
@@ -1130,6 +1142,7 @@ def main():
                 st.session_state.chat_history = []
                 st.session_state.chat_display = []
                 st.session_state.user_errors = []
+                st.session_state.chat_scenario = ""
                 st.session_state.error_quiz_active = False
                 st.session_state.error_quiz_questions = []
                 st.session_state.error_quiz_index = 0
@@ -1141,16 +1154,29 @@ def main():
                 st.write("### Configure your conversational partner")
                 selected_role = st.selectbox("Persona", list(config.CHARACTER_CARDS.keys()))
                 selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
+                chat_scenario = st.text_area(
+                    "Real-world scenario (optional)",
+                    placeholder=(
+                        "Describe a real situation you'll face this week — e.g. "
+                        "'I need to buy vegetables at the local market and haggle over the price.'"
+                    ),
+                    height=80,
+                    key="chat_scenario_input",
+                )
 
                 if st.button("Start Conversation"):
                     st.session_state.chat_active = True
                     st.session_state.chat_role = selected_role
                     st.session_state.chat_focus = selected_focus
+                    st.session_state.chat_scenario = chat_scenario
 
                     # Trigger bot to speak first
                     with st.spinner("Connecting to Bengaluru..."):
                         init_prompt = "Please start the conversation in character. You speak first."
-                        res = logic.generate_chat_turn_ai(init_prompt, [], selected_focus, selected_role, lang_mode)
+                        res = logic.generate_chat_turn_ai(
+                            init_prompt, [], selected_focus, selected_role, lang_mode,
+                            scenario=st.session_state.chat_scenario,
+                        )
 
                         if "error" not in res:
                             st.session_state.chat_history.append({"role": "user", "content": init_prompt})
@@ -1200,7 +1226,8 @@ def main():
                             st.session_state.chat_history,
                             st.session_state.chat_focus,
                             st.session_state.chat_role,
-                            lang_mode
+                            lang_mode,
+                            scenario=st.session_state.chat_scenario,
                         )
 
                         if "error" not in res:
@@ -1322,6 +1349,7 @@ def main():
                     st.session_state.chat_history = []
                     st.session_state.chat_display = []
                     st.session_state.user_errors = []
+                    st.session_state.chat_scenario = ""
                     st.session_state.error_quiz_active = False
                     st.session_state.error_quiz_questions = []
                     st.session_state.error_quiz_index = 0

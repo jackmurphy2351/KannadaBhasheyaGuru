@@ -1130,6 +1130,11 @@ def main():
                 st.session_state.chat_history = []
                 st.session_state.chat_display = []
                 st.session_state.user_errors = []
+                st.session_state.error_quiz_active = False
+                st.session_state.error_quiz_questions = []
+                st.session_state.error_quiz_index = 0
+                st.session_state.error_quiz_score = 0
+                st.session_state.error_quiz_history = []
 
             # 2. STATE A: Setup Phase
             if not st.session_state.chat_active and not st.session_state.show_review:
@@ -1227,6 +1232,89 @@ def main():
                             st.write(f"**Correction:** {corr}")
                             st.write(f"**Reason:** {err.get('reason', '')}")
 
+                    st.markdown("---")
+                    if not st.session_state.error_quiz_active:
+                        if st.button("Practice These Errors 🎯"):
+                            with st.spinner("Generating targeted practice questions..."):
+                                qs = logic.generate_error_quiz(
+                                    st.session_state.user_errors, st.session_state.context
+                                )
+                                st.session_state.error_quiz_questions = qs
+                                st.session_state.error_quiz_index = 0
+                                st.session_state.error_quiz_score = 0
+                                st.session_state.error_quiz_history = []
+                                st.session_state.error_quiz_active = True
+                                st.rerun()
+                    else:
+                        total = len(st.session_state.error_quiz_questions)
+                        st.markdown("### 🎯 Error Practice Mini-Quiz")
+
+                        if st.session_state.error_quiz_history:
+                            st.markdown("#### Previous Answers")
+                            for i, item in enumerate(st.session_state.error_quiz_history):
+                                with st.expander(f"Q{i + 1}: {item['question']}", expanded=False):
+                                    st.write(f"**Your Answer:** {item['user_answer']}")
+                                    feed = logic.toggle_script(item['feedback'], lang_mode)
+                                    corr = logic.toggle_script(item['correct_translation'], lang_mode)
+                                    if item['correct']:
+                                        st.success(feed)
+                                        st.info(f"Standard Kannada: {corr}")
+                                    else:
+                                        st.error(feed)
+                                        st.write(f"**Correct:** {corr}")
+                            st.markdown("---")
+
+                        q_idx = st.session_state.error_quiz_index
+                        if q_idx < total:
+                            q_text = st.session_state.error_quiz_questions[q_idx]
+                            st.progress(q_idx / total)
+                            st.markdown(f"### Q{q_idx + 1}: {q_text}")
+
+                            if len(st.session_state.error_quiz_history) == q_idx:
+                                st.write(logic.get_ui_text("LBL_TRANS", lang_mode))
+                                user_ans = st.text_input(
+                                    "Answer", key=f"eq_input_{q_idx}",
+                                    label_visibility="collapsed"
+                                )
+                                if st.button(logic.get_ui_text("BTN_SUBMIT", lang_mode), key="eq_submit"):
+                                    with st.spinner("Grading..."):
+                                        res = logic.grade_answer_ai(
+                                            q_text, user_ans, st.session_state.context
+                                        )
+                                        history_item = {
+                                            'question': q_text,
+                                            'user_answer': user_ans,
+                                            'correct': res['is_correct'],
+                                            'feedback': res['feedback'],
+                                            'correct_translation': res.get('correct_translation', '')
+                                        }
+                                        st.session_state.error_quiz_history.append(history_item)
+                                        if res['is_correct']:
+                                            st.session_state.error_quiz_score += 1
+                                        st.rerun()
+                            else:
+                                last = st.session_state.error_quiz_history[-1]
+                                feed_text = logic.toggle_script(last['feedback'], lang_mode)
+                                corr_text = logic.toggle_script(last['correct_translation'], lang_mode)
+                                if last['correct']:
+                                    st.success(f"Correct! {feed_text}")
+                                    st.info(f"Standard Kannada: {corr_text}")
+                                else:
+                                    st.error(f"Incorrect. {feed_text}")
+                                    st.write(f"**Correct Answer:** {corr_text}")
+
+                                is_last = (q_idx == total - 1)
+                                btn_label = "See Results 🏁" if is_last else logic.get_ui_text("BTN_NEXT", lang_mode)
+                                if st.button(btn_label, key="eq_next"):
+                                    st.session_state.error_quiz_index += 1
+                                    st.rerun()
+                        else:
+                            score = st.session_state.error_quiz_score
+                            st.markdown(f"## Score: {score}/{total}")
+                            if st.button("Back to Review"):
+                                st.session_state.error_quiz_active = False
+                                st.rerun()
+
                 st.markdown("---")
                 if st.button("Start New Conversation"):
                     st.session_state.chat_active = False
@@ -1234,6 +1322,11 @@ def main():
                     st.session_state.chat_history = []
                     st.session_state.chat_display = []
                     st.session_state.user_errors = []
+                    st.session_state.error_quiz_active = False
+                    st.session_state.error_quiz_questions = []
+                    st.session_state.error_quiz_index = 0
+                    st.session_state.error_quiz_score = 0
+                    st.session_state.error_quiz_history = []
                     st.rerun()
 
         # ================================================================

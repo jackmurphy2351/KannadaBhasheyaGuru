@@ -54,9 +54,9 @@ Unlike Hindi, where you use the Past Participle + To Be (*Baitha hoon*), Kannada
 
 | Verb | Written Form | Spoken Form (Bengaluru) | Meaning | Hindi |
 | :--- | :--- | :--- | :--- | :--- |
-| **To Sit** | **Kuḷitukoṇḍiddēne** | **Kūtkondiddīni** | I am sitting | *Baiṭha hūn* |
-| **To Stand** | **Nintukoṇḍiddēne** | **Nintkondiddīni** | I am standing | *Khaḍā hūn* |
-| **To Sleep** | **Malagikoṇḍiddēne** | **Malkondiddīni** | I am sleeping | *Soyā hūn* |
+| **To Sit** | **Kuḷitukoṇḍiddēne** | **Kūtkonḍiddīni** | I am sitting | *Baiṭha hūn* |
+| **To Stand** | **Nintukoṇḍiddēne** | **Nintkonḍiddīni** | I am standing | *Khaḍā hūn* |
+| **To Sleep** | **Malagikoṇḍiddēne** | **Malkonḍiddīni** | I am sleeping | *Soyā hūn* |
 
 ---
 

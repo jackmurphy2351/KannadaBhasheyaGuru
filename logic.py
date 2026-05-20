@@ -253,7 +253,7 @@ def update_mastery(row_num):
 def generate_quiz(topic, context):
     # CHANGED: Reverted to 10 questions to save API quota
     prompt = f"""
-    TASK: Generate exactly 10 simple sentences in English based on the topic "{topic}" 
+    TASK: Generate exactly 10 simple sentences in English based on the topic "{topic}"
     that the student must translate into Kannada. The sentences should use a diverse range of vocabulary
     and should increase in length and complexity following this pattern:
     * First 3 sentences are easy (short and simple)
@@ -265,6 +265,29 @@ def generate_quiz(topic, context):
     data = clean_json(res)
     if data:
         return data
+    return ["Error generating questions."]
+
+
+def generate_error_quiz(errors: list, context: str) -> list:
+    """Generate 5 English sentences targeting the grammar patterns from the user's error log."""
+    error_summary = "\n".join(
+        f"- Used: '{e.get('original', '')}' → Correct: '{e.get('correction', '')}' "
+        f"({e.get('reason', '')})"
+        for e in errors
+    )
+    prompt = f"""
+    A student made the following grammar errors during a Kannada conversation:
+    {error_summary}
+
+    TASK: Generate exactly 5 English sentences that specifically exercise the grammar
+    patterns identified in the errors above. Each sentence should require the student
+    to produce the correct grammatical structure they previously got wrong.
+    OUTPUT: JSON list of 5 strings. Example: ["I go home.", "She is eating rice."]
+    """
+    res = generate_content(prompt, context)
+    data = clean_json(res)
+    if data and isinstance(data, list):
+        return data[:5]
     return ["Error generating questions."]
 
 
@@ -386,12 +409,28 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
             response_format={"type": "json_object"},
         )
         raw_text = response.choices[0].message.content
+        finish_reason = response.choices[0].finish_reason
+
+        print(
+            f"\n--- Chat Turn Diagnostics ---\n"
+            f"  finish_reason : {finish_reason}\n"
+            f"  output chars  : {len(raw_text)}\n"
+            f"  messages in   : {len(messages)}\n"
+            f"  raw[:400]     : {raw_text[:400]}\n"
+            f"-----------------------------\n"
+        )
 
         # 5. Deterministic JSON parsing — no regex, no fallbacks
         data = clean_json(raw_text)
         if not data or not data.get("kannada"):
-            print(f"\n--- 🚨 JSON PARSING FAILED. RAW TEXT: 🚨 ---\n{raw_text}\n-----------------------------------\n")
-            return {"error": f"Parsing failed. Raw output:\n\n{raw_text}"}
+            print(f"\n--- 🚨 JSON PARSING FAILED 🚨 ---\nfull raw:\n{raw_text}\n---------------------------------\n")
+            return {
+                "error": (
+                    f"Parsing failed "
+                    f"[finish_reason={finish_reason}, chars={len(raw_text)}]."
+                    f"\n\nRaw output:\n\n{raw_text}"
+                )
+            }
 
         return {
             "bot_reply_kannada": data.get("kannada", ""),

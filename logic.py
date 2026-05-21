@@ -386,9 +386,8 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
     _CUSTOM = "Custom Scenario"
     if role_key == _CUSTOM:
         role_text = (
-            "The learner has described the following real-world scenario. Adopt the most "
-            "appropriate conversational role and play it authentically throughout the session:\n\n"
-            + (scenario.strip() or "No scenario provided — be a helpful, generic Bengalurean.")
+            scenario.strip()
+            or "You are a friendly, helpful Bengalurean. Converse naturally and authentically in Kannada."
         )
         scenario_text = "The learner's situation is fully described in the Active Roleplay Persona section below."
     else:
@@ -423,6 +422,7 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
             model=config.SARVAM_CHAT_MODEL,
             messages=messages,
             response_format={"type": "json_object"},
+            max_tokens=8192,
         )
         raw_text = response.choices[0].message.content or ""
         finish_reason = response.choices[0].finish_reason

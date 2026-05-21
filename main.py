@@ -875,14 +875,24 @@ def render_voice_chat(lang_mode):
             )
 
         if vc_is_custom:
+            st.info(
+                "**Write a character card for your conversation partner, starting with "
+                "\"You are...\"** — just like the predefined personas.  \n"
+                "Include their role, personality, background, and any quirks. "
+                "The more detail you provide, the more authentic the conversation. "
+                "*(Max 1500 characters)*"
+            )
             vc_scenario = st.text_area(
-                "Describe your scenario",
+                "Describe your conversation partner",
                 placeholder=(
-                    "Describe who you're talking to and what the situation is — e.g., "
-                    "'I am about to meet a trekking guide in Chikmagalur who will lead "
-                    "me on a 2-day hike through the coffee estates.'"
+                    "You are a trekking guide in your thirties based in Chikmagalur. You are "
+                    "deeply knowledgeable about the local coffee estates, wildlife, and trails, "
+                    "and you speak enthusiastically about the region's history. You are practical "
+                    "and direct about gear requirements and safety, but warm and encouraging with "
+                    "first-time visitors."
                 ),
-                height=120,
+                height=150,
+                max_chars=1500,
                 key="vc_scenario_input",
             )
         else:
@@ -913,7 +923,7 @@ def render_voice_chat(lang_mode):
                 if "error" not in res:
                     # Save to chat history
                     st.session_state.vc_history.append({"role": "user", "content": init_prompt})
-                    st.session_state.vc_history.append({"role": "assistant", "content": res.get("raw_text", res.get("bot_reply_kannada", ""))})
+                    st.session_state.vc_history.append({"role": "assistant", "content": res.get("bot_reply_kannada", "")})
 
                     kannada_text = res.get("bot_reply_kannada", "")
                     english_text = res.get("bot_reply_english_translation", "")
@@ -1017,7 +1027,7 @@ def render_voice_chat(lang_mode):
                     if "error" not in res:
                         # Update chat history
                         st.session_state.vc_history.append({"role": "user", "content": user_text})
-                        st.session_state.vc_history.append({"role": "assistant", "content": res.get("raw_text", res.get("bot_reply_kannada", ""))})
+                        st.session_state.vc_history.append({"role": "assistant", "content": res.get("bot_reply_kannada", "")})
 
                         kannada_reply = res.get("bot_reply_kannada", "")
                         english_reply = res.get("bot_reply_english_translation", "")
@@ -1196,15 +1206,24 @@ def main():
                 else:
                     selected_role = "Custom Scenario"
                     selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
+                    st.info(
+                        "**Write a character card for your conversation partner, starting with "
+                        "\"You are...\"** — just like the predefined personas.  \n"
+                        "Include their role, personality, background, and any quirks. "
+                        "The more detail you provide, the more authentic the conversation. "
+                        "*(Max 1500 characters)*"
+                    )
                     chat_scenario = st.text_area(
-                        "Describe your scenario",
+                        "Describe your conversation partner",
                         placeholder=(
-                            "Describe who you're talking to and what the situation is — e.g., "
-                            "'I am about to meet a trekking guide in Chikmagalur who will lead "
-                            "me on a 2-day hike through the coffee estates. I want to practise "
-                            "discussing the route, what gear to bring, and local wildlife.'"
+                            "You are a pet store employee in your mid-twenties who is passionate about "
+                            "cats and dogs. You are knowledgeable about a wide range of brands of cat "
+                            "and dog food, toys, and accessories, and you enjoy making recommendations "
+                            "based on a customer's specific needs. You are friendly and enthusiastic, "
+                            "and you always ask customers about their pets before suggesting products."
                         ),
-                        height=120,
+                        height=150,
+                        max_chars=1500,
                         key="chat_scenario_input",
                     )
 
@@ -1224,7 +1243,7 @@ def main():
 
                         if "error" not in res:
                             st.session_state.chat_history.append({"role": "user", "content": init_prompt})
-                            st.session_state.chat_history.append({"role": "assistant", "content": res.get("raw_text", res.get("bot_reply_kannada", ""))})
+                            st.session_state.chat_history.append({"role": "assistant", "content": res.get("bot_reply_kannada", "")})
                             st.session_state.chat_display.append({
                                 "role": "assistant",
                                 "kannada": res.get("bot_reply_kannada", ""),
@@ -1276,7 +1295,7 @@ def main():
 
                         if "error" not in res:
                             st.session_state.chat_history.append({"role": "user", "content": prompt})
-                            st.session_state.chat_history.append({"role": "assistant", "content": res.get("raw_text", res.get("bot_reply_kannada", ""))})
+                            st.session_state.chat_history.append({"role": "assistant", "content": res.get("bot_reply_kannada", "")})
                             st.session_state.chat_display.append({
                                 "role": "assistant",
                                 "kannada": res.get("bot_reply_kannada", ""),

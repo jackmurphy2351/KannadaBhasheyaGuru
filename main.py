@@ -846,8 +846,9 @@ def render_voice_chat(lang_mode):
 
         vc_col1, vc_col2 = st.columns(2)
         with vc_col1:
-            vc_role = st.selectbox(
-                "Persona", list(config.CHARACTER_CARDS.keys()), key="vc_role_sel"
+            vc_persona_options = list(config.CHARACTER_CARDS.keys()) + ["Custom Scenario 🌐"]
+            vc_role_display = st.selectbox(
+                "Persona", vc_persona_options, key="vc_role_sel"
             )
             vc_focus = st.selectbox(
                 "Grammar Focus", config.GRAMMAR_GOALS, key="vc_focus_sel"
@@ -864,12 +865,27 @@ def render_voice_chat(lang_mode):
                 help="Lower = slower (good for beginners). Default 0.85."
             )
 
-        vc_scenario = st.text_area(
-            "Real-world scenario (optional)",
-            placeholder="Describe a real situation you'll face this week.",
-            height=80,
-            key="vc_scenario_input",
-        )
+        vc_is_custom = vc_role_display == "Custom Scenario 🌐"
+        vc_role = "Custom Scenario" if vc_is_custom else vc_role_display
+
+        if vc_is_custom:
+            vc_scenario = st.text_area(
+                "Describe your scenario",
+                placeholder=(
+                    "Describe who you're talking to and what the situation is — e.g., "
+                    "'I am about to meet a trekking guide in Chikmagalur who will lead "
+                    "me on a 2-day hike through the coffee estates.'"
+                ),
+                height=120,
+                key="vc_scenario_input",
+            )
+        else:
+            vc_scenario = st.text_area(
+                "Real-world scenario (optional)",
+                placeholder="Describe a real situation you'll face this week.",
+                height=80,
+                key="vc_scenario_input",
+            )
 
         if st.button("Start Voice Chat", key="vc_start_btn"):
             st.session_state.vc_active = True
@@ -1152,17 +1168,35 @@ def main():
             # 2. STATE A: Setup Phase
             if not st.session_state.chat_active and not st.session_state.show_review:
                 st.write("### Configure your conversational partner")
-                selected_role = st.selectbox("Persona", list(config.CHARACTER_CARDS.keys()))
+                persona_options = list(config.CHARACTER_CARDS.keys()) + ["Custom Scenario 🌐"]
+                selected_role_display = st.selectbox("Persona", persona_options)
+                is_custom = selected_role_display == "Custom Scenario 🌐"
+                selected_role = "Custom Scenario" if is_custom else selected_role_display
+
                 selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
-                chat_scenario = st.text_area(
-                    "Real-world scenario (optional)",
-                    placeholder=(
-                        "Describe a real situation you'll face this week — e.g. "
-                        "'I need to buy vegetables at the local market and haggle over the price.'"
-                    ),
-                    height=80,
-                    key="chat_scenario_input",
-                )
+
+                if is_custom:
+                    chat_scenario = st.text_area(
+                        "Describe your scenario",
+                        placeholder=(
+                            "Describe who you're talking to and what the situation is — e.g., "
+                            "'I am about to meet a trekking guide in Chikmagalur who will lead "
+                            "me on a 2-day hike through the coffee estates. I want to practise "
+                            "discussing the route, what gear to bring, and local wildlife.'"
+                        ),
+                        height=120,
+                        key="chat_scenario_input",
+                    )
+                else:
+                    chat_scenario = st.text_area(
+                        "Real-world scenario (optional)",
+                        placeholder=(
+                            "Describe a real situation you'll face this week — e.g. "
+                            "'I need to buy vegetables at the local market and haggle over the price.'"
+                        ),
+                        height=80,
+                        key="chat_scenario_input",
+                    )
 
                 if st.button("Start Conversation"):
                     st.session_state.chat_active = True

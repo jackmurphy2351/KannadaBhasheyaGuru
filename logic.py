@@ -383,12 +383,21 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
         track = config.CHAT_LANG_MODES["FORMAL_SCRIPT"]
 
     # 2. Prepare the dynamic system instruction
-    role_text = config.CHARACTER_CARDS.get(role_key, "")
-    scenario_text = (
-        f"The learner is preparing for this real-world situation: {scenario.strip()}"
-        if scenario and scenario.strip()
-        else "No specific scenario — carry on a natural conversation in character."
-    )
+    _CUSTOM = "Custom Scenario"
+    if role_key == _CUSTOM:
+        role_text = (
+            "The learner has described the following real-world scenario. Adopt the most "
+            "appropriate conversational role and play it authentically throughout the session:\n\n"
+            + (scenario.strip() or "No scenario provided — be a helpful, generic Bengalurean.")
+        )
+        scenario_text = "The learner's situation is fully described in the Active Roleplay Persona section below."
+    else:
+        role_text = config.CHARACTER_CARDS.get(role_key, "")
+        scenario_text = (
+            f"The learner is preparing for this real-world situation: {scenario.strip()}"
+            if scenario and scenario.strip()
+            else "No specific scenario — carry on a natural conversation in character."
+        )
     system_instruction = config.CHAT_SYSTEM_PROMPT.replace(
         "[INJECT_JSON_SCHEMA_HERE]", track["schema"]
     ).replace(

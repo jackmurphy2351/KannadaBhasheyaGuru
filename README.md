@@ -1,5 +1,7 @@
 # 🏫 Kannada Bhasheya Guru
 
+![Tests](https://img.shields.io/badge/tests-159%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+
 **An AI-powered personalized language tutor for Kannada learners.**
 
 Kannada Bhasheya Guru is a Python-based web application designed to assist students at the **high-beginner to high-intermediate level** in mastering Kannada grammar and vocabulary. This app acts as a strict but encouraging teacher — using Sarvam AI for both language intelligence and native Kannada speech — to generate lessons, grade quizzes, critique writing, and hold voice conversations grounded in a curated Knowledge Base of grammar rules.
@@ -15,7 +17,9 @@ Automatically generates and emails structured lessons based on a learning schedu
 A dynamic quiz engine that generates 10 English sentences of increasing difficulty for a given topic. The student translates each sentence into Kannada, and the AI grades meaning, spelling, and grammar — updating the topic's "Mastery" status in Google Sheets when the student scores 90%+.
 
 ### 💬 Text Chat (Conversation Practice)
-An immersive text-based chatbot powered by Sarvam AI (`sarvam-30b`). The student selects a **character persona** (shopkeeper, doctor, nosy neighbor, etc.) and a **grammar focus** (compound verbs, conditionals, etc.), then holds a freeform Kannada conversation. The bot responds in-character, provides English translations, and silently logs every grammar error for a post-conversation review.
+An immersive text-based chatbot powered by Sarvam AI (`sarvam-30b`). The student selects from **8 richly-detailed character personas** (shopkeeper, doctor, train conductor, nosy neighbor, landlord, auto driver, house cleaner, or a traditional priest) and a **grammar focus** (compound verbs, conditionals, etc.), then holds a freeform Kannada conversation. A **Custom Scenario** mode lets you write your own character card for any conversation partner you need to practice with.
+
+After each conversation, a **post-session error log** surfaces every grammar mistake silently tracked during the chat. A "Practice These Errors" button then generates a targeted 5-question mini-quiz drilling exactly the patterns you got wrong.
 
 ### 🎙️ Voice Chat (Conversation Practice)
 A parallel voice-based conversation mode that chains three APIs together:
@@ -37,6 +41,12 @@ The entire interface can be toggled between four display modes: English, Kannada
 
 ---
 
+## ⚠️ Disclaimer
+
+This tool uses Large Language Models (LLMs) to generate content. While instructed to adhere to strict grammar rules, the AI may occasionally produce errors or "hallucinations." It is intended as a study aid, not a replacement for a human instructor.
+
+---
+
 ## 🛠️ Technical Stack
 
 | Component | Technology |
@@ -48,6 +58,7 @@ The entire interface can be toggled between four display modes: English, Kannada
 | **Text-to-Speech** | Sarvam AI Bulbul v3 (REST API) |
 | **Database** | Google Sheets (`gspread`) |
 | **Audio Input** | Streamlit native `st.audio_input` (no third-party components) |
+| **Test Suite** | pytest — 159 tests across 5 modules, ~1s runtime, all network calls mocked |
 | **Environment** | Python 3.10+ |
 
 ---
@@ -87,16 +98,15 @@ Kannada_Guru/
 
 ### 1. Prerequisites
 
-You will need API keys/credentials from three services:
+You will need credentials from three separate services:
 
 | Service | What You Need | What It Powers |
 |---------|--------------|----------------|
 | **Sarvam AI** | API subscription key ([dashboard.sarvam.ai](https://dashboard.sarvam.ai)) | All text generation (chat, quizzes, lessons, grading) + Voice STT/TTS |
-| **Google Cloud** | Service Account JSON with Sheets + Drive API access | Email lessons, quiz tracking, mastery updates |
+| **Google Cloud** | Service Account JSON with Sheets + Drive API access | Quiz tracking, mastery status updates |
+| **Gmail** | App Password — not your regular login password ([Google's guide](https://support.google.com/accounts/answer/185833)) | Email lesson delivery |
 
 You will also need a **Google Sheet** with columns: `Topic`, `Status`, `Date Sent` — populated with the grammar topics you want to study. The service account must have edit access to this sheet.
-
-For email lessons, you need a **Gmail App Password** (not your regular password). See [Google's guide](https://support.google.com/accounts/answer/185833) to generate one.
 
 ### 2. Installation
 
@@ -206,7 +216,10 @@ The voice chat feature lives under **Conversation Practice → 🎙️ Voice Cha
 This codebase is designed to be adapted for other Indic languages supported by Sarvam AI. Here is what you would need to change:
 
 ### Knowledge Base
-Replace the `.txt` files in `knowledge_base/` with grammar guides for your target language. The AI uses these files as grounding context for all generation and grading tasks. The more structured and detailed your grammar files are, the better the AI's corrections will be.
+
+Replace the `.txt` files in `knowledge_base/` with grammar guides for your target language. The AI uses these files as grounding context for all generation and grading tasks.
+
+**Grammar file format matters.** The AI relies on consistent structure to extract rules accurately. Files should use markdown headers (`##`, `###`) to separate topics, tables with transliteration columns alongside the target script, and concrete worked examples with both native script and romanized forms. Flat prose without this structure significantly degrades the quality of corrections and quiz generation.
 
 ### config.py
 - **`SYSTEM_INSTRUCTION`** — Rewrite the system prompt to reference your target language instead of Kannada.
@@ -222,12 +235,6 @@ Replace the `.txt` files in `knowledge_base/` with grammar guides for your targe
 
 ### Sarvam AI Language Support
 Sarvam's STT (Saaras v3) supports 22+ Indian languages. TTS (Bulbul v3) supports 10 Indian languages plus English. Check the [Sarvam documentation](https://docs.sarvam.ai/api-reference-docs/introduction) for the latest supported language list.
-
----
-
-## ⚠️ Disclaimer
-
-This tool uses Large Language Models (LLMs) to generate content. While instructed to adhere to strict grammar rules, the AI may occasionally produce errors or "hallucinations." It is intended as a study aid, not a replacement for a human instructor.
 
 ---
 

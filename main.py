@@ -844,12 +844,21 @@ def render_voice_chat(lang_mode):
     if not st.session_state.vc_active and not st.session_state.vc_show_review:
         st.write("#### Configure your voice partner")
 
+        vc_mode = st.radio(
+            "Session mode",
+            ["Choose a Persona", "Custom Scenario 🌐"],
+            horizontal=True,
+            key="vc_mode_sel",
+        )
+        vc_is_custom = vc_mode == "Custom Scenario 🌐"
+        vc_role = "Custom Scenario" if vc_is_custom else None
+
         vc_col1, vc_col2 = st.columns(2)
         with vc_col1:
-            vc_persona_options = list(config.CHARACTER_CARDS.keys()) + ["Custom Scenario 🌐"]
-            vc_role_display = st.selectbox(
-                "Persona", vc_persona_options, key="vc_role_sel"
-            )
+            if not vc_is_custom:
+                vc_role = st.selectbox(
+                    "Persona", list(config.CHARACTER_CARDS.keys()), key="vc_role_sel"
+                )
             vc_focus = st.selectbox(
                 "Grammar Focus", config.GRAMMAR_GOALS, key="vc_focus_sel"
             )
@@ -864,9 +873,6 @@ def render_voice_chat(lang_mode):
                 step=0.05, key="vc_pace_sl",
                 help="Lower = slower (good for beginners). Default 0.85."
             )
-
-        vc_is_custom = vc_role_display == "Custom Scenario 🌐"
-        vc_role = "Custom Scenario" if vc_is_custom else vc_role_display
 
         if vc_is_custom:
             vc_scenario = st.text_area(
@@ -1168,14 +1174,28 @@ def main():
             # 2. STATE A: Setup Phase
             if not st.session_state.chat_active and not st.session_state.show_review:
                 st.write("### Configure your conversational partner")
-                persona_options = list(config.CHARACTER_CARDS.keys()) + ["Custom Scenario 🌐"]
-                selected_role_display = st.selectbox("Persona", persona_options)
-                is_custom = selected_role_display == "Custom Scenario 🌐"
-                selected_role = "Custom Scenario" if is_custom else selected_role_display
+                session_mode = st.radio(
+                    "Session mode",
+                    ["Choose a Persona", "Custom Scenario 🌐"],
+                    horizontal=True,
+                )
+                is_custom = session_mode == "Custom Scenario 🌐"
 
-                selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
-
-                if is_custom:
+                if not is_custom:
+                    selected_role = st.selectbox("Persona", list(config.CHARACTER_CARDS.keys()))
+                    selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
+                    chat_scenario = st.text_area(
+                        "Real-world scenario (optional)",
+                        placeholder=(
+                            "Describe a real situation you'll face this week — e.g. "
+                            "'I need to buy vegetables at the local market and haggle over the price.'"
+                        ),
+                        height=80,
+                        key="chat_scenario_input",
+                    )
+                else:
+                    selected_role = "Custom Scenario"
+                    selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
                     chat_scenario = st.text_area(
                         "Describe your scenario",
                         placeholder=(
@@ -1185,16 +1205,6 @@ def main():
                             "discussing the route, what gear to bring, and local wildlife.'"
                         ),
                         height=120,
-                        key="chat_scenario_input",
-                    )
-                else:
-                    chat_scenario = st.text_area(
-                        "Real-world scenario (optional)",
-                        placeholder=(
-                            "Describe a real situation you'll face this week — e.g. "
-                            "'I need to buy vegetables at the local market and haggle over the price.'"
-                        ),
-                        height=80,
                         key="chat_scenario_input",
                     )
 

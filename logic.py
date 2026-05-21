@@ -424,7 +424,7 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
             messages=messages,
             response_format={"type": "json_object"},
         )
-        raw_text = response.choices[0].message.content
+        raw_text = response.choices[0].message.content or ""
         finish_reason = response.choices[0].finish_reason
 
         print(

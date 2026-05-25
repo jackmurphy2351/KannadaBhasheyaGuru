@@ -422,7 +422,7 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
             model=config.SARVAM_CHAT_MODEL,
             messages=messages,
             response_format={"type": "json_object"},
-            max_tokens=8192,
+            max_tokens=4096,
         )
         raw_text = response.choices[0].message.content or ""
         finish_reason = response.choices[0].finish_reason

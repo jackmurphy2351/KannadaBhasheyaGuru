@@ -415,48 +415,102 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
         messages.append({"role": msg["role"], "content": msg["content"]})
     messages.append({"role": "user", "content": user_message})
 
-    try:
-        # 4. Call Sarvam chat completions with JSON mode for deterministic structure
-        client = _sarvam_chat_client()
-        response = client.chat.completions.create(
-            model=config.SARVAM_CHAT_MODEL,
-            messages=messages,
-            response_format={"type": "json_object"},
-            max_tokens=4096,
+    MAX_ATTEMPTS = 2
+    last_raw = ""
+    last_finish = ""
+
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            # Call Sarvam chat completions with JSON mode
+            client = _sarvam_chat_client()
+            response = client.chat.completions.create(
+                model=config.SARVAM_CHAT_MODEL,
+                messages=messages,
+                response_format={"type": "json_object"},
+                max_tokens=4096,
+            )
+            raw_text = response.choices[0].message.content or ""
+            finish_reason = response.choices[0].finish_reason
+            last_raw, last_finish = raw_text, finish_reason
+
+            msg_summary = "\n".join(
+                f"    [{i}] role={m['role']:9s} chars={len(m['content'])}"
+                for i, m in enumerate(messages)
+            )
+            print(
+                f"\n--- Chat Turn Diagnostics [attempt {attempt}/{MAX_ATTEMPTS}] ---\n"
+                f"  model         : {config.SARVAM_CHAT_MODEL}\n"
+                f"  finish_reason : {finish_reason}\n"
+                f"  output chars  : {len(raw_text)}\n"
+                f"  starts_with_{{: {raw_text.lstrip().startswith('{')}\n"
+                f"  messages sent ({len(messages)}):\n{msg_summary}\n"
+                f"  raw[:400]     : {raw_text[:400]}\n"
+                f"-----------------------------\n"
+            )
+
+            data = clean_json(raw_text)
+            if data and data.get("kannada"):
+                return {
+                    "bot_reply_kannada": data.get("kannada", ""),
+                    "bot_reply_english_translation": data.get("english", ""),
+                    "user_errors": data.get("errors", []),
+                    "raw_text": raw_text,
+                }
+
+            # Parse failed — log and decide retry strategy
+            parse_result = (
+                "clean_json returned None"
+                if data is None
+                else f"dict parsed but 'kannada' key missing (keys: {list(data.keys())})"
+            )
+            print(
+                f"\n--- ⚠️ Parse failed [attempt {attempt}/{MAX_ATTEMPTS}] ---\n"
+                f"  finish_reason : {finish_reason}\n"
+                f"  output chars  : {len(raw_text)}\n"
+                f"  parse result  : {parse_result}\n"
+            )
+
+            if attempt < MAX_ATTEMPTS:
+                # Retry with the same messages for both failure modes:
+                # - empty response: transient token-budget spike, same call usually works
+                # - non-JSON text: appending Kannada correction text is too token-expensive;
+                #   rely on the system prompt's JSON instruction instead
+                print("  action        : retrying with same messages\n---\n")
+
+        except Exception as e:
+            if attempt == MAX_ATTEMPTS:
+                return {"error": str(e)}
+            print(f"\n--- ⚠️ API exception [attempt {attempt}/{MAX_ATTEMPTS}]: {e} — retrying ---\n")
+
+    # All attempts exhausted
+    final_data = clean_json(last_raw)
+    parse_result_final = (
+        "clean_json returned None"
+        if final_data is None
+        else f"dict parsed but 'kannada' key missing (keys: {list(final_data.keys())})"
+    )
+    msg_summary = "\n".join(
+        f"    [{i}] role={m['role']:9s} chars={len(m['content'])}"
+        for i, m in enumerate(messages)
+    )
+    print(
+        f"\n--- 🚨 JSON PARSING FAILED after {MAX_ATTEMPTS} attempts 🚨 ---\n"
+        f"  model         : {config.SARVAM_CHAT_MODEL}\n"
+        f"  finish_reason : {last_finish}\n"
+        f"  output chars  : {len(last_raw)}\n"
+        f"  starts_with_{{: {last_raw.lstrip().startswith('{')}\n"
+        f"  parse result  : {parse_result_final}\n"
+        f"  final messages sent ({len(messages)}):\n{msg_summary}\n"
+        f"  full raw output:\n{last_raw}\n"
+        f"-----------------------------------\n"
+    )
+    return {
+        "error": (
+            f"Parsing failed after {MAX_ATTEMPTS} attempts "
+            f"[finish_reason={last_finish}, chars={len(last_raw)}]."
+            f"\n\nRaw output:\n\n{last_raw}"
         )
-        raw_text = response.choices[0].message.content or ""
-        finish_reason = response.choices[0].finish_reason
-
-        print(
-            f"\n--- Chat Turn Diagnostics ---\n"
-            f"  finish_reason : {finish_reason}\n"
-            f"  output chars  : {len(raw_text)}\n"
-            f"  messages in   : {len(messages)}\n"
-            f"  raw[:400]     : {raw_text[:400]}\n"
-            f"-----------------------------\n"
-        )
-
-        # 5. Deterministic JSON parsing — no regex, no fallbacks
-        data = clean_json(raw_text)
-        if not data or not data.get("kannada"):
-            print(f"\n--- 🚨 JSON PARSING FAILED 🚨 ---\nfull raw:\n{raw_text}\n---------------------------------\n")
-            return {
-                "error": (
-                    f"Parsing failed "
-                    f"[finish_reason={finish_reason}, chars={len(raw_text)}]."
-                    f"\n\nRaw output:\n\n{raw_text}"
-                )
-            }
-
-        return {
-            "bot_reply_kannada": data.get("kannada", ""),
-            "bot_reply_english_translation": data.get("english", ""),
-            "user_errors": data.get("errors", []),
-            "raw_text": raw_text,
-        }
-
-    except Exception as e:
-        return {"error": str(e)}
+    }
 
 
 # ============================================================================

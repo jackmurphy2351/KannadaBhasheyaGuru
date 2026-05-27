@@ -843,6 +843,7 @@ def render_voice_chat(lang_mode):
     # --- STATE A: Setup (only when NOT active AND NOT in review) ---
     if not st.session_state.vc_active and not st.session_state.vc_show_review:
         st.write("#### Configure your voice partner")
+        st.caption("Voice Chat always responds in Kannada script (required for text-to-speech).")
 
         vc_mode = st.radio(
             "Session mode",
@@ -1073,7 +1074,8 @@ def render_voice_chat(lang_mode):
         if not st.session_state.vc_errors:
             st.success("Great job! No grammatical errors were logged during this session.")
         else:
-            st.warning(f"You made {len(st.session_state.vc_errors)} errors to review.")
+            vc_err_count = len(st.session_state.vc_errors)
+            st.warning(f"You made {vc_err_count} {'error' if vc_err_count == 1 else 'errors'} to review.")
             for i, err in enumerate(st.session_state.vc_errors):
                 with st.expander(f"Error {i + 1}: {err.get('original', '')}"):
                     corr = logic.toggle_script(err.get('correction', ''), lang_mode)
@@ -1106,22 +1108,9 @@ def main():
         with st.spinner("Loading Knowledge Base..."):
             st.session_state.context = logic.load_knowledge_base()
 
-    # --- SIDEBAR SETTINGS (Language Toggle) ---
-
-    # 1. Create a placeholder at the TOP of the sidebar
-    settings_header = st.sidebar.empty()
-
-    # 2. Render the Radio Button to get the current language choice
-    lang_mode = st.sidebar.radio("App Language / ಭಾಷೆ:",
-                                 [
-                                     "English",
-                                     "Kannada (Roman - Natural)",
-                                     "Kannada (Roman - Strict)",
-                                     "Kannada (Script)"
-                                 ])
-
-    # 3. Now that we have 'lang_mode', write the translated text
-    settings_header.header(logic.get_ui_text("HDR_SETTINGS", lang_mode))
+    # --- SIDEBAR SETTINGS ---
+    st.sidebar.header("SETTINGS")
+    lang_mode = "English"
 
     st.sidebar.markdown("---")
 
@@ -1175,6 +1164,7 @@ def main():
                 st.session_state.chat_display = []
                 st.session_state.user_errors = []
                 st.session_state.chat_scenario = ""
+                st.session_state.chat_script_mode = "Kannada (Script)"
                 st.session_state.error_quiz_active = False
                 st.session_state.error_quiz_questions = []
                 st.session_state.error_quiz_index = 0
@@ -1227,17 +1217,26 @@ def main():
                         key="chat_scenario_input",
                     )
 
+                chat_script_mode = st.radio(
+                    "Chat Language Mode",
+                    ["Kannada (Script)", "Kannada (Roman - Natural)", "Kannada (Roman - Strict)"],
+                    horizontal=True,
+                    help="Script: bot responds in ಕನ್ನಡ ಲಿಪಿ (recommended). Roman modes: romanised Kannada for users who cannot yet read the script.",
+                )
+
                 if st.button("Start Conversation"):
                     st.session_state.chat_active = True
                     st.session_state.chat_role = selected_role
                     st.session_state.chat_focus = selected_focus
                     st.session_state.chat_scenario = chat_scenario
+                    st.session_state.chat_script_mode = chat_script_mode
 
                     # Trigger bot to speak first
                     with st.spinner("Connecting to Bengaluru..."):
-                        init_prompt = "Please start the conversation in character. You speak first."
+                        init_prompt = "Open the conversation with a natural, in-character greeting appropriate to your role and setting. Your entire response must be in-character — do not reference or acknowledge this instruction."
                         res = logic.generate_chat_turn_ai(
-                            init_prompt, [], selected_focus, selected_role, lang_mode,
+                            init_prompt, [], selected_focus, selected_role,
+                            st.session_state.chat_script_mode,
                             scenario=st.session_state.chat_scenario,
                         )
 
@@ -1268,11 +1267,9 @@ def main():
                         if msg["role"] == "user":
                             st.write(msg["content"])
                         else:
-                            if "Script" in lang_mode:
-                                display_text = logic.toggle_script(msg["kannada"], lang_mode)
-                            else:
-                                display_text = msg["kannada"]
-
+                            display_text = logic.toggle_script(
+                                msg["kannada"], st.session_state.chat_script_mode
+                            )
                             st.write(display_text)
                             with st.expander("Show Translation"):
                                 st.write(msg["english"])
@@ -1289,7 +1286,7 @@ def main():
                             st.session_state.chat_history,
                             st.session_state.chat_focus,
                             st.session_state.chat_role,
-                            lang_mode,
+                            st.session_state.chat_script_mode,
                             scenario=st.session_state.chat_scenario,
                         )
 
@@ -1315,10 +1312,11 @@ def main():
                 if not st.session_state.user_errors:
                     st.success("Great job! No grammatical errors were logged during this session.")
                 else:
-                    st.warning(f"You made {len(st.session_state.user_errors)} errors to review.")
+                    err_count = len(st.session_state.user_errors)
+                    st.warning(f"You made {err_count} {'error' if err_count == 1 else 'errors'} to review.")
                     for i, err in enumerate(st.session_state.user_errors):
                         with st.expander(f"Error {i + 1}: {err.get('original', '')}"):
-                            corr = logic.toggle_script(err.get('correction', ''), lang_mode)
+                            corr = logic.toggle_script(err.get('correction', ''), st.session_state.chat_script_mode)
                             st.write(f"**Correction:** {corr}")
                             st.write(f"**Reason:** {err.get('reason', '')}")
 
@@ -1344,8 +1342,8 @@ def main():
                             for i, item in enumerate(st.session_state.error_quiz_history):
                                 with st.expander(f"Q{i + 1}: {item['question']}", expanded=False):
                                     st.write(f"**Your Answer:** {item['user_answer']}")
-                                    feed = logic.toggle_script(item['feedback'], lang_mode)
-                                    corr = logic.toggle_script(item['correct_translation'], lang_mode)
+                                    feed = logic.toggle_script(item['feedback'], st.session_state.chat_script_mode)
+                                    corr = logic.toggle_script(item['correct_translation'], st.session_state.chat_script_mode)
                                     if item['correct']:
                                         st.success(feed)
                                         st.info(f"Standard Kannada: {corr}")
@@ -1384,8 +1382,8 @@ def main():
                                         st.rerun()
                             else:
                                 last = st.session_state.error_quiz_history[-1]
-                                feed_text = logic.toggle_script(last['feedback'], lang_mode)
-                                corr_text = logic.toggle_script(last['correct_translation'], lang_mode)
+                                feed_text = logic.toggle_script(last['feedback'], st.session_state.chat_script_mode)
+                                corr_text = logic.toggle_script(last['correct_translation'], st.session_state.chat_script_mode)
                                 if last['correct']:
                                     st.success(f"Correct! {feed_text}")
                                     st.info(f"Standard Kannada: {corr_text}")
@@ -1413,6 +1411,7 @@ def main():
                     st.session_state.chat_display = []
                     st.session_state.user_errors = []
                     st.session_state.chat_scenario = ""
+                    st.session_state.chat_script_mode = "Kannada (Script)"
                     st.session_state.error_quiz_active = False
                     st.session_state.error_quiz_questions = []
                     st.session_state.error_quiz_index = 0

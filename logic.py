@@ -304,7 +304,10 @@ def generate_quiz(topic, context):
     * First 3 sentences are easy (short and simple)
     * Middle 4 sentences are intermediate (longer, slightly more complex)
     * Final 3 sentences are hard (long and complex)
-    OUTPUT: JSON list of strings. Example: ["I go", "She eats"]
+    CRITICAL: Every sentence MUST be in plain English only. Do NOT output Kannada script,
+    Roman transliteration of Kannada, or any non-English text. The student's job is to
+    translate FROM English INTO Kannada — the prompts must be English.
+    OUTPUT: JSON list of strings. Example: ["I go", "She eats", "He reads a book"]
     """
     res = generate_content(prompt, context)
     data = clean_json(res)
@@ -357,8 +360,9 @@ def grade_answer_ai(question, answer, context):
        forms, or vice versa.
     4. CORRECT ANSWERS: When is_correct is TRUE, keep feedback brief and encouraging —
        do NOT suggest alternative verb forms or phrasings. Set correct_translation to
-       the standard Granthika rendering of the user's own answer (minor spelling
-       normalisation only). Do NOT invent a different conjugation or structure.
+       the standard Granthika Kannada script (Kannada Lipi, e.g. ನಾನು ಹೋಗುತ್ತೇನೆ) form
+       of the user's answer — minor spelling normalisation only, no new structure.
+       Never output Roman transliteration in correct_translation.
     5. CORRECTION: When is_correct is FALSE, provide the perfect, standard Granthika
        Kannada translation in 'correct_translation'.
 

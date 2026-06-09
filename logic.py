@@ -344,9 +344,19 @@ def grade_answer_ai(question, answer, context):
     TASK: Grade the user's translation.
 
     RULES:
-    1. MEANING: If the user conveys the correct meaning but has small spelling/suffix mistakes (e.g. writing 'ಬಾಟಲ್‌ದಲ್ಲಿ' instead of 'ಬಾಟಲಿನಲ್ಲಿ'), mark 'is_correct' as TRUE.
-    2. PEDANTRY: You MUST explicitly point out every spelling or grammar mistake in the 'feedback', even if you marked it correct. Explain the rule (e.g. "You missed the 'in' connector before 'alli'").
-    3. CORRECTION: Always provide the perfect, standard Kannada translation in 'correct_translation'.
+    1. MEANING: If the user conveys the correct meaning but has minor spelling or
+       suffix mistakes, mark 'is_correct' as TRUE.
+    2. REAL ERRORS ONLY: Flag only genuine, unambiguous mistakes — non-existent words,
+       clearly wrong verb conjugations, missing obligatory particles, or definite
+       misspellings. Do NOT flag a form merely because a different phrasing also exists.
+       If the user's construction is grammatically valid Kannada, do not criticise it.
+    3. VERIFY BEFORE FLAGGING: Before reporting any error, verify that your proposed
+       correction is MORE correct or MORE standard than the user's form. If the user's
+       form is equally valid or more formal than your alternative, do NOT flag it.
+       Specifically, do not suggest Aadumaatu/colloquial alternatives to valid Granthika
+       forms, or vice versa.
+    4. CORRECTION: Always provide the perfect, standard Granthika Kannada translation
+       in 'correct_translation'.
 
     Output JSON: {{ "is_correct": boolean, "feedback": "string", "correct_translation": "string" }}
     """

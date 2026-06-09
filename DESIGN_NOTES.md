@@ -1,4 +1,4 @@
-# Design Notes — Kannada Bhasheya Guru (Maximalist Karnataka Edition)
+# Design Notes — Vāṇi (Maximalist Karnataka Edition)
 
 ## Color Palette
 

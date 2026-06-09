@@ -16,6 +16,7 @@ from logic import (
     toggle_script,
     get_ui_text,
     load_knowledge_base,
+    load_topic_doc,
 )
 
 
@@ -231,15 +232,17 @@ class TestLoadKnowledgeBase:
         monkeypatch.setattr(config, "KNOWLEDGE_DIR", str(tmp_path))
         assert load_knowledge_base() == ""
 
-    def test_ignores_non_txt_files(self, tmp_path, monkeypatch):
+    def test_loads_txt_and_md_but_ignores_other_types(self, tmp_path, monkeypatch):
+        # Beginner foundation docs are .md; legacy grammar refs are .txt — both
+        # are loaded. Other file types (e.g. .py) are ignored.
         (tmp_path / "grammar.txt").write_text("Good content", encoding="utf-8")
-        (tmp_path / "readme.md").write_text("Should be ignored", encoding="utf-8")
+        (tmp_path / "beginner.md").write_text("Markdown content", encoding="utf-8")
         (tmp_path / "notes.py").write_text("Also ignored", encoding="utf-8")
         monkeypatch.setattr(config, "KNOWLEDGE_DIR", str(tmp_path))
 
         result = load_knowledge_base()
         assert "Good content" in result
-        assert "Should be ignored" not in result
+        assert "Markdown content" in result
         assert "Also ignored" not in result
 
     def test_returns_string_type(self, tmp_path, monkeypatch):
@@ -247,10 +250,56 @@ class TestLoadKnowledgeBase:
         monkeypatch.setattr(config, "KNOWLEDGE_DIR", str(tmp_path))
         assert isinstance(load_knowledge_base(), str)
 
-    def test_real_knowledge_base_has_12_modules(self):
+    def test_real_knowledge_base_loads_all_modules(self):
         # Smoke check against the actual knowledge_base/ directory.
-        # Does NOT hit any API — just reads local files.
+        # Does NOT hit any API — just reads local files. Counts both the legacy
+        # .txt grammar references and the newer .md beginner foundation docs, so
+        # the test stays correct as the curriculum grows.
+        import glob
+        import os
+        expected = len(
+            glob.glob(os.path.join(config.KNOWLEDGE_DIR, "*.txt"))
+            + glob.glob(os.path.join(config.KNOWLEDGE_DIR, "*.md"))
+        )
         result = load_knowledge_base()
         assert result, "load_knowledge_base() returned empty — check knowledge_base/ directory"
-        assert result.count("--- SOURCE:") == 12, \
-            "Expected 12 grammar module files in knowledge_base/"
+        assert expected >= 14, "Expected at least 14 grammar/foundation modules"
+        assert result.count("--- SOURCE:") == expected, \
+            f"Expected {expected} module files loaded from knowledge_base/"
+
+
+class TestLoadTopicDoc:
+
+    def test_single_string_returns_raw_content_no_header(self, tmp_path, monkeypatch):
+        (tmp_path / "topic.md").write_text("Lesson body", encoding="utf-8")
+        monkeypatch.setattr(config, "KNOWLEDGE_DIR", str(tmp_path))
+
+        result = load_topic_doc("topic.md")
+        assert result == "Lesson body"
+        # A single doc needs no SOURCE header.
+        assert "--- SOURCE:" not in result
+
+    def test_list_concatenates_with_source_headers(self, tmp_path, monkeypatch):
+        (tmp_path / "base.md").write_text("Shared base", encoding="utf-8")
+        (tmp_path / "past.md").write_text("Past tense", encoding="utf-8")
+        monkeypatch.setattr(config, "KNOWLEDGE_DIR", str(tmp_path))
+
+        result = load_topic_doc(["base.md", "past.md"])
+        assert "Shared base" in result
+        assert "Past tense" in result
+        assert "--- SOURCE: base.md ---" in result
+        assert "--- SOURCE: past.md ---" in result
+        # Order is preserved.
+        assert result.index("Shared base") < result.index("Past tense")
+
+    def test_missing_file_in_list_is_skipped(self, tmp_path, monkeypatch):
+        (tmp_path / "base.md").write_text("Shared base", encoding="utf-8")
+        monkeypatch.setattr(config, "KNOWLEDGE_DIR", str(tmp_path))
+
+        result = load_topic_doc(["base.md", "does_not_exist.md"])
+        assert "Shared base" in result
+        assert "does_not_exist" not in result
+
+    def test_missing_single_file_returns_empty(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(config, "KNOWLEDGE_DIR", str(tmp_path))
+        assert load_topic_doc("nope.md") == ""

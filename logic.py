@@ -19,12 +19,17 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 # Import settings from our new config file
 import config
+import storage
 
 
 # --- HELPER FUNCTIONS ---
 
 def clean_json(text):
     """Robustly extracts JSON from AI text."""
+    # The model can return None/empty content (e.g. a null completion); treat
+    # that as "no JSON" rather than crashing on .strip().
+    if not text or not isinstance(text, str):
+        return None
     try:
         text = text.strip()
         if text.startswith("```json"):
@@ -47,8 +52,12 @@ def clean_json(text):
 def load_knowledge_base():
     """Reads all grammar text files into a single context string."""
     combined_text = ""
-    # Use config.KNOWLEDGE_DIR
-    files = glob.glob(os.path.join(config.KNOWLEDGE_DIR, "*.txt"))
+    # Use config.KNOWLEDGE_DIR. Beginner foundation docs are .md; legacy grammar
+    # references are .txt — load both extensions.
+    files = sorted(
+        glob.glob(os.path.join(config.KNOWLEDGE_DIR, "*.txt"))
+        + glob.glob(os.path.join(config.KNOWLEDGE_DIR, "*.md"))
+    )
     if not files:
         return ""
     for filename in files:
@@ -103,8 +112,11 @@ def generate_content(user_prompt, context_override=None, use_reading_model=False
                 {"role": "system", "content": config.SYSTEM_INSTRUCTION},
                 {"role": "user", "content": full_prompt},
             ],
+            max_tokens=4096,
         )
-        return response.choices[0].message.content
+        # Sarvam can return a null completion (message.content is None);
+        # coalesce to "" so downstream string handling never sees None.
+        return response.choices[0].message.content or ""
     except Exception as e:
         return f"API Error: {e}"
 
@@ -248,6 +260,39 @@ def get_quiz_data(context):
 def update_mastery(row_num):
     sheet = get_sheet_client()
     sheet.update_cell(row_num, 2, 'Mastered')
+
+
+def get_quiz_topics():
+    """Return the deterministic grammar-topic registry annotated with local
+    mastery status. Replaces the Google-Sheets-driven get_quiz_data(): every
+    topic is always available (no email/'Sent' gate)."""
+    topics = []
+    for t in config.GRAMMAR_TOPICS:
+        topics.append({**t, "mastered": storage.is_mastered(t["name"])})
+    return topics
+
+
+def load_topic_doc(filename):
+    """Return the markdown/text of one or more knowledge_base files, for the
+    'read-then-quiz' lesson view and as scoped quiz context.
+
+    `filename` may be a single string or a list of filenames (e.g. a shared
+    verb-basics doc plus a tense-specific doc). Multiple files are concatenated
+    with the same '--- SOURCE: name ---' header format as load_knowledge_base().
+    Missing files are skipped; returns '' if nothing could be read."""
+    filenames = [filename] if isinstance(filename, str) else list(filename)
+    combined = ""
+    for name in filenames:
+        path = os.path.join(config.KNOWLEDGE_DIR, name)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                text = f.read()
+        except (FileNotFoundError, OSError):
+            continue
+        if len(filenames) > 1:
+            combined += f"\n--- SOURCE: {name} ---\n"
+        combined += text
+    return combined
 
 
 def generate_quiz(topic, context):

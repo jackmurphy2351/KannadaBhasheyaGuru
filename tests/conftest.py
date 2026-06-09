@@ -81,7 +81,7 @@ def sample_chat_history():
 @pytest.fixture
 def sample_knowledge_base():
     return (
-        "\n--- SOURCE: 1. case_suffixes_in_kannada.txt ---\n"
+        "\n--- SOURCE: 1. case_suffixes_in_kannada.md ---\n"
         "Nominative: subject of sentence.\n"
         "Accusative: direct object.\n"
     )

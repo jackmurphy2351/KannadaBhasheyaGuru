@@ -7,6 +7,7 @@ import json
 # Import our custom modules
 import config
 import logic
+import storage
 
 
 # --- CUSTOM CSS FOR KARNATAKA THEME ---
@@ -1100,7 +1101,7 @@ def render_voice_chat(lang_mode):
 # ============================================================================
 
 def main():
-    st.set_page_config(page_title="Kannada Bhasheya Guru", page_icon="🪔", layout="wide")
+    st.set_page_config(page_title="Vāṇi", page_icon="🪔", layout="wide")
     local_css()
 
     # 1. Load Context
@@ -1142,7 +1143,10 @@ def main():
         st.subheader(logic.get_ui_text("TITLE_HOME", lang_mode))
         st.markdown(logic.get_ui_text("WELCOME_MSG", lang_mode))
 
-        file_count = len(glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.txt')))
+        file_count = len(
+            glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.txt'))
+            + glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.md'))
+        )
         st.info(f"System Status: {file_count} grammar modules loaded.")
 
     # --- MODE: CONVERSATION PRACTICE (Text + Voice tabs) ---
@@ -1448,27 +1452,39 @@ def main():
             st.session_state.current_q_index = 0
             st.session_state.quiz_score = 0
 
-        # State 1: Setup
+        # State 1: Setup (read-then-quiz — every topic is always available)
         if not st.session_state.quiz_questions:
-            sheet, topics = logic.get_quiz_data(st.session_state.context)
-            if topics:
-                topic_names = [t['topic'] for t in topics]
-                st.write(logic.get_ui_text("LBL_TOPIC", lang_mode))
-                selected_topic = st.selectbox("Topic", topic_names, label_visibility="collapsed")
+            topics = logic.get_quiz_topics()
+            # Build a labelled list: beginners first, ✓ for mastered topics.
+            def _label(t):
+                check = "✓ " if t["mastered"] else ""
+                return f"{check}{t['name']}  ·  {t['level']}"
 
-                if st.button(logic.get_ui_text("BTN_START_QUIZ", lang_mode)):
-                    row = next(t['row'] for t in topics if t['topic'] == selected_topic)
-                    with st.spinner("Generating 10 questions..."):
-                        qs = logic.generate_quiz(selected_topic, st.session_state.context)
-                        st.session_state.quiz_questions = qs
-                        st.session_state.quiz_topic = selected_topic
-                        st.session_state.quiz_sheet_row = row
-                        st.session_state.quiz_score = 0
-                        st.session_state.current_q_index = 0
-                        st.session_state.quiz_history = []
-                        st.rerun()
-            else:
-                st.warning("No 'Sent' topics available.")
+            labels = [_label(t) for t in topics]
+            st.write(logic.get_ui_text("LBL_TOPIC", lang_mode))
+            selected_label = st.selectbox("Topic", labels, label_visibility="collapsed")
+            selected = topics[labels.index(selected_label)]
+
+            # Read-then-quiz: show the lesson doc inline before testing.
+            doc_text = logic.load_topic_doc(selected["file"])
+            if doc_text:
+                with st.expander("📖 Read the lesson", expanded=False):
+                    st.markdown(doc_text)
+
+            if st.button(logic.get_ui_text("BTN_START_QUIZ", lang_mode)):
+                with st.spinner("Generating 10 questions..."):
+                    # Scoped context: feed the quiz/grader ONLY this topic's doc(s),
+                    # not the full knowledge base. Keeps rich files from overwhelming
+                    # the model. doc_text was already loaded above for the lesson view.
+                    topic_context = doc_text or st.session_state.context
+                    qs = logic.generate_quiz(selected["name"], topic_context)
+                    st.session_state.quiz_questions = qs
+                    st.session_state.quiz_topic = selected["name"]
+                    st.session_state.quiz_context = topic_context
+                    st.session_state.quiz_score = 0
+                    st.session_state.current_q_index = 0
+                    st.session_state.quiz_history = []
+                    st.rerun()
 
         # State 2: Active Quiz
         else:
@@ -1509,7 +1525,9 @@ def main():
 
                     if st.button(logic.get_ui_text("BTN_SUBMIT", lang_mode)):
                         with st.spinner("Grading..."):
-                            res = logic.grade_answer_ai(q_text, user_ans, st.session_state.context)
+                            # Grade against the same scoped context used to generate.
+                            grade_context = st.session_state.get("quiz_context", st.session_state.context)
+                            res = logic.grade_answer_ai(q_text, user_ans, grade_context)
 
                             history_item = {
                                 'question': q_text,
@@ -1547,8 +1565,10 @@ def main():
                 score = st.session_state.quiz_score
                 st.markdown(f"## Score: {score}/{total}")
                 if score >= (total * 0.9):
-                    st.success("Topic Mastered! Sheet updated.")
-                    logic.update_mastery(st.session_state.quiz_sheet_row)
+                    st.success("Topic Mastered! 🎉")
+                    storage.set_mastered(
+                        st.session_state.quiz_topic, score=f"{score}/{total}"
+                    )
                 else:
                     st.warning("Not yet! Keep trying.")
 

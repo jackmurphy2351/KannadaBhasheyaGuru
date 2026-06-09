@@ -174,8 +174,12 @@ class TestGenerateChatTurnAi:
             )
         messages = mock_client.chat.completions.create.call_args.kwargs["messages"]
         system_text = next(m["content"] for m in messages if m["role"] == "system")
-        # AADUMAATU_ROMAN schema contains a romanized example
-        assert "Arey" in system_text or "naan" in system_text or "late aade" in system_text
+        # Roman display modes inject the AADUMAATU (spoken/colloquial) track, not
+        # the formal-script track. Assert on the full instruction phrases, which
+        # are unique to each track string (bare words like "Aadumaatu" can also
+        # appear in injected persona cards).
+        assert "Spoken Kannada (Aadumaatu)" in system_text
+        assert "Standard/Formal Kannada (Granthika)" not in system_text
 
     def test_script_lang_mode_uses_formal_schema(self):
         mock_client = _make_client(CHAT_JSON)
@@ -186,8 +190,11 @@ class TestGenerateChatTurnAi:
             )
         messages = mock_client.chat.completions.create.call_args.kwargs["messages"]
         system_text = next(m["content"] for m in messages if m["role"] == "system")
-        # FORMAL_SCRIPT schema uses Kannada script in the example
-        assert "ನಮಸ್ಕಾರ" in system_text
+        # Script mode injects the formal-script track, not the aadumaatu track.
+        # Mirror the Roman test: assert on the full instruction phrases, which are
+        # unique to each track string (bare words can also appear in persona cards).
+        assert "Standard/Formal Kannada (Granthika)" in system_text
+        assert "Spoken Kannada (Aadumaatu)" not in system_text
 
     def test_appends_user_message_at_end_of_messages(self, sample_chat_history):
         mock_client = _make_client(CHAT_JSON)

@@ -1,10 +1,10 @@
-# 🏫 Kannada Bhasheya Guru
+# 🪔 Vāṇi
 
 ![Tests](https://img.shields.io/badge/tests-159%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **An AI-powered personalized language tutor for Kannada learners.**
 
-Kannada Bhasheya Guru is a Python-based web application designed to assist students at the **high-beginner to high-intermediate level** in mastering Kannada grammar and vocabulary. This app acts as a strict but encouraging teacher — using Sarvam AI for both language intelligence and native Kannada speech — to generate lessons, grade quizzes, critique writing, and hold voice conversations grounded in a curated Knowledge Base of grammar rules.
+Vāṇi (ವಾಣಿ) is a Python-based web application designed to assist students from the **total beginner through high-intermediate level** in mastering Kannada grammar and vocabulary. This app acts as a strict but encouraging teacher — using Sarvam AI for both language intelligence and native Kannada speech — to generate lessons, grade quizzes, critique writing, and hold voice conversations grounded in a curated Knowledge Base of grammar rules.
 
 ---
 

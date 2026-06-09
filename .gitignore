@@ -7,3 +7,8 @@ venv/
 .venv/
 .claude/
 *.pyc
+
+# Local user-state (portable storage layer) — progress & spaced-repetition.
+# Content data (e.g. data/vocabulary.json) is tracked; per-user state is not.
+data/progress.json
+data/srs.json

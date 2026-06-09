@@ -357,7 +357,9 @@ def grade_answer_ai(question, answer, context):
        correction is MORE correct or MORE standard than the user's form. If the user's
        form is equally valid or more formal than your alternative, do NOT flag it.
        Specifically, do not suggest Aadumaatu/colloquial alternatives to valid Granthika
-       forms, or vice versa.
+       forms, or vice versa. If your correct_translation would be identical (or
+       near-identical) to the user's answer, do not describe the user's form as
+       'colloquial', 'informal', or 'non-standard' — treat it as fully correct.
     4. CORRECT ANSWERS: When is_correct is TRUE, keep feedback brief and encouraging —
        do NOT suggest alternative verb forms or phrasings. Set correct_translation to
        the standard Granthika Kannada script (Kannada Lipi, e.g. ನಾನು ಹೋಗುತ್ತೇನೆ) form

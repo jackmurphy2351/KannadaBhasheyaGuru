@@ -1545,7 +1545,7 @@ def main():
                     corr_text = logic.toggle_script(last_result['correct_translation'], lang_mode)
 
                     if last_result['correct']:
-                        st.success(f"Correct! {feed_text}")
+                        st.success(feed_text)
                         st.info(f"Standard Kannada: {corr_text}")
                     else:
                         st.error(f"Incorrect. {feed_text}")

@@ -355,8 +355,12 @@ def grade_answer_ai(question, answer, context):
        form is equally valid or more formal than your alternative, do NOT flag it.
        Specifically, do not suggest Aadumaatu/colloquial alternatives to valid Granthika
        forms, or vice versa.
-    4. CORRECTION: Always provide the perfect, standard Granthika Kannada translation
-       in 'correct_translation'.
+    4. CORRECT ANSWERS: When is_correct is TRUE, keep feedback brief and encouraging —
+       do NOT suggest alternative verb forms or phrasings. Set correct_translation to
+       the standard Granthika rendering of the user's own answer (minor spelling
+       normalisation only). Do NOT invent a different conjugation or structure.
+    5. CORRECTION: When is_correct is FALSE, provide the perfect, standard Granthika
+       Kannada translation in 'correct_translation'.
 
     Output JSON: {{ "is_correct": boolean, "feedback": "string", "correct_translation": "string" }}
     """

@@ -792,7 +792,16 @@ def local_css():
             [data-testid="stTextArea"] > div > div > textarea {
                 background: #2A1810 !important;
                 color: #F5E6D3 !important;
+                caret-color: #F5E6D3 !important;
                 border-color: var(--hoysala-dark) !important;
+            }
+            /* The light-mode :focus rule has higher specificity and would
+               flip the background back to near-white under cream text —
+               keep the writing surface dark while typing. */
+            [data-testid="stTextInput"] > div > div > input:focus,
+            [data-testid="stTextArea"] > div > div > textarea:focus {
+                background: #321D12 !important;
+                color: #F5E6D3 !important;
             }
             div.stSuccess { background: #0D2B0D !important; }
             div.stError   { background: #2B0808 !important; }
@@ -1451,6 +1460,7 @@ def main():
             st.session_state.quiz_history = []
             st.session_state.current_q_index = 0
             st.session_state.quiz_score = 0
+            st.session_state.quiz_attempts = {}  # topic -> [{"score", "total"}]
 
         # State 1: Setup (read-then-quiz — every topic is always available)
         if not st.session_state.quiz_questions:
@@ -1472,84 +1482,95 @@ def main():
                     st.markdown(doc_text)
 
             if st.button(logic.get_ui_text("BTN_START_QUIZ", lang_mode)):
-                with st.spinner("Generating 10 questions..."):
-                    # Scoped context: feed the quiz/grader ONLY this topic's doc(s),
-                    # not the full knowledge base. Keeps rich files from overwhelming
-                    # the model. doc_text was already loaded above for the lesson view.
-                    topic_context = doc_text or st.session_state.context
-                    qs = logic.generate_quiz(selected["name"], topic_context)
-                    st.session_state.quiz_questions = qs
-                    st.session_state.quiz_topic = selected["name"]
-                    st.session_state.quiz_context = topic_context
-                    st.session_state.quiz_score = 0
-                    st.session_state.current_q_index = 0
-                    st.session_state.quiz_history = []
-                    st.rerun()
+                # Deterministic: questions come from the fixed bank, no LLM.
+                # The topic doc is kept only as context for explain_mistake.
+                st.session_state.quiz_questions = logic.build_quiz(selected["name"], n=10)
+                st.session_state.quiz_topic = selected["name"]
+                st.session_state.quiz_context = doc_text or st.session_state.context
+                st.session_state.quiz_score = 0
+                st.session_state.current_q_index = 0
+                st.session_state.quiz_history = []
+                st.rerun()
 
         # State 2: Active Quiz
         else:
             total = len(st.session_state.quiz_questions)
 
+            # Result renderer. The displayed correct answer always comes
+            # from the bank item — LLM feedback can never override it.
+            def render_quiz_result(entry):
+                canonical = logic.toggle_script(entry['item']['canonical'], lang_mode)
+                if entry['tier'] == "exact":
+                    st.success("Correct! ✅")
+                    st.info(f"Standard Kannada: {canonical}")
+                elif entry['tier'] == "variant":
+                    st.success("Correct! ✅ Your variant is also valid.")
+                    st.info(f"Standard / literary form for reference: {canonical}")
+                elif entry['tier'] == "accepted":
+                    st.success("Correct! ✅ Your phrasing works too.")
+                    st.info(f"Reference answer for comparison: {canonical}")
+                else:
+                    st.error("Incorrect.")
+                    st.write(f"**Correct Answer:** {canonical}")
+                    st.write(logic.toggle_script(entry['feedback'], lang_mode))
+
             # History
             if st.session_state.quiz_history:
                 st.markdown("### Previous Answers")
-                for i, item in enumerate(st.session_state.quiz_history):
-                    display_q = logic.toggle_script(item['question'], lang_mode)
-                    with st.expander(f"Q{i + 1}: {display_q}", expanded=False):
-                        st.write(f"**Your Answer:** {item['user_answer']}")
-
-                        feed = logic.toggle_script(item['feedback'], lang_mode)
-                        corr = logic.toggle_script(item['correct_translation'], lang_mode)
-
-                        if item['correct']:
-                            st.success(feed)
-                            st.info(f"Standard Kannada: {corr}")
-                        else:
-                            st.error(feed)
-                            st.write(f"**Correct:** {corr}")
+                for i, entry in enumerate(st.session_state.quiz_history):
+                    with st.expander(f"Q{i + 1}: {entry['item']['english']}", expanded=False):
+                        st.write(f"**Your Answer:** {entry['user_answer']}")
+                        render_quiz_result(entry)
                 st.markdown("---")
 
             # Current Question
             if st.session_state.current_q_index < total:
                 q_idx = st.session_state.current_q_index
-                q_text = st.session_state.quiz_questions[q_idx]
-
-                display_q = logic.toggle_script(q_text, lang_mode)
+                item = st.session_state.quiz_questions[q_idx]
 
                 st.progress(q_idx / total)
-                st.markdown(f"### Q{q_idx + 1}: {display_q}")
+                st.markdown(f"### Q{q_idx + 1}: {item['english']}")
 
                 if len(st.session_state.quiz_history) == q_idx:
                     st.write(logic.get_ui_text("LBL_TRANS", lang_mode))
                     user_ans = st.text_input("Answer", key=f"input_{q_idx}", label_visibility="collapsed")
 
                     if st.button(logic.get_ui_text("BTN_SUBMIT", lang_mode)):
-                        with st.spinner("Grading..."):
-                            # Grade against the same scoped context used to generate.
-                            grade_context = st.session_state.get("quiz_context", st.session_state.context)
-                            res = logic.grade_answer_ai(q_text, user_ans, grade_context)
+                        # Deterministic match against the bank's acceptable
+                        # forms decides the fast path; a non-match gets one
+                        # constrained LLM equivalence check (Kannada has many
+                        # valid surface forms) before being marked wrong.
+                        tier = logic.classify_answer(user_ans, item)
+                        feedback = ""
+                        if tier == "incorrect":
+                            quiz_ctx = st.session_state.get(
+                                "quiz_context", st.session_state.context)
+                            with st.spinner("Checking your phrasing..."):
+                                if logic.judge_equivalence(user_ans, item, quiz_ctx):
+                                    tier = "accepted"
+                            if tier == "incorrect":
+                                with st.spinner("Preparing explanation..."):
+                                    feedback = logic.explain_mistake(
+                                        user_ans, item, quiz_ctx,
+                                    )["feedback"]
 
-                            history_item = {
-                                'question': q_text,
-                                'user_answer': user_ans,
-                                'correct': res['is_correct'],
-                                'feedback': res['feedback'],
-                                'correct_translation': res.get('correct_translation', '')
-                            }
-                            st.session_state.quiz_history.append(history_item)
-                            if res['is_correct']: st.session_state.quiz_score += 1
-                            st.rerun()
+                        st.session_state.quiz_history.append({
+                            'item': item,
+                            'user_answer': user_ans,
+                            'tier': tier,
+                            'feedback': feedback,
+                        })
+                        if tier != "incorrect":
+                            st.session_state.quiz_score += 1
+                        # Record the attempt once, on the final submit — the
+                        # results view reruns and must not double-count.
+                        if q_idx == total - 1:
+                            st.session_state.quiz_attempts.setdefault(
+                                st.session_state.quiz_topic, []
+                            ).append({"score": st.session_state.quiz_score, "total": total})
+                        st.rerun()
                 else:
-                    last_result = st.session_state.quiz_history[-1]
-                    feed_text = logic.toggle_script(last_result['feedback'], lang_mode)
-                    corr_text = logic.toggle_script(last_result['correct_translation'], lang_mode)
-
-                    if last_result['correct']:
-                        st.success(feed_text)
-                        st.info(f"Standard Kannada: {corr_text}")
-                    else:
-                        st.error(f"Incorrect. {feed_text}")
-                        st.write(f"**Correct Answer:** {corr_text}")
+                    render_quiz_result(st.session_state.quiz_history[-1])
 
                     is_last_question = (st.session_state.current_q_index == total - 1)
 
@@ -1564,6 +1585,10 @@ def main():
             else:
                 score = st.session_state.quiz_score
                 st.markdown(f"## Score: {score}/{total}")
+                attempts = st.session_state.quiz_attempts.get(st.session_state.quiz_topic, [])
+                if attempts:
+                    best = max(a["score"] for a in attempts)
+                    st.caption(f"Attempts this session: {len(attempts)} · best: {best}/{total}")
                 if score >= (total * 0.9):
                     st.success("Topic Mastered! 🎉")
                     storage.set_mastered(

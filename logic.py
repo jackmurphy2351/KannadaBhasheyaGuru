@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import glob
 import json
+import random
 import re
 import smtplib
 import unicodedata
@@ -93,7 +94,12 @@ def _sarvam_chat_client():
 
 
 def generate_content(user_prompt, context_override=None, use_reading_model=False):
-    """Helper to call Sarvam chat completions API."""
+    """Helper to call Sarvam chat completions API.
+
+    Retries up to 3 attempts: Sarvam transiently returns empty/null
+    completions (finish_reason="length" with 0 visible chars — hidden tokens
+    burn the whole budget) and a plain retry usually recovers. Returns the
+    final empty string or "API Error: ..." only after all attempts fail."""
     model = config.SARVAM_READING_MODEL if use_reading_model else config.SARVAM_CHAT_MODEL
     client = _sarvam_chat_client()
 
@@ -105,20 +111,26 @@ def generate_content(user_prompt, context_override=None, use_reading_model=False
     {user_prompt}
     """
 
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": config.SYSTEM_INSTRUCTION},
-                {"role": "user", "content": full_prompt},
-            ],
-            max_tokens=4096,
-        )
-        # Sarvam can return a null completion (message.content is None);
-        # coalesce to "" so downstream string handling never sees None.
-        return response.choices[0].message.content or ""
-    except Exception as e:
-        return f"API Error: {e}"
+    MAX_ATTEMPTS = 3
+    result = ""
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": config.SYSTEM_INSTRUCTION},
+                    {"role": "user", "content": full_prompt},
+                ],
+                max_tokens=config.SARVAM_MAX_TOKENS,
+            )
+            # Sarvam can return a null completion (message.content is None);
+            # coalesce to "" so downstream string handling never sees None.
+            result = response.choices[0].message.content or ""
+            if result.strip():
+                return result
+        except Exception as e:
+            result = f"API Error: {e}"
+    return result
 
 
 # --- TEXT & TRANSLATION HANDLERS ---
@@ -246,30 +258,249 @@ def send_email_lesson(context):
         return f"Error: {e}"
 
 
-def get_quiz_data(context):
-    try:
-        sheet = get_sheet_client()
-        records = sheet.get_all_records()
-        topics = [{'topic': row.get('Topic'), 'row': i + 2} for i, row in enumerate(records) if
-                  row.get('Status') == 'Sent']
-        return sheet, topics
-    except Exception as e:
-        return None, []
+# --- DETERMINISTIC MASTERY QUIZ ---
+# The quiz is driven entirely by the fixed question bank in
+# knowledge_base/quiz_bank.json. Correctness is decided first by
+# deterministic string comparison (check_answer); answers that don't match
+# any acceptable form get one constrained LLM equivalence check
+# (judge_equivalence) before being marked wrong. The canonical answer is
+# always authoritative — the LLM never supplies its own.
+
+QUIZ_BANK_FILE = os.path.join(config.KNOWLEDGE_DIR, "quiz_bank.json")
+QUIZ_ERROR_LOG = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "logs", "quiz_errors.log")
+_DIFFICULTY_ORDER = {"easy": 0, "medium": 1, "hard": 2}
+_ZW_RE = re.compile("[\u200c\u200d]")  # ZWNJ / ZWJ
+# Punctuation incl. danda and every common quote style — quotation marks are
+# presentation, not grammar, so their absence must never fail an answer.
+_PUNCT_RE = re.compile("[.!?,;:।॥\"'“”‘’«»]")
+# Token-level equivalences: the colloquial quotative ಅಂತ, its lengthened
+# spoken form ಅಂತಾ, and the literary ಎಂದು are interchangeable in answers.
+#  ಅಂತೆ is NOT folded — it is the hearsay marker
+# ("apparently"), a different meaning.
+#  ಎಂಬ is NOT folded — it is a literary form used only for naming proper
+# nouns ("a novel called Parva"), never for reported speech, so it is not
+# a general substitute for ಅಂತ/ಎಂದು. Where an ಎಂಬ answer might be valid
+# (naming contexts), judge_equivalence decides contextually.
+_TOKEN_EQUIV = {"ಅಂತಾ": "ಅಂತ", "ಎಂದು": "ಅಂತ"}
 
 
-def update_mastery(row_num):
-    sheet = get_sheet_client()
-    sheet.update_cell(row_num, 2, 'Mastered')
+def _validate_quiz_bank(bank):
+    """Enforce the bank's schema contract; raise ValueError naming the
+    offending item id. Guarantees: unique ids, canonical == acceptable[0],
+    every topic listed in the top-level 'topics' array."""
+    topics = set(bank.get("topics") or [])
+    seen_ids = set()
+    for item in bank.get("items") or []:
+        iid = item.get("id")
+        if not iid or iid in seen_ids:
+            raise ValueError(f"quiz_bank: missing or duplicate item id: {iid!r}")
+        seen_ids.add(iid)
+        acceptable = item.get("acceptable")
+        if not acceptable or not isinstance(acceptable, list):
+            raise ValueError(
+                f"quiz_bank item '{iid}': 'acceptable' must be a non-empty list")
+        if not item.get("canonical") or item["canonical"] != acceptable[0]:
+            raise ValueError(
+                f"quiz_bank item '{iid}': canonical must equal acceptable[0]")
+        if item.get("topic") not in topics:
+            raise ValueError(
+                f"quiz_bank item '{iid}': topic {item.get('topic')!r} "
+                f"not in top-level topics array")
+    return bank
+
+
+def _load_quiz_bank_from_disk(path=None):
+    """Read and validate the bank. Pure (no Streamlit) for testability."""
+    with open(path or QUIZ_BANK_FILE, "r", encoding="utf-8") as f:
+        return _validate_quiz_bank(json.load(f))
+
+
+def load_quiz_bank():
+    """Return the validated quiz bank, loading it once per session."""
+    if "quiz_bank" not in st.session_state:
+        st.session_state["quiz_bank"] = _load_quiz_bank_from_disk()
+    return st.session_state["quiz_bank"]
 
 
 def get_quiz_topics():
-    """Return the deterministic grammar-topic registry annotated with local
-    mastery status. Replaces the Google-Sheets-driven get_quiz_data(): every
-    topic is always available (no email/'Sent' gate)."""
-    topics = []
-    for t in config.GRAMMAR_TOPICS:
-        topics.append({**t, "mastered": storage.is_mastered(t["name"])})
+    """Return quiz topics sourced from the bank itself (never Sheets), each
+    annotated with its lesson doc(s), display level, and local mastery status.
+    The dropdown and the question pool share one source so they cannot drift;
+    config.QUIZ_TOPIC_DOCS is validated against the bank here."""
+    bank = load_quiz_bank()
+    missing = [t for t in bank["topics"] if t not in config.QUIZ_TOPIC_DOCS]
+    extra = [t for t in config.QUIZ_TOPIC_DOCS if t not in bank["topics"]]
+    if missing or extra:
+        raise ValueError(
+            f"config.QUIZ_TOPIC_DOCS out of sync with quiz bank "
+            f"(unmapped: {missing}, stale: {extra})")
+    topics = [{"name": t,
+               "file": config.QUIZ_TOPIC_DOCS[t]["files"],
+               "level": config.QUIZ_TOPIC_DOCS[t]["level"],
+               "mastered": storage.is_mastered(t)}
+              for t in bank["topics"]]
+    topics.sort(key=lambda t: (t["level"] != "Core", t["name"]))  # Core first
     return topics
+
+
+def build_quiz(topic, n=10, seed=None):
+    """Sample n bank items for `topic` without replacement, ordered
+    easy -> medium -> hard. If the topic has fewer than n items, return all.
+    `seed` makes the sample reproducible for tests."""
+    bank = load_quiz_bank()
+    pool = [it for it in bank["items"] if it["topic"] == topic]
+    if not pool:
+        raise ValueError(f"No quiz items for topic {topic!r}")
+    rng = random.Random(seed)
+    chosen = rng.sample(pool, min(n, len(pool)))
+    return sorted(chosen, key=lambda it: _DIFFICULTY_ORDER[it["difficulty"]])
+
+
+def normalize_answer(s):
+    """Deterministic normalization for answer comparison: NFC, strip
+    ZWNJ/ZWJ, strip punctuation (incl. danda and quotes), collapse
+    whitespace, and fold interchangeable quotative tokens (ಅಂತ/ಅಂತಾ/ಎಂದು)."""
+    if not s:
+        return ""
+    s = unicodedata.normalize("NFC", s)
+    s = _ZW_RE.sub("", s)
+    s = _PUNCT_RE.sub("", s)
+    tokens = [_TOKEN_EQUIV.get(t, t) for t in s.split()]
+    return " ".join(tokens)
+
+
+def check_answer(user_answer, item):
+    """True iff the normalized answer matches any acceptable form.
+    This is the SOLE decider of correctness — the LLM never grades."""
+    norm = normalize_answer(user_answer)
+    return any(norm == normalize_answer(a) for a in item["acceptable"])
+
+
+def classify_answer(user_answer, item):
+    """Three-tier result: 'exact' (matches canonical), 'variant' (matches
+    another acceptable form), or 'incorrect'."""
+    if normalize_answer(user_answer) == normalize_answer(item["canonical"]):
+        return "exact"
+    return "variant" if check_answer(user_answer, item) else "incorrect"
+
+
+def judge_equivalence(user_answer, item, context):
+    """Constrained yes/no LLM check for answers that failed the deterministic
+    match: is the student's Kannada a valid alternative rendering of the same
+    English sentence? The canonical answer is passed as authoritative ground
+    truth and the model may NOT propose a different one — it only votes
+    equivalent/not. Retries once; any persistent failure returns False so the
+    answer falls through to the normal wrong-answer explanation (an API
+    outage must never silently mark answers correct)."""
+    if not normalize_answer(user_answer):
+        return False
+    prompt = f"""
+    A student translated an English sentence into Kannada. Their answer did
+    not exactly match our reference, but it may still be correct — Kannada
+    allows many valid surface forms.
+
+    English sentence: "{item['english']}"
+    Reference answer (authoritative): "{item['canonical']}"
+    Grammar point being tested: "{item['grammar_note']}"
+    Student's answer: "{user_answer}"
+
+    TASK: Decide ONLY whether the student's answer is a grammatically correct
+    Kannada sentence that conveys the same meaning as the English sentence
+    AND demonstrates the grammar point being tested.
+
+    Treat ALL of these as fully acceptable, never as mistakes:
+    - sandhi / contracted spoken forms (e.g. ಬರ್ತಾನೆ for ಬರುತ್ತಾನೆ,
+      ಹೇಳಿದ್ನು for ಹೇಳಿದನು)
+    - literary vs colloquial verb endings (ಹೇಳಿದ / ಹೇಳಿದನು)
+    - ಅಂತ / ಅಂತಾ / ಎಂದು quotative variants
+    - presence or absence of quotation marks or other punctuation
+    - natural word-order variations
+    - synonyms and loanword spelling variants that keep the meaning
+
+    Mark NOT equivalent only for real errors: wrong tense, wrong person or
+    gender agreement, wrong case suffix, missing required grammar (e.g. the
+    quotative), or a different meaning.
+
+    Do NOT output a corrected sentence. OUTPUT exactly one JSON object:
+    {{"equivalent": true or false, "reason": "one short sentence"}}
+    """
+    raw, last_exc = "", None
+    for _attempt in range(2):  # initial try + one retry
+        try:
+            raw = generate_content(prompt, context)
+            if raw and not raw.startswith("API Error"):
+                data = clean_json(raw)
+                if isinstance(data, dict) and isinstance(
+                        data.get("equivalent"), bool):
+                    return data["equivalent"]
+        except Exception as e:
+            last_exc = e
+    _log_quiz_error(item["id"], user_answer, raw, last_exc)
+    return False
+
+
+def _log_quiz_error(item_id, user_answer, raw_output, exc):
+    """Append a JSON line to logs/quiz_errors.log. Never raises — a logging
+    failure must not block showing the (already known) correct answer."""
+    try:
+        os.makedirs(os.path.dirname(QUIZ_ERROR_LOG), exist_ok=True)
+        with open(QUIZ_ERROR_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({
+                "timestamp": datetime.now().isoformat(timespec="seconds"),
+                "item_id": item_id,
+                "user_answer": user_answer,
+                "raw_output": raw_output,
+                "exception": repr(exc) if exc else None,
+            }, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+def explain_mistake(user_answer, item, context):
+    """Ask the LLM to explain why an already-judged-wrong answer is wrong.
+    The canonical answer and grammar note are passed as authoritative ground
+    truth — the model never re-grades and never proposes its own 'correct'
+    answer. Retries once; on persistent failure returns a friendly fallback
+    (never 'AI Error'/'Unknown') and logs the raw output to QUIZ_ERROR_LOG."""
+    prompt = f"""
+    A student translated this English sentence into Kannada, and the answer is
+    WRONG. Correctness was already decided deterministically — do NOT re-grade.
+
+    English sentence: "{item['english']}"
+    Student's answer (incorrect): "{user_answer}"
+    Correct answer: "{item['canonical']}"
+    The correct answer above is authoritative; do not change, dispute, or
+    replace it. Grammar note (authoritative): "{item['grammar_note']}"
+
+    TASK: In 2-4 encouraging sentences, explain WHY the student's answer is
+    wrong and what rule applies, citing the grammar note. You may only point
+    out differences that ACTUALLY exist between the student's answer and the
+    correct answer — quote the differing words verbatim from both sentences.
+    Never attribute a word or word order to the student that is not in their
+    answer. If you cannot identify the specific difference, just restate the
+    grammar note. Do NOT output a different 'correct answer'. Do NOT say the
+    student's answer is acceptable.
+    OUTPUT: a JSON object exactly like {{"feedback": "your explanation"}}
+    """
+    raw, last_exc = "", None
+    for _attempt in range(2):  # initial try + one retry
+        try:
+            raw = generate_content(prompt, context)
+            # generate_content returns "API Error: ..." instead of raising.
+            if raw and not raw.startswith("API Error"):
+                data = clean_json(raw)
+                feedback = data.get("feedback") if isinstance(data, dict) else None
+                if feedback and feedback.strip():
+                    return {"feedback": feedback.strip()}
+        except Exception as e:
+            last_exc = e
+    _log_quiz_error(item["id"], user_answer, raw, last_exc)
+    return {"feedback": (
+        "I couldn't generate a detailed explanation right now. Compare your "
+        "answer with the correct sentence above — the key grammar point: "
+        f"{item['grammar_note']}"
+    )}
 
 
 def load_topic_doc(filename):
@@ -293,27 +524,6 @@ def load_topic_doc(filename):
             combined += f"\n--- SOURCE: {name} ---\n"
         combined += text
     return combined
-
-
-def generate_quiz(topic, context):
-    # CHANGED: Reverted to 10 questions to save API quota
-    prompt = f"""
-    TASK: Generate exactly 10 simple sentences in English based on the topic "{topic}"
-    that the student must translate into Kannada. The sentences should use a diverse range of vocabulary
-    and should increase in length and complexity following this pattern:
-    * First 3 sentences are easy (short and simple)
-    * Middle 4 sentences are intermediate (longer, slightly more complex)
-    * Final 3 sentences are hard (long and complex)
-    CRITICAL: Every sentence MUST be in plain English only. Do NOT output Kannada script,
-    Roman transliteration of Kannada, or any non-English text. The student's job is to
-    translate FROM English INTO Kannada — the prompts must be English.
-    OUTPUT: JSON list of strings. Example: ["I go", "She eats", "He reads a book"]
-    """
-    res = generate_content(prompt, context)
-    data = clean_json(res)
-    if data:
-        return data
-    return ["Error generating questions."]
 
 
 def generate_error_quiz(errors: list, context: str) -> list:
@@ -436,6 +646,53 @@ def grade_reading_ai(question, text, answer, context):
     return {"is_correct": False, "feedback": "AI Error", "detailed_explanation": "Error"}
 
 
+def _norm_for_presence(s):
+    """Lenient normalization for checking whether text reported by the model
+    actually occurs in the user's message: NFC, strip ZWNJ/ZWJ, strip
+    punctuation, collapse whitespace."""
+    if not s or not isinstance(s, str):
+        return ""
+    s = unicodedata.normalize("NFC", s)
+    s = _ZW_RE.sub("", s)
+    s = _PUNCT_RE.sub("", s)
+    return " ".join(s.split())
+
+
+def _filter_hallucinated_errors(errors, user_message):
+    """Deterministic guard against hallucinated corrections: the model
+    sometimes 'corrects' words the user never wrote. Keep only error objects
+    whose 'original' text actually occurs in the user's message; everything
+    else is dropped before it can reach the UI or the error log.
+
+    Matching is deliberately lenient so a genuine correction is never
+    discarded over surface differences: NFC, zero-width chars and punctuation
+    stripped, whitespace collapsed, plus a Roman-transliteration fallback for
+    users who type Romanized Kannada while the model quotes the Kannada-script
+    rendering of their words.
+
+    Returns (kept, dropped). Malformed entries (non-dict, missing/empty
+    'original') count as dropped; a non-list `errors` yields ([], [])."""
+    if not isinstance(errors, list):
+        return [], []
+    msg_norm = _norm_for_presence(user_message)
+    msg_folded = msg_norm.casefold()
+    kept, dropped = [], []
+    for err in errors:
+        original = err.get("original") if isinstance(err, dict) else None
+        orig_norm = _norm_for_presence(original)
+        if orig_norm and orig_norm in msg_norm:
+            kept.append(err)
+            continue
+        if orig_norm:
+            translit = _norm_for_presence(
+                toggle_script(original, "Kannada (Roman - Natural)"))
+            if translit and translit.casefold() in msg_folded:
+                kept.append(err)
+                continue
+        dropped.append(err)
+    return kept, dropped
+
+
 def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, lang_mode, scenario: str = ""):
     """
     Handles a single turn of the conversational chatbot using Sarvam chat completions.
@@ -480,7 +737,7 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
         messages.append({"role": msg["role"], "content": msg["content"]})
     messages.append({"role": "user", "content": user_message})
 
-    MAX_ATTEMPTS = 2
+    MAX_ATTEMPTS = 3
     last_raw = ""
     last_finish = ""
 
@@ -492,7 +749,7 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
                 model=config.SARVAM_CHAT_MODEL,
                 messages=messages,
                 response_format={"type": "json_object"},
-                max_tokens=4096,
+                max_tokens=config.SARVAM_MAX_TOKENS,
             )
             raw_text = response.choices[0].message.content or ""
             finish_reason = response.choices[0].finish_reason
@@ -515,10 +772,18 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
 
             data = clean_json(raw_text)
             if data and data.get("kannada"):
+                user_errors, dropped = _filter_hallucinated_errors(
+                    data.get("errors", []), user_message)
+                if dropped:
+                    print(
+                        f"\n--- ⚠️ Dropped {len(dropped)} hallucinated error(s) "
+                        f"(original not in user message) ---\n"
+                        f"  {json.dumps(dropped, ensure_ascii=False)}\n---\n"
+                    )
                 return {
                     "bot_reply_kannada": data.get("kannada", ""),
                     "bot_reply_english_translation": data.get("english", ""),
-                    "user_errors": data.get("errors", []),
+                    "user_errors": user_errors,
                     "raw_text": raw_text,
                 }
 
@@ -536,10 +801,15 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
             )
 
             if attempt < MAX_ATTEMPTS:
-                # Retry with the same messages for both failure modes:
-                # - empty response: transient token-budget spike, same call usually works
-                # - non-JSON text: appending Kannada correction text is too token-expensive;
-                #   rely on the system prompt's JSON instruction instead
+                # Retry with the same messages for all failure modes:
+                # - empty response / finish_reason="length" with ~0 chars:
+                #   Sarvam transiently burns the whole completion budget on
+                #   hidden tokens; the same call usually works on retry.
+                #   Raising max_tokens is NOT an option — the starter tier
+                #   hard-caps it at 4096 (HTTP 400 above that).
+                # - non-JSON text: appending Kannada correction text is too
+                #   token-expensive; rely on the system prompt's JSON
+                #   instruction instead
                 print("  action        : retrying with same messages\n---\n")
 
         except Exception as e:

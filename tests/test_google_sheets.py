@@ -11,7 +11,7 @@ import pytest
 
 import config
 import logic
-from logic import get_sheet_client, get_quiz_data, update_mastery
+from logic import get_sheet_client
 
 
 # ---------------------------------------------------------------------------
@@ -107,99 +107,3 @@ class TestGetSheetClient:
         creds_dict = call_args.args[0]
         # dict() of the secrets entry should be passed
         assert creds_dict["type"] == "service_account"
-
-
-# ===========================================================================
-# get_quiz_data
-# ===========================================================================
-
-class TestGetQuizData:
-
-    RECORDS = [
-        {"Topic": "Case Suffixes",  "Status": "",         "Date Sent": ""},
-        {"Topic": "Verb Tenses",    "Status": "Sent",     "Date Sent": "2024-01-01"},
-        {"Topic": "Adjectives",     "Status": "Sent",     "Date Sent": "2024-01-03"},
-        {"Topic": "Negation",       "Status": "Mastered", "Date Sent": "2024-01-05"},
-    ]
-
-    def test_returns_only_sent_topics(self):
-        with _sheet_context(has_secrets=False, mock_records=self.RECORDS):
-            _, topics = get_quiz_data("context")
-        assert len(topics) == 2
-        topic_names = [t["topic"] for t in topics]
-        assert "Verb Tenses" in topic_names
-        assert "Adjectives" in topic_names
-
-    def test_excludes_empty_status_topics(self):
-        with _sheet_context(has_secrets=False, mock_records=self.RECORDS):
-            _, topics = get_quiz_data("context")
-        topic_names = [t["topic"] for t in topics]
-        assert "Case Suffixes" not in topic_names
-
-    def test_excludes_mastered_topics(self):
-        with _sheet_context(has_secrets=False, mock_records=self.RECORDS):
-            _, topics = get_quiz_data("context")
-        topic_names = [t["topic"] for t in topics]
-        assert "Negation" not in topic_names
-
-    def test_row_numbers_are_1_indexed_offset_by_header(self):
-        # Sheet rows: header=1, first data=2, so record index 0 → row 2
-        with _sheet_context(has_secrets=False, mock_records=self.RECORDS):
-            _, topics = get_quiz_data("context")
-        # "Verb Tenses" is record index 1 → row 3
-        verb_topic = next(t for t in topics if t["topic"] == "Verb Tenses")
-        assert verb_topic["row"] == 3
-
-    def test_no_sent_topics_returns_empty_list(self):
-        records = [
-            {"Topic": "X", "Status": "", "Date Sent": ""},
-            {"Topic": "Y", "Status": "Mastered", "Date Sent": "2024-01-01"},
-        ]
-        with _sheet_context(has_secrets=False, mock_records=records):
-            _, topics = get_quiz_data("context")
-        assert topics == []
-
-    def test_exception_returns_none_and_empty_list(self):
-        with patch("logic.get_sheet_client", side_effect=Exception("auth failed")):
-            sheet, topics = get_quiz_data("context")
-        assert sheet is None
-        assert topics == []
-
-    def test_returns_sheet_as_first_element(self):
-        with _sheet_context(has_secrets=False, mock_records=self.RECORDS) as (_, _, _, mock_sheet):
-            sheet, _ = get_quiz_data("context")
-        assert sheet is mock_sheet
-
-
-# ===========================================================================
-# update_mastery
-# ===========================================================================
-
-class TestUpdateMastery:
-
-    def test_writes_mastered_to_status_column(self):
-        with _sheet_context(has_secrets=False) as (_, _, _, mock_sheet):
-            with patch("logic.get_sheet_client", return_value=mock_sheet):
-                update_mastery(5)
-        mock_sheet.update_cell.assert_called_with(5, 2, "Mastered")
-
-    def test_updates_correct_row(self):
-        with _sheet_context(has_secrets=False) as (_, _, _, mock_sheet):
-            with patch("logic.get_sheet_client", return_value=mock_sheet):
-                update_mastery(7)
-        call_args = mock_sheet.update_cell.call_args
-        assert call_args.args[0] == 7  # row number
-
-    def test_updates_column_2(self):
-        with _sheet_context(has_secrets=False) as (_, _, _, mock_sheet):
-            with patch("logic.get_sheet_client", return_value=mock_sheet):
-                update_mastery(3)
-        call_args = mock_sheet.update_cell.call_args
-        assert call_args.args[1] == 2  # column index
-
-    def test_value_is_exactly_mastered_string(self):
-        with _sheet_context(has_secrets=False) as (_, _, _, mock_sheet):
-            with patch("logic.get_sheet_client", return_value=mock_sheet):
-                update_mastery(4)
-        call_args = mock_sheet.update_cell.call_args
-        assert call_args.args[2] == "Mastered"

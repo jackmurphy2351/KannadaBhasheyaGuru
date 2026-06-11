@@ -1,0 +1,2428 @@
+{
+ "schema_version": 1,
+ "description": "Deterministic quiz bank for Vani. Each item has a fixed canonical answer and a list of acceptable correct forms. Correctness is decided deterministically first; non-matching answers get one constrained LLM equivalence check. The LLM never generates questions or reference answers. Sentences are intentionally different from the lesson markdown examples.",
+ "topics": [
+  "Adjectives",
+  "Adverbs",
+  "Case Suffixes",
+  "Compound Verbs",
+  "Conditional",
+  "Conjunctions",
+  "Dative Constructions and Modals",
+  "Impersonal Verbs",
+  "Negation",
+  "Relative Clauses",
+  "Reported Speech",
+  "Verb Tenses"
+ ],
+ "items": [
+  {
+   "id": "neg_001",
+   "topic": "Negation",
+   "english": "The cat is not on the mat.",
+   "canonical": "ಬೆಕ್ಕು ಚಾಪೆಯ ಮೇಲೆ ಇಲ್ಲ.",
+   "acceptable": [
+    "ಬೆಕ್ಕು ಚಾಪೆಯ ಮೇಲೆ ಇಲ್ಲ.",
+    "ಬೆಕ್ಕು ಚಾಪೆ ಮೇಲೆ ಇಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "illa = negation of existence/location"
+  },
+  {
+   "id": "neg_002",
+   "topic": "Negation",
+   "english": "He is not a teacher.",
+   "canonical": "ಅವನು ಟೀಚರ್ ಅಲ್ಲ.",
+   "acceptable": [
+    "ಅವನು ಟೀಚರ್ ಅಲ್ಲ.",
+    "ಅವನು ಶಿಕ್ಷಕ ಅಲ್ಲ.",
+    "ಅವನು ಮೇಷ್ಟ್ರು ಅಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "alla = negation of identity"
+  },
+  {
+   "id": "neg_003",
+   "topic": "Negation",
+   "english": "I do not like coffee.",
+   "canonical": "ನನಗೆ ಕಾಫಿ ಇಷ್ಟವಿಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಕಾಫಿ ಇಷ್ಟವಿಲ್ಲ.",
+    "ನನಗೆ ಕಾಫಿ ಇಷ್ಟ ಇಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "ishta negated with illa, NOT alla; dative subject"
+  },
+  {
+   "id": "neg_004",
+   "topic": "Negation",
+   "english": "He will not come tomorrow.",
+   "canonical": "ಅವನು ನಾಳೆ ಬರುವುದಿಲ್ಲ.",
+   "acceptable": [
+    "ಅವನು ನಾಳೆ ಬರುವುದಿಲ್ಲ.",
+    "ಅವನು ನಾಳೆ ಬರಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "future negative -uvudilla (formal) / -alla (spoken)"
+  },
+  {
+   "id": "neg_005",
+   "topic": "Negation",
+   "english": "He did not write.",
+   "canonical": "ಅವನು ಬರೆಯಲಿಲ್ಲ.",
+   "acceptable": [
+    "ಅವನು ಬರೆಯಲಿಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "past negative -lilla"
+  },
+  {
+   "id": "neg_006",
+   "topic": "Negation",
+   "english": "We did not go to the park yesterday.",
+   "canonical": "ನಾವು ನಿನ್ನೆ ಪಾರ್ಕಿಗೆ ಹೋಗಲಿಲ್ಲ.",
+   "acceptable": [
+    "ನಾವು ನಿನ್ನೆ ಪಾರ್ಕಿಗೆ ಹೋಗಲಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "past negative of irregular hogu = hogalilla, NOT hodalla"
+  },
+  {
+   "id": "neg_007",
+   "topic": "Negation",
+   "english": "This tea is not hot.",
+   "canonical": "ಈ ಟೀ ಬಿಸಿ ಅಲ್ಲ.",
+   "acceptable": [
+    "ಈ ಟೀ ಬಿಸಿ ಅಲ್ಲ.",
+    "ಈ ಟೀ ಬಿಸಿಯಲ್ಲ.",
+    "ಈ ಚಹಾ ಬಿಸಿ ಅಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "alla negates quality/adjective"
+  },
+  {
+   "id": "neg_008",
+   "topic": "Negation",
+   "english": "No one is in the kitchen.",
+   "canonical": "ಅಡುಗೆಮನೆಯಲ್ಲಿ ಯಾರೂ ಇಲ್ಲ.",
+   "acceptable": [
+    "ಅಡುಗೆಮನೆಯಲ್ಲಿ ಯಾರೂ ಇಲ್ಲ.",
+    "ಅಡಿಗೆಮನೆಯಲ್ಲಿ ಯಾರೂ ಇಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "illa for existence"
+  },
+  {
+   "id": "neg_009",
+   "topic": "Negation",
+   "english": "I don't have money.",
+   "canonical": "ನನಗೆ ದುಡ್ಡು ಇಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ದುಡ್ಡು ಇಲ್ಲ.",
+    "ನನಗೆ ದುಡ್ಡಿಲ್ಲ.",
+    "ನನಗೆ ಹಣ ಇಲ್ಲ.",
+    "ನನಗೆ ಹಣವಿಲ್ಲ.",
+    "ನನ್ನ ಹತ್ತಿರ ದುಡ್ಡು ಇಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "possession negated with dative + illa"
+  },
+  {
+   "id": "neg_010",
+   "topic": "Negation",
+   "english": "The child is not sleeping right now.",
+   "canonical": "ಈಗ ಮಗು ಮಲಗ್ತಾ ಇಲ್ಲ.",
+   "acceptable": [
+    "ಈಗ ಮಗು ಮಲಗ್ತಾ ಇಲ್ಲ.",
+    "ಮಗು ಈಗ ಮಲಗ್ತಾ ಇಲ್ಲ.",
+    "ಈಗ ಮಗು ಮಲಗುತ್ತಾ ಇಲ್ಲ.",
+    "ಮಗು ಈಗ ಮಲಗುತ್ತಾ ಇಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "present continuous negative -taa illa"
+  },
+  {
+   "id": "neg_011",
+   "topic": "Negation",
+   "english": "I haven't eaten breakfast.",
+   "canonical": "ನಾನು ತಿಂಡಿ ತಿಂದಿಲ್ಲ.",
+   "acceptable": [
+    "ನಾನು ತಿಂಡಿ ತಿಂದಿಲ್ಲ.",
+    "ನಾನು ತಿಂಡಿ ಮಾಡಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "present perfect negative (participle + illa)"
+  },
+  {
+   "id": "neg_012",
+   "topic": "Negation",
+   "english": "Don't be afraid.",
+   "canonical": "ಹೆದರಬೇಡಿ.",
+   "acceptable": [
+    "ಹೆದರಬೇಡಿ.",
+    "ಹೆದರಬೇಡ.",
+    "ಭಯ ಪಡಬೇಡ.",
+    "ಭಯಪಡಬೇಡಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "imperative negative beda/bedi"
+  },
+  {
+   "id": "neg_013",
+   "topic": "Negation",
+   "english": "One should not waste water.",
+   "canonical": "ನೀರು ಹಾಳು ಮಾಡಬಾರದು.",
+   "acceptable": [
+    "ನೀರು ಹಾಳು ಮಾಡಬಾರದು.",
+    "ನೀರನ್ನು ಹಾಳು ಮಾಡಬಾರದು.",
+    "ನೀರು ವೇಸ್ಟ್ ಮಾಡಬಾರದು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "prohibitive -baradu"
+  },
+  {
+   "id": "neg_014",
+   "topic": "Negation",
+   "english": "I cannot understand.",
+   "canonical": "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥ ಆಗಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗುವುದಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "inability infinitive + agalla"
+  },
+  {
+   "id": "neg_015",
+   "topic": "Negation",
+   "english": "He was not at home.",
+   "canonical": "ಅವನು ಮನೆಯಲ್ಲಿ ಇರಲಿಲ್ಲ.",
+   "acceptable": [
+    "ಅವನು ಮನೆಯಲ್ಲಿ ಇರಲಿಲ್ಲ.",
+    "ಅವನು ಮನೇಲಿ ಇರಲಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "past 'to be' negative iralilla"
+  },
+  {
+   "id": "neg_016",
+   "topic": "Negation",
+   "english": "He went to school without eating.",
+   "canonical": "ಅವನು ಊಟ ಮಾಡದೆ ಶಾಲೆಗೆ ಹೋದ.",
+   "acceptable": [
+    "ಅವನು ಊಟ ಮಾಡದೆ ಶಾಲೆಗೆ ಹೋದ.",
+    "ಅವನು ಊಟ ಮಾಡದೇ ಶಾಲೆಗೆ ಹೋದ.",
+    "ಅವನು ತಿನ್ನದೆ ಸ್ಕೂಲಿಗೆ ಹೋದ.",
+    "ಅವನು ಊಟ ಮಾಡದೆ ಸ್ಕೂಲಿಗೆ ಹೋದನು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "negative gerund -ade (without doing)"
+  },
+  {
+   "id": "case_001",
+   "topic": "Case Suffixes",
+   "english": "She went to school.",
+   "canonical": "ಅವಳು ಶಾಲೆಗೆ ಹೋದಳು.",
+   "acceptable": [
+    "ಅವಳು ಶಾಲೆಗೆ ಹೋದಳು.",
+    "ಅವಳು ಸ್ಕೂಲಿಗೆ ಹೋದಳು.",
+    "ಅವಳು ಶಾಲೆಗೆ ಹೋದ್ಲು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "dative -ge (direction)"
+  },
+  {
+   "id": "case_002",
+   "topic": "Case Suffixes",
+   "english": "This is Krishna's shop.",
+   "canonical": "ಇದು ಕೃಷ್ಣನ ಅಂಗಡಿ.",
+   "acceptable": [
+    "ಇದು ಕೃಷ್ಣನ ಅಂಗಡಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "genitive -a"
+  },
+  {
+   "id": "case_003",
+   "topic": "Case Suffixes",
+   "english": "I called him.",
+   "canonical": "ನಾನು ಅವನನ್ನು ಕರೆದೆ.",
+   "acceptable": [
+    "ನಾನು ಅವನನ್ನು ಕರೆದೆ.",
+    "ನಾನು ಅವನ್ನ ಕರೆದೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "mandatory human accusative -annu"
+  },
+  {
+   "id": "case_004",
+   "topic": "Case Suffixes",
+   "english": "I drank the milk.",
+   "canonical": "ನಾನು ಹಾಲನ್ನು ಕುಡಿದೆ.",
+   "acceptable": [
+    "ನಾನು ಹಾಲನ್ನು ಕುಡಿದೆ.",
+    "ನಾನು ಹಾಲು ಕುಡಿದೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "inanimate accusative optional in speech"
+  },
+  {
+   "id": "case_005",
+   "topic": "Case Suffixes",
+   "english": "He is in the village.",
+   "canonical": "ಅವನು ಊರಿನಲ್ಲಿ ಇದ್ದಾನೆ.",
+   "acceptable": [
+    "ಅವನು ಊರಿನಲ್ಲಿ ಇದ್ದಾನೆ.",
+    "ಅವನು ಊರಲ್ಲಿ ಇದ್ದಾನೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "locative -alli with -in- insertion"
+  },
+  {
+   "id": "case_006",
+   "topic": "Case Suffixes",
+   "english": "She came from Mysore.",
+   "canonical": "ಅವಳು ಮೈಸೂರಿನಿಂದ ಬಂದಳು.",
+   "acceptable": [
+    "ಅವಳು ಮೈಸೂರಿನಿಂದ ಬಂದಳು.",
+    "ಅವಳು ಮೈಸೂರಿಂದ ಬಂದಳು.",
+    "ಅವಳು ಮೈಸೂರಿನಿಂದ ಬಂದ್ಲು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "ablative -inda (source)"
+  },
+  {
+   "id": "case_007",
+   "topic": "Case Suffixes",
+   "english": "I ate with a spoon.",
+   "canonical": "ನಾನು ಚಮಚದಿಂದ ತಿಂದೆ.",
+   "acceptable": [
+    "ನಾನು ಚಮಚದಿಂದ ತಿಂದೆ.",
+    "ನಾನು ಸ್ಪೂನಿಂದ ತಿಂದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "instrumental -inda (means)"
+  },
+  {
+   "id": "case_008",
+   "topic": "Case Suffixes",
+   "english": "There is water in the bottle.",
+   "canonical": "ಬಾಟಲಿಯಲ್ಲಿ ನೀರು ಇದೆ.",
+   "acceptable": [
+    "ಬಾಟಲಿಯಲ್ಲಿ ನೀರು ಇದೆ.",
+    "ಬಾಟಲಿಯಲ್ಲಿ ನೀರಿದೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "locative -yalli"
+  },
+  {
+   "id": "case_009",
+   "topic": "Case Suffixes",
+   "english": "Come for dinner.",
+   "canonical": "ಊಟಕ್ಕೆ ಬನ್ನಿ.",
+   "acceptable": [
+    "ಊಟಕ್ಕೆ ಬನ್ನಿ.",
+    "ಊಟಕ್ಕೆ ಬಾ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "dative -kke for 'a'-ending neuter"
+  },
+  {
+   "id": "case_010",
+   "topic": "Case Suffixes",
+   "english": "The price of the book.",
+   "canonical": "ಪುಸ್ತಕದ ಬೆಲೆ.",
+   "acceptable": [
+    "ಪುಸ್ತಕದ ಬೆಲೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "genitive with -d- oblique on neuter -a noun"
+  },
+  {
+   "id": "case_011",
+   "topic": "Case Suffixes",
+   "english": "There is sugar in the milk.",
+   "canonical": "ಹಾಲಿನಲ್ಲಿ ಸಕ್ಕರೆ ಇದೆ.",
+   "acceptable": [
+    "ಹಾಲಿನಲ್ಲಿ ಸಕ್ಕರೆ ಇದೆ.",
+    "ಹಾಲಲ್ಲಿ ಸಕ್ಕರೆ ಇದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "locative on u-ending noun -> -in-alli"
+  },
+  {
+   "id": "case_012",
+   "topic": "Case Suffixes",
+   "english": "He has a dog.",
+   "canonical": "ಅವನಿಗೆ ನಾಯಿ ಇದೆ.",
+   "acceptable": [
+    "ಅವನಿಗೆ ನಾಯಿ ಇದೆ.",
+    "ಅವನ ಹತ್ತಿರ ನಾಯಿ ಇದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "dative of possession"
+  },
+  {
+   "id": "case_013",
+   "topic": "Case Suffixes",
+   "english": "To the houses.",
+   "canonical": "ಮನೆಗಳಿಗೆ.",
+   "acceptable": [
+    "ಮನೆಗಳಿಗೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "plural + dative (galu+ge -> galige)"
+  },
+  {
+   "id": "case_014",
+   "topic": "Case Suffixes",
+   "english": "Hey Krishna, come quickly.",
+   "canonical": "ಕೃಷ್ಣನೇ, ಬೇಗ ಬಾ.",
+   "acceptable": [
+    "ಕೃಷ್ಣನೇ, ಬೇಗ ಬಾ.",
+    "ಕೃಷ್ಣನೇ ಬೇಗ ಬಾ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "vocative -e"
+  },
+  {
+   "id": "case_015",
+   "topic": "Case Suffixes",
+   "english": "I sent it from the computer.",
+   "canonical": "ನಾನು ಕಂಪ್ಯೂಟರಿನಿಂದ ಕಳಿಸಿದೆ.",
+   "acceptable": [
+    "ನಾನು ಕಂಪ್ಯೂಟರಿನಿಂದ ಕಳಿಸಿದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "ablative on consonant-final loanword"
+  },
+  {
+   "id": "tense_001",
+   "topic": "Verb Tenses",
+   "english": "I do.",
+   "canonical": "ನಾನು ಮಾಡುತ್ತೇನೆ.",
+   "acceptable": [
+    "ನಾನು ಮಾಡುತ್ತೇನೆ.",
+    "ನಾನು ಮಾಡ್ತೀನಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "present habitual 1st person"
+  },
+  {
+   "id": "tense_002",
+   "topic": "Verb Tenses",
+   "english": "He does.",
+   "canonical": "ಅವನು ಮಾಡುತ್ತಾನೆ.",
+   "acceptable": [
+    "ಅವನು ಮಾಡುತ್ತಾನೆ.",
+    "ಅವನು ಮಾಡ್ತಾನೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "present 3rd masc"
+  },
+  {
+   "id": "tense_003",
+   "topic": "Verb Tenses",
+   "english": "I went.",
+   "canonical": "ನಾನು ಹೋದೆ.",
+   "acceptable": [
+    "ನಾನು ಹೋದೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "past irregular hogu -> hode"
+  },
+  {
+   "id": "tense_004",
+   "topic": "Verb Tenses",
+   "english": "I gave money.",
+   "canonical": "ನಾನು ದುಡ್ಡು ಕೊಟ್ಟೆ.",
+   "acceptable": [
+    "ನಾನು ದುಡ್ಡು ಕೊಟ್ಟೆ.",
+    "ನಾನು ಹಣ ಕೊಟ್ಟೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "past irregular kodu -> kotte"
+  },
+  {
+   "id": "tense_005",
+   "topic": "Verb Tenses",
+   "english": "I ate.",
+   "canonical": "ನಾನು ತಿಂದೆ.",
+   "acceptable": [
+    "ನಾನು ತಿಂದೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "past irregular tinnu -> tinde"
+  },
+  {
+   "id": "tense_006",
+   "topic": "Verb Tenses",
+   "english": "I am eating.",
+   "canonical": "ನಾನು ತಿನ್ತಾ ಇದ್ದೀನಿ.",
+   "acceptable": [
+    "ನಾನು ತಿನ್ತಾ ಇದ್ದೀನಿ.",
+    "ನಾನು ತಿಂತಾ ಇದ್ದೀನಿ.",
+    "ನಾನು ತಿನ್ನುತ್ತಾ ಇದ್ದೇನೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "present continuous"
+  },
+  {
+   "id": "tense_007",
+   "topic": "Verb Tenses",
+   "english": "He is reading.",
+   "canonical": "ಅವನು ಓದ್ತಾ ಇದ್ದಾನೆ.",
+   "acceptable": [
+    "ಅವನು ಓದ್ತಾ ಇದ್ದಾನೆ.",
+    "ಅವನು ಓದುತ್ತಾ ಇದ್ದಾನೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "present continuous 3rd masc"
+  },
+  {
+   "id": "tense_008",
+   "topic": "Verb Tenses",
+   "english": "She drank water.",
+   "canonical": "ಅವಳು ನೀರು ಕುಡಿದಳು.",
+   "acceptable": [
+    "ಅವಳು ನೀರು ಕುಡಿದಳು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "past 3rd fem"
+  },
+  {
+   "id": "tense_009",
+   "topic": "Verb Tenses",
+   "english": "Did you eat? (Have you eaten?)",
+   "canonical": "ಊಟ ಆಯಿತಾ?",
+   "acceptable": [
+    "ಊಟ ಆಯಿತಾ?",
+    "ಊಟ ಆಯ್ತಾ?"
+   ],
+   "difficulty": "medium",
+   "grammar_note": "idiomatic 'agu' for completion"
+  },
+  {
+   "id": "tense_010",
+   "topic": "Verb Tenses",
+   "english": "We were in Bangalore last week.",
+   "canonical": "ನಾವು ಕಳೆದ ವಾರ ಬೆಂಗಳೂರಿನಲ್ಲಿ ಇದ್ದೆವು.",
+   "acceptable": [
+    "ನಾವು ಕಳೆದ ವಾರ ಬೆಂಗಳೂರಿನಲ್ಲಿ ಇದ್ದೆವು.",
+    "ನಾವು ಹೋದ ವಾರ ಬೆಂಗಳೂರಿನಲ್ಲಿ ಇದ್ದೆವು.",
+    "ನಾವು ಹೋದ ವಾರ ಬೆಂಗಳೂರಲ್ಲಿ ಇದ್ವಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "past of iru"
+  },
+  {
+   "id": "tense_011",
+   "topic": "Verb Tenses",
+   "english": "It happened.",
+   "canonical": "ಅದು ಆಯಿತು.",
+   "acceptable": [
+    "ಅದು ಆಯಿತು.",
+    "ಅದು ಆಯ್ತು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "agu past neuter"
+  },
+  {
+   "id": "tense_012",
+   "topic": "Verb Tenses",
+   "english": "They do.",
+   "canonical": "ಅವರು ಮಾಡುತ್ತಾರೆ.",
+   "acceptable": [
+    "ಅವರು ಮಾಡುತ್ತಾರೆ.",
+    "ಅವರು ಮಾಡ್ತಾರೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "present 3rd plural"
+  },
+  {
+   "id": "tense_013",
+   "topic": "Verb Tenses",
+   "english": "We will come tomorrow.",
+   "canonical": "ನಾವು ನಾಳೆ ಬರುತ್ತೇವೆ.",
+   "acceptable": [
+    "ನಾವು ನಾಳೆ ಬರುತ್ತೇವೆ.",
+    "ನಾವು ನಾಳೆ ಬರ್ತೀವಿ.",
+    "ನಾಳೆ ಬರ್ತೀವಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "present/future 1st plural"
+  },
+  {
+   "id": "tense_014",
+   "topic": "Verb Tenses",
+   "english": "She is sleeping.",
+   "canonical": "ಅವಳು ಮಲಗ್ತಾ ಇದ್ದಾಳೆ.",
+   "acceptable": [
+    "ಅವಳು ಮಲಗ್ತಾ ಇದ್ದಾಳೆ.",
+    "ಅವಳು ಮಲಗುತ್ತಾ ಇದ್ದಾಳೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "present continuous 3rd fem"
+  },
+  {
+   "id": "tense_015",
+   "topic": "Verb Tenses",
+   "english": "He gave the book.",
+   "canonical": "ಅವನು ಪುಸ್ತಕ ಕೊಟ್ಟ.",
+   "acceptable": [
+    "ಅವನು ಪುಸ್ತಕ ಕೊಟ್ಟ.",
+    "ಅವನು ಪುಸ್ತಕವನ್ನು ಕೊಟ್ಟ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "past irregular kodu -> kotta"
+  },
+  {
+   "id": "adj_001",
+   "topic": "Adjectives",
+   "english": "This is a big house.",
+   "canonical": "ಇದು ದೊಡ್ಡ ಮನೆ.",
+   "acceptable": [
+    "ಇದು ದೊಡ್ಡ ಮನೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "pure adjective, zero copula"
+  },
+  {
+   "id": "adj_002",
+   "topic": "Adjectives",
+   "english": "She is a smart woman.",
+   "canonical": "ಅವಳು ಬುದ್ಧಿವಂತ ಮಹಿಳೆ.",
+   "acceptable": [
+    "ಅವಳು ಬುದ್ಧಿವಂತ ಮಹಿಳೆ.",
+    "ಅವಳು ಬುದ್ಧಿವಂತ ಹೆಂಗಸು.",
+    "ಅವಳು ಜಾಣ ಮಹಿಳೆ.",
+    "ಅವಳು ಜಾಣ ಹೆಂಗಸು.",
+    "ಅವಳು ಬುದ್ಧಿವಂತೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "zero copula, no 'iddale'"
+  },
+  {
+   "id": "adj_003",
+   "topic": "Adjectives",
+   "english": "That is a beautiful flower.",
+   "canonical": "ಅದು ಸುಂದರವಾದ ಹೂವು.",
+   "acceptable": [
+    "ಅದು ಸುಂದರವಾದ ಹೂವು.",
+    "ಅದು ಸುಂದರ ಹೂವು.",
+    "ಅದು ಚಂದದ ಹೂವು.",
+    "ಅದು ಅಂದವಾದ ಹೂವು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "derived adjective -aada"
+  },
+  {
+   "id": "adj_004",
+   "topic": "Adjectives",
+   "english": "This is a very important matter.",
+   "canonical": "ಇದು ಬಹಳ ಮುಖ್ಯವಾದ ವಿಷಯ.",
+   "acceptable": [
+    "ಇದು ಬಹಳ ಮುಖ್ಯವಾದ ವಿಷಯ.",
+    "ಇದು ತುಂಬಾ ಮುಖ್ಯವಾದ ವಿಷಯ.",
+    "ಇದು ಬಹಳ ಮುಖ್ಯ ವಿಷಯ.",
+    "ಇದು ತುಂಬಾ ಮುಖ್ಯ ವಿಷಯ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "derived adjective with bahala"
+  },
+  {
+   "id": "adj_005",
+   "topic": "Adjectives",
+   "english": "The coffee is hot.",
+   "canonical": "ಕಾಫಿ ಬಿಸಿಯಾಗಿದೆ.",
+   "acceptable": [
+    "ಕಾಫಿ ಬಿಸಿಯಾಗಿದೆ.",
+    "ಕಾಫಿ ಬಿಸಿ ಇದೆ.",
+    "ಕಾಫಿ ಬಿಸಿಯಿದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "state/quality -aagide"
+  },
+  {
+   "id": "adj_006",
+   "topic": "Adjectives",
+   "english": "Your answer is correct.",
+   "canonical": "ನಿಮ್ಮ ಉತ್ತರ ಸರಿಯಾಗಿದೆ.",
+   "acceptable": [
+    "ನಿಮ್ಮ ಉತ್ತರ ಸರಿಯಾಗಿದೆ.",
+    "ನಿನ್ನ ಉತ್ತರ ಸರಿಯಾಗಿದೆ.",
+    "ನಿಮ್ಮ ಉತ್ತರ ಸರಿ ಇದೆ.",
+    "ನಿಮ್ಮ ಉತ್ತರ ಸರಿಯಿದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "sariyaada -> sariyaagide"
+  },
+  {
+   "id": "adj_007",
+   "topic": "Adjectives",
+   "english": "My new phone is good.",
+   "canonical": "ನನ್ನ ಹೊಸ ಫೋನ್ ಚೆನ್ನಾಗಿದೆ.",
+   "acceptable": [
+    "ನನ್ನ ಹೊಸ ಫೋನ್ ಚೆನ್ನಾಗಿದೆ.",
+    "ನನ್ನ ಹೊಸ ಫೋನ್ ಚೆನ್ನಾಗಿ ಇದೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "pure adjective hosa + chennagide"
+  },
+  {
+   "id": "adj_008",
+   "topic": "Adjectives",
+   "english": "That cat is black.",
+   "canonical": "ಆ ಬೆಕ್ಕು ಕಪ್ಪಾಗಿದೆ.",
+   "acceptable": [
+    "ಆ ಬೆಕ್ಕು ಕಪ್ಪಾಗಿದೆ.",
+    "ಆ ಬೆಕ್ಕು ಕಪ್ಪಗಿದೆ.",
+    "ಆ ಬೆಕ್ಕು ಕಪ್ಪು ಇದೆ.",
+    "ಆ ಬೆಕ್ಕು ಕಪ್ಪು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "kappu + aagide sandhi"
+  },
+  {
+   "id": "adj_009",
+   "topic": "Adjectives",
+   "english": "This is a difficult question.",
+   "canonical": "ಇದು ಕಷ್ಟವಾದ ಪ್ರಶ್ನೆ.",
+   "acceptable": [
+    "ಇದು ಕಷ್ಟವಾದ ಪ್ರಶ್ನೆ.",
+    "ಇದು ಕಷ್ಟ ಪ್ರಶ್ನೆ.",
+    "ಇದು ಕಷ್ಟದ ಪ್ರಶ್ನೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "derived adj, colloquial drop of -aada"
+  },
+  {
+   "id": "adj_010",
+   "topic": "Adjectives",
+   "english": "Today the weather is bad.",
+   "canonical": "ಇವತ್ತು ಹವಾಮಾನ ಕೆಟ್ಟದಾಗಿದೆ.",
+   "acceptable": [
+    "ಇವತ್ತು ಹವಾಮಾನ ಕೆಟ್ಟದಾಗಿದೆ.",
+    "ಇಂದು ಹವಾಮಾನ ಕೆಟ್ಟದಾಗಿದೆ.",
+    "ಇವತ್ತು ವಾತಾವರಣ ಕೆಟ್ಟದಾಗಿದೆ.",
+    "ಇವತ್ತು ಹವಾಮಾನ ಚೆನ್ನಾಗಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "state with -aagide"
+  },
+  {
+   "id": "adj_011",
+   "topic": "Adjectives",
+   "english": "It is a good boy.",
+   "canonical": "ಅದು ಒಳ್ಳೆಯ ಹುಡುಗ.",
+   "acceptable": [
+    "ಅದು ಒಳ್ಳೆಯ ಹುಡುಗ.",
+    "ಅವನು ಒಳ್ಳೆಯ ಹುಡುಗ.",
+    "ಅದು ಒಳ್ಳೆ ಹುಡುಗ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "invariant adjective"
+  },
+  {
+   "id": "adj_012",
+   "topic": "Adjectives",
+   "english": "This is an old car.",
+   "canonical": "ಇದು ಹಳೆಯ ಕಾರು.",
+   "acceptable": [
+    "ಇದು ಹಳೆಯ ಕಾರು.",
+    "ಇದು ಹಳೇ ಕಾರು.",
+    "ಇದು ಹಳೆ ಕಾರು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "pure adjective haleya"
+  },
+  {
+   "id": "adj_013",
+   "topic": "Adjectives",
+   "english": "She is a happy person.",
+   "canonical": "ಅವಳು ಖುಷಿಯಾದ ವ್ಯಕ್ತಿ.",
+   "acceptable": [
+    "ಅವಳು ಖುಷಿಯಾದ ವ್ಯಕ್ತಿ.",
+    "ಅವಳು ಸಂತೋಷದ ವ್ಯಕ್ತಿ.",
+    "ಅವಳು ಖುಷಿಯಾಗಿರುವ ವ್ಯಕ್ತಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "khushi + yaada (y-glide)"
+  },
+  {
+   "id": "adj_014",
+   "topic": "Adjectives",
+   "english": "The work is easy.",
+   "canonical": "ಕೆಲಸ ಸುಲಭವಾಗಿದೆ.",
+   "acceptable": [
+    "ಕೆಲಸ ಸುಲಭವಾಗಿದೆ.",
+    "ಕೆಲಸ ಸುಲಭ.",
+    "ಕೆಲಸ ಸುಲಭ ಇದೆ.",
+    "ಕೆಲಸ ಸುಲಭವಿದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "state quality -aagide"
+  },
+  {
+   "id": "adv_001",
+   "topic": "Adverbs",
+   "english": "Study well.",
+   "canonical": "ಚೆನ್ನಾಗಿ ಓದಿ.",
+   "acceptable": [
+    "ಚೆನ್ನಾಗಿ ಓದಿ.",
+    "ಚೆನ್ನಾಗಿ ಓದು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "chennagi adverb"
+  },
+  {
+   "id": "adv_002",
+   "topic": "Adverbs",
+   "english": "I am well.",
+   "canonical": "ನಾನು ಚೆನ್ನಾಗಿದ್ದೀನಿ.",
+   "acceptable": [
+    "ನಾನು ಚೆನ್ನಾಗಿದ್ದೀನಿ.",
+    "ನಾನು ಚೆನ್ನಾಗಿ ಇದ್ದೀನಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "must use chennagi (adverb), not chenna"
+  },
+  {
+   "id": "adv_003",
+   "topic": "Adverbs",
+   "english": "Speak loudly.",
+   "canonical": "ಜೋರಾಗಿ ಮಾತಾಡಿ.",
+   "acceptable": [
+    "ಜೋರಾಗಿ ಮಾತಾಡಿ.",
+    "ಜೋರಾಗಿ ಮಾತಾಡು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "joraagi adverb"
+  },
+  {
+   "id": "adv_004",
+   "topic": "Adverbs",
+   "english": "Go slowly.",
+   "canonical": "ನಿಧಾನವಾಗಿ ಹೋಗಿ.",
+   "acceptable": [
+    "ನಿಧಾನವಾಗಿ ಹೋಗಿ.",
+    "ನಿಧಾನವಾಗಿ ಹೋಗು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "nidhaanavaagi adverb"
+  },
+  {
+   "id": "adv_005",
+   "topic": "Adverbs",
+   "english": "I won easily.",
+   "canonical": "ನಾನು ಸುಲಭವಾಗಿ ಗೆದ್ದೆ.",
+   "acceptable": [
+    "ನಾನು ಸುಲಭವಾಗಿ ಗೆದ್ದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "sulabhavaagi adverb"
+  },
+  {
+   "id": "adv_006",
+   "topic": "Adverbs",
+   "english": "I didn't hear clearly.",
+   "canonical": "ನನಗೆ ಸ್ಪಷ್ಟವಾಗಿ ಕೇಳಿಸಿಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಸ್ಪಷ್ಟವಾಗಿ ಕೇಳಿಸಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "spashtavaagi adverb + perfect negative"
+  },
+  {
+   "id": "adv_007",
+   "topic": "Adverbs",
+   "english": "Come fast.",
+   "canonical": "ಬೇಗ ಬನ್ನಿ.",
+   "acceptable": [
+    "ಬೇಗ ಬನ್ನಿ.",
+    "ಬೇಗ ಬಾ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "native adverb bega"
+  },
+  {
+   "id": "adv_008",
+   "topic": "Adverbs",
+   "english": "I want only coffee.",
+   "canonical": "ನನಗೆ ಕಾಫಿ ಮಾತ್ರ ಬೇಕು.",
+   "acceptable": [
+    "ನನಗೆ ಕಾಫಿ ಮಾತ್ರ ಬೇಕು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "matra = only"
+  },
+  {
+   "id": "adv_009",
+   "topic": "Adverbs",
+   "english": "Let's go now.",
+   "canonical": "ಈಗ ಹೋಗೋಣ.",
+   "acceptable": [
+    "ಈಗ ಹೋಗೋಣ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "iga = now"
+  },
+  {
+   "id": "adv_010",
+   "topic": "Adverbs",
+   "english": "I will phone later.",
+   "canonical": "ಆಮೇಲೆ ಫೋನ್ ಮಾಡ್ತೀನಿ.",
+   "acceptable": [
+    "ಆಮೇಲೆ ಫೋನ್ ಮಾಡ್ತೀನಿ.",
+    "ಆಮೇಲೆ ಫೋನ್ ಮಾಡುತ್ತೇನೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "aamele = afterwards"
+  },
+  {
+   "id": "adv_011",
+   "topic": "Adverbs",
+   "english": "He always comes late.",
+   "canonical": "ಅವನು ಯಾವಾಗಲೂ ತಡವಾಗಿ ಬರ್ತಾನೆ.",
+   "acceptable": [
+    "ಅವನು ಯಾವಾಗಲೂ ತಡವಾಗಿ ಬರ್ತಾನೆ.",
+    "ಅವನು ಯಾವಾಗಲೂ ತಡವಾಗಿ ಬರುತ್ತಾನೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "yavagalu + tadavaagi"
+  },
+  {
+   "id": "adv_012",
+   "topic": "Adverbs",
+   "english": "I feel tired.",
+   "canonical": "ನನಗೆ ಸುಸ್ತಾಗಿದೆ.",
+   "acceptable": [
+    "ನನಗೆ ಸುಸ್ತಾಗಿದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "sustu -> sustaagide"
+  },
+  {
+   "id": "adv_013",
+   "topic": "Adverbs",
+   "english": "Sit quietly.",
+   "canonical": "ಸುಮ್ಮನೆ ಕುಳಿತುಕೊಳ್ಳಿ.",
+   "acceptable": [
+    "ಸುಮ್ಮನೆ ಕುಳಿತುಕೊಳ್ಳಿ.",
+    "ಸುಮ್ಮನೆ ಕೂತ್ಕೊಳ್ಳಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "summane native adverb"
+  },
+  {
+   "id": "adv_014",
+   "topic": "Adverbs",
+   "english": "Many thanks.",
+   "canonical": "ತುಂಬಾ ಧನ್ಯವಾದಗಳು.",
+   "acceptable": [
+    "ತುಂಬಾ ಧನ್ಯವಾದಗಳು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "tumba intensifier"
+  },
+  {
+   "id": "dat_001",
+   "topic": "Dative Constructions and Modals",
+   "english": "He wants a new phone.",
+   "canonical": "ಅವನಿಗೆ ಹೊಸ ಫೋನ್ ಬೇಕು.",
+   "acceptable": [
+    "ಅವನಿಗೆ ಹೊಸ ಫೋನ್ ಬೇಕು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "beku with dative subject"
+  },
+  {
+   "id": "dat_002",
+   "topic": "Dative Constructions and Modals",
+   "english": "She likes music.",
+   "canonical": "ಅವಳಿಗೆ ಸಂಗೀತ ಇಷ್ಟ.",
+   "acceptable": [
+    "ಅವಳಿಗೆ ಸಂಗೀತ ಇಷ್ಟ.",
+    "ಅವಳಿಗೆ ಮ್ಯೂಸಿಕ್ ಇಷ್ಟ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "ishta with dative subject"
+  },
+  {
+   "id": "dat_003",
+   "topic": "Dative Constructions and Modals",
+   "english": "He knows English.",
+   "canonical": "ಅವನಿಗೆ ಇಂಗ್ಲಿಷ್ ಗೊತ್ತು.",
+   "acceptable": [
+    "ಅವನಿಗೆ ಇಂಗ್ಲಿಷ್ ಗೊತ್ತು.",
+    "ಅವನಿಗೆ ಇಂಗ್ಲೀಷ್ ಗೊತ್ತು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "gottu static knowledge"
+  },
+  {
+   "id": "dat_004",
+   "topic": "Dative Constructions and Modals",
+   "english": "I have to study today.",
+   "canonical": "ನಾನು ಇವತ್ತು ಓದಬೇಕು.",
+   "acceptable": [
+    "ನಾನು ಇವತ್ತು ಓದಬೇಕು.",
+    "ಇವತ್ತು ನಾನು ಓದಬೇಕು.",
+    "ನಾನು ಇಂದು ಓದಬೇಕು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "verb + beku (obligation), nominative subject"
+  },
+  {
+   "id": "dat_005",
+   "topic": "Dative Constructions and Modals",
+   "english": "I don't want sugar.",
+   "canonical": "ನನಗೆ ಸಕ್ಕರೆ ಬೇಡ.",
+   "acceptable": [
+    "ನನಗೆ ಸಕ್ಕರೆ ಬೇಡ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "beda = don't want"
+  },
+  {
+   "id": "dat_006",
+   "topic": "Dative Constructions and Modals",
+   "english": "He might come today.",
+   "canonical": "ಅವನು ಇವತ್ತು ಬರಬಹುದು.",
+   "acceptable": [
+    "ಅವನು ಇವತ್ತು ಬರಬಹುದು.",
+    "ಇವತ್ತು ಅವನು ಬರಬಹುದು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "bahudu possibility, nominative"
+  },
+  {
+   "id": "dat_007",
+   "topic": "Dative Constructions and Modals",
+   "english": "I cannot read this.",
+   "canonical": "ನನಗೆ ಇದನ್ನು ಓದಲು ಆಗಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಇದನ್ನು ಓದಲು ಆಗಲ್ಲ.",
+    "ನನಗೆ ಇದು ಓದಕ್ಕೆ ಆಗಲ್ಲ.",
+    "ನನಗೆ ಇದನ್ನು ಓದಲು ಆಗುವುದಿಲ್ಲ.",
+    "ನನಗೆ ಇದನ್ನು ಓದೋಕೆ ಆಗಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "infinitive + agalla, dative"
+  },
+  {
+   "id": "dat_008",
+   "topic": "Dative Constructions and Modals",
+   "english": "This much rice is enough for me.",
+   "canonical": "ನನಗೆ ಇಷ್ಟು ಅನ್ನ ಸಾಕು.",
+   "acceptable": [
+    "ನನಗೆ ಇಷ್ಟು ಅನ್ನ ಸಾಕು.",
+    "ಇಷ್ಟು ಅನ್ನ ನನಗೆ ಸಾಕು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "saaku = enough"
+  },
+  {
+   "id": "dat_009",
+   "topic": "Dative Constructions and Modals",
+   "english": "She is thirsty.",
+   "canonical": "ಅವಳಿಗೆ ಬಾಯಾರಿಕೆ ಆಗಿದೆ.",
+   "acceptable": [
+    "ಅವಳಿಗೆ ಬಾಯಾರಿಕೆ ಆಗಿದೆ.",
+    "ಅವಳಿಗೆ ಬಾಯಾರಿಕೆಯಾಗಿದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "dative experiencer of feeling"
+  },
+  {
+   "id": "dat_010",
+   "topic": "Dative Constructions and Modals",
+   "english": "You should not talk in class.",
+   "canonical": "ನೀನು ಕ್ಲಾಸಲ್ಲಿ ಮಾತಾಡಬಾರದು.",
+   "acceptable": [
+    "ನೀನು ಕ್ಲಾಸಲ್ಲಿ ಮಾತಾಡಬಾರದು.",
+    "ನೀವು ಕ್ಲಾಸಲ್ಲಿ ಮಾತಾಡಬಾರದು.",
+    "ನೀನು ಕ್ಲಾಸ್ನಲ್ಲಿ ಮಾತನಾಡಬಾರದು.",
+    "ಕ್ಲಾಸಲ್ಲಿ ಮಾತಾಡಬಾರದು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "baradu prohibition, nominative"
+  },
+  {
+   "id": "dat_011",
+   "topic": "Dative Constructions and Modals",
+   "english": "It is possible for him to win.",
+   "canonical": "ಅವನಿಗೆ ಗೆಲ್ಲಲು ಸಾಧ್ಯವಿದೆ.",
+   "acceptable": [
+    "ಅವನಿಗೆ ಗೆಲ್ಲಲು ಸಾಧ್ಯವಿದೆ.",
+    "ಅವನಿಗೆ ಗೆಲ್ಲಲು ಸಾಧ್ಯ ಇದೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "sadhyavide ability"
+  },
+  {
+   "id": "dat_012",
+   "topic": "Dative Constructions and Modals",
+   "english": "She desires peace.",
+   "canonical": "ಅವಳು ಶಾಂತಿಯನ್ನು ಬಯಸುತ್ತಾಳೆ.",
+   "acceptable": [
+    "ಅವಳು ಶಾಂತಿಯನ್ನು ಬಯಸುತ್ತಾಳೆ.",
+    "ಅವಳು ಶಾಂತಿ ಬಯಸುತ್ತಾಳೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "bayasu (formal active desire)"
+  },
+  {
+   "id": "dat_013",
+   "topic": "Dative Constructions and Modals",
+   "english": "You don't have to wait.",
+   "canonical": "ನೀವು ಕಾಯಬೇಕಾಗಿಲ್ಲ.",
+   "acceptable": [
+    "ನೀವು ಕಾಯಬೇಕಾಗಿಲ್ಲ.",
+    "ನೀನು ಕಾಯಬೇಕಾಗಿಲ್ಲ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "bekagilla = don't have to"
+  },
+  {
+   "id": "dat_014",
+   "topic": "Dative Constructions and Modals",
+   "english": "Do you want tea?",
+   "canonical": "ನಿಮಗೆ ಟೀ ಬೇಕಾ?",
+   "acceptable": [
+    "ನಿಮಗೆ ಟೀ ಬೇಕಾ?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "beka question form"
+  },
+  {
+   "id": "dat_015",
+   "topic": "Dative Constructions and Modals",
+   "english": "I know him.",
+   "canonical": "ನನಗೆ ಅವನು ಗೊತ್ತು.",
+   "acceptable": [
+    "ನನಗೆ ಅವನು ಗೊತ್ತು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "gottu for knowing a person"
+  },
+  {
+   "id": "conj_001",
+   "topic": "Conjunctions",
+   "english": "Rice and sambar.",
+   "canonical": "ಅನ್ನ ಮತ್ತು ಸಾಂಬಾರ್.",
+   "acceptable": [
+    "ಅನ್ನ ಮತ್ತು ಸಾಂಬಾರ್.",
+    "ಅನ್ನ ಮತ್ತು ಸಾಂಬಾರು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "mattu = and"
+  },
+  {
+   "id": "conj_002",
+   "topic": "Conjunctions",
+   "english": "He sang and she danced.",
+   "canonical": "ಅವನು ಹಾಡಿದ ಮತ್ತು ಅವಳು ಕುಣಿದಳು.",
+   "acceptable": [
+    "ಅವನು ಹಾಡಿದ ಮತ್ತು ಅವಳು ಕುಣಿದಳು.",
+    "ಅವನು ಹಾಡಿದನು ಮತ್ತು ಅವಳು ಕುಣಿದಳು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "mattu joining sentences"
+  },
+  {
+   "id": "conj_003",
+   "topic": "Conjunctions",
+   "english": "Do you want rice or chapati?",
+   "canonical": "ಅನ್ನ ಅಥವಾ ಚಪಾತಿ ಬೇಕಾ?",
+   "acceptable": [
+    "ಅನ್ನ ಅಥವಾ ಚಪಾತಿ ಬೇಕಾ?",
+    "ನಿಮಗೆ ಅನ್ನ ಅಥವಾ ಚಪಾತಿ ಬೇಕಾ?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "athava = or"
+  },
+  {
+   "id": "conj_004",
+   "topic": "Conjunctions",
+   "english": "The house is small, but it is nice.",
+   "canonical": "ಮನೆ ಚಿಕ್ಕದು, ಆದರೆ ಚೆನ್ನಾಗಿದೆ.",
+   "acceptable": [
+    "ಮನೆ ಚಿಕ್ಕದು, ಆದರೆ ಚೆನ್ನಾಗಿದೆ.",
+    "ಮನೆ ಚಿಕ್ಕದಾಗಿದೆ, ಆದರೆ ಚೆನ್ನಾಗಿದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "adare = but"
+  },
+  {
+   "id": "conj_005",
+   "topic": "Conjunctions",
+   "english": "I am tired because I didn't sleep.",
+   "canonical": "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕೆಂದರೆ ನಾನು ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕೆಂದರೆ ನಾನು ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ.",
+    "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕಂದ್ರೆ ನಾನು ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ.",
+    "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕೆಂದರೆ ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "yakendare = because"
+  },
+  {
+   "id": "conj_006",
+   "topic": "Conjunctions",
+   "english": "It rained, so I stayed at home.",
+   "canonical": "ಮಳೆ ಬಂತು, ಅದಕ್ಕೆ ನಾನು ಮನೆಯಲ್ಲಿ ಇದ್ದೆ.",
+   "acceptable": [
+    "ಮಳೆ ಬಂತು, ಅದಕ್ಕೆ ನಾನು ಮನೆಯಲ್ಲಿ ಇದ್ದೆ.",
+    "ಮಳೆ ಬಂತು, ಅದಕ್ಕೆ ಮನೆಯಲ್ಲಿ ಇದ್ದೆ.",
+    "ಮಳೆ ಬಂತು, ಅದಕ್ಕೆ ನಾನು ಮನೇಲಿ ಇದ್ದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "adakke = so/therefore"
+  },
+  {
+   "id": "conj_007",
+   "topic": "Conjunctions",
+   "english": "The work is hard, but I like it.",
+   "canonical": "ಕೆಲಸ ಕಷ್ಟ, ಆದರೆ ನನಗೆ ಇಷ್ಟ.",
+   "acceptable": [
+    "ಕೆಲಸ ಕಷ್ಟ, ಆದರೆ ನನಗೆ ಇಷ್ಟ.",
+    "ಕೆಲಸ ಕಷ್ಟ ಇದೆ, ಆದರೆ ನನಗೆ ಇಷ್ಟ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "adare contrast"
+  },
+  {
+   "id": "conj_008",
+   "topic": "Conjunctions",
+   "english": "She won't come because she has work.",
+   "canonical": "ಅವಳು ಬರಲ್ಲ, ಯಾಕೆಂದರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ.",
+   "acceptable": [
+    "ಅವಳು ಬರಲ್ಲ, ಯಾಕೆಂದರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ.",
+    "ಅವಳು ಬರುವುದಿಲ್ಲ, ಯಾಕೆಂದರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ.",
+    "ಅವಳು ಬರಲ್ಲ, ಯಾಕಂದ್ರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "yakendare reason clause"
+  },
+  {
+   "id": "conj_009",
+   "topic": "Conjunctions",
+   "english": "Eat now, otherwise the food will get cold.",
+   "canonical": "ಈಗ ಊಟ ಮಾಡು, ಇಲ್ಲಾಂದ್ರೆ ಊಟ ತಣ್ಣಗಾಗುತ್ತೆ.",
+   "acceptable": [
+    "ಈಗ ಊಟ ಮಾಡು, ಇಲ್ಲಾಂದ್ರೆ ಊಟ ತಣ್ಣಗಾಗುತ್ತೆ.",
+    "ಈಗ ಊಟ ಮಾಡಿ, ಇಲ್ಲಾಂದ್ರೆ ಊಟ ತಣ್ಣಗಾಗುತ್ತೆ.",
+    "ಈಗ ಊಟ ಮಾಡು, ಇಲ್ಲಾಂದ್ರೆ ಊಟ ತಣ್ಣಗೆ ಆಗುತ್ತೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "illandre = otherwise"
+  },
+  {
+   "id": "conj_010",
+   "topic": "Conjunctions",
+   "english": "I was sleepy, so I slept early.",
+   "canonical": "ನನಗೆ ನಿದ್ದೆ ಬಂತು, ಅದಕ್ಕೆ ಬೇಗ ಮಲಗಿದೆ.",
+   "acceptable": [
+    "ನನಗೆ ನಿದ್ದೆ ಬಂತು, ಅದಕ್ಕೆ ಬೇಗ ಮಲಗಿದೆ.",
+    "ನನಗೆ ನಿದ್ದೆ ಬಂತು, ಅದಕ್ಕೆ ನಾನು ಬೇಗ ಮಲಗಿದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "adakke result clause"
+  },
+  {
+   "id": "conj_011",
+   "topic": "Conjunctions",
+   "english": "Today or tomorrow.",
+   "canonical": "ಇವತ್ತು ಅಥವಾ ನಾಳೆ.",
+   "acceptable": [
+    "ಇವತ್ತು ಅಥವಾ ನಾಳೆ.",
+    "ಇಂದು ಅಥವಾ ನಾಳೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "athava with time words"
+  },
+  {
+   "id": "conj_012",
+   "topic": "Conjunctions",
+   "english": "Come by bus, if not, take an auto.",
+   "canonical": "ಬಸ್ಸಲ್ಲಿ ಬನ್ನಿ, ಇಲ್ಲಾಂದ್ರೆ ಆಟೋದಲ್ಲಿ ಬನ್ನಿ.",
+   "acceptable": [
+    "ಬಸ್ಸಲ್ಲಿ ಬನ್ನಿ, ಇಲ್ಲಾಂದ್ರೆ ಆಟೋದಲ್ಲಿ ಬನ್ನಿ.",
+    "ಬಸ್ಸಿನಲ್ಲಿ ಬನ್ನಿ, ಇಲ್ಲಾಂದ್ರೆ ಆಟೋದಲ್ಲಿ ಬನ್ನಿ.",
+    "ಬಸ್ಸಲ್ಲಿ ಬಾ, ಇಲ್ಲಾಂದ್ರೆ ಆಟೋದಲ್ಲಿ ಬಾ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "illandre alternative"
+  },
+  {
+   "id": "conj_013",
+   "topic": "Conjunctions",
+   "english": "I like cats, but I don't have a cat.",
+   "canonical": "ನನಗೆ ಬೆಕ್ಕುಗಳು ಇಷ್ಟ, ಆದರೆ ನನಗೆ ಬೆಕ್ಕು ಇಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಬೆಕ್ಕುಗಳು ಇಷ್ಟ, ಆದರೆ ನನಗೆ ಬೆಕ್ಕು ಇಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "adare + possession negation"
+  },
+  {
+   "id": "imp_001",
+   "topic": "Impersonal Verbs",
+   "english": "I went to see him.",
+   "canonical": "ನಾನು ಅವನನ್ನು ನೋಡಲು ಹೋದೆ.",
+   "acceptable": [
+    "ನಾನು ಅವನನ್ನು ನೋಡಲು ಹೋದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "infinitive -alu (purpose)"
+  },
+  {
+   "id": "imp_002",
+   "topic": "Impersonal Verbs",
+   "english": "I cannot do this.",
+   "canonical": "ನನಗೆ ಇದು ಮಾಡಲು ಆಗಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಇದು ಮಾಡಲು ಆಗಲ್ಲ.",
+    "ನನಗೆ ಇದು ಮಾಡಲು ಆಗುವುದಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "infinitive + agalla"
+  },
+  {
+   "id": "imp_003",
+   "topic": "Impersonal Verbs",
+   "english": "Swimming is good for health.",
+   "canonical": "ಈಜುವುದು ಆರೋಗ್ಯಕ್ಕೆ ಒಳ್ಳೆಯದು.",
+   "acceptable": [
+    "ಈಜುವುದು ಆರೋಗ್ಯಕ್ಕೆ ಒಳ್ಳೆಯದು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "verbal noun -uvudu as subject"
+  },
+  {
+   "id": "imp_004",
+   "topic": "Impersonal Verbs",
+   "english": "Writing in Kannada is difficult.",
+   "canonical": "ಕನ್ನಡದಲ್ಲಿ ಬರೆಯುವುದು ಕಷ್ಟ.",
+   "acceptable": [
+    "ಕನ್ನಡದಲ್ಲಿ ಬರೆಯುವುದು ಕಷ್ಟ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "verbal noun bareyuvudu"
+  },
+  {
+   "id": "imp_005",
+   "topic": "Impersonal Verbs",
+   "english": "I must practice writing.",
+   "canonical": "ನಾನು ಬರೆಯುವುದನ್ನು ಅಭ್ಯಾಸ ಮಾಡಬೇಕು.",
+   "acceptable": [
+    "ನಾನು ಬರೆಯುವುದನ್ನು ಅಭ್ಯಾಸ ಮಾಡಬೇಕು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "verbal noun + accusative"
+  },
+  {
+   "id": "imp_006",
+   "topic": "Impersonal Verbs",
+   "english": "I came to work.",
+   "canonical": "ನಾನು ಕೆಲಸ ಮಾಡುವುದಕ್ಕೆ ಬಂದೆ.",
+   "acceptable": [
+    "ನಾನು ಕೆಲಸ ಮಾಡುವುದಕ್ಕೆ ಬಂದೆ.",
+    "ನಾನು ಕೆಲಸ ಮಾಡಲು ಬಂದೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "verbal noun + dative for purpose"
+  },
+  {
+   "id": "imp_007",
+   "topic": "Impersonal Verbs",
+   "english": "You learn by speaking.",
+   "canonical": "ನೀವು ಮಾತಾಡುವುದರಿಂದ ಕಲಿತೀರಿ.",
+   "acceptable": [
+    "ನೀವು ಮಾತಾಡುವುದರಿಂದ ಕಲಿತೀರಿ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "verbal noun + ablative"
+  },
+  {
+   "id": "imp_008",
+   "topic": "Impersonal Verbs",
+   "english": "Let me go.",
+   "canonical": "ನನ್ನ ಹೋಗಲು ಬಿಡಿ.",
+   "acceptable": [
+    "ನನ್ನ ಹೋಗಲು ಬಿಡಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "infinitive + bidi (permission)"
+  },
+  {
+   "id": "imp_009",
+   "topic": "Impersonal Verbs",
+   "english": "It is time to eat.",
+   "canonical": "ಊಟ ಮಾಡುವ ಸಮಯ.",
+   "acceptable": [
+    "ಊಟ ಮಾಡುವ ಸಮಯ.",
+    "ತಿನ್ನುವ ಸಮಯ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "relative use of verbal form"
+  },
+  {
+   "id": "imp_010",
+   "topic": "Impersonal Verbs",
+   "english": "Reading books is a good habit.",
+   "canonical": "ಪುಸ್ತಕ ಓದುವುದು ಒಳ್ಳೆಯ ಅಭ್ಯಾಸ.",
+   "acceptable": [
+    "ಪುಸ್ತಕ ಓದುವುದು ಒಳ್ಳೆಯ ಅಭ್ಯಾಸ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "verbal noun as subject"
+  },
+  {
+   "id": "imp_011",
+   "topic": "Impersonal Verbs",
+   "english": "I want to drink water.",
+   "canonical": "ನನಗೆ ನೀರು ಕುಡಿಯಬೇಕು.",
+   "acceptable": [
+    "ನನಗೆ ನೀರು ಕುಡಿಯಬೇಕು.",
+    "ನಾನು ನೀರು ಕುಡಿಯಬೇಕು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "verb + beku desire"
+  },
+  {
+   "id": "imp_012",
+   "topic": "Impersonal Verbs",
+   "english": "To go to school.",
+   "canonical": "ಶಾಲೆಗೆ ಹೋಗಲು.",
+   "acceptable": [
+    "ಶಾಲೆಗೆ ಹೋಗಲು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "infinitive of purpose"
+  },
+  {
+   "id": "cmp_001",
+   "topic": "Compound Verbs",
+   "english": "Write it down (note it).",
+   "canonical": "ಬರೆದುಕೊಳ್ಳಿ.",
+   "acceptable": [
+    "ಬರೆದುಕೊಳ್ಳಿ.",
+    "ಬರ್ಕೊಳ್ಳಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "koLLu reflexive (for oneself)"
+  },
+  {
+   "id": "cmp_002",
+   "topic": "Compound Verbs",
+   "english": "Please do it for me.",
+   "canonical": "ಇದನ್ನು ಮಾಡಿಕೊಡಿ.",
+   "acceptable": [
+    "ಇದನ್ನು ಮಾಡಿಕೊಡಿ.",
+    "ಮಾಡ್ಕೊಡಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "koDu benefactive (for someone)"
+  },
+  {
+   "id": "cmp_003",
+   "topic": "Compound Verbs",
+   "english": "I am sitting.",
+   "canonical": "ನಾನು ಕೂತ್ಕೊಂಡಿದ್ದೀನಿ.",
+   "acceptable": [
+    "ನಾನು ಕೂತ್ಕೊಂಡಿದ್ದೀನಿ.",
+    "ನಾನು ಕುಳಿತುಕೊಂಡಿದ್ದೇನೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "koNDu stative posture"
+  },
+  {
+   "id": "cmp_004",
+   "topic": "Compound Verbs",
+   "english": "I am standing.",
+   "canonical": "ನಾನು ನಿಂತ್ಕೊಂಡಿದ್ದೀನಿ.",
+   "acceptable": [
+    "ನಾನು ನಿಂತ್ಕೊಂಡಿದ್ದೀನಿ.",
+    "ನಾನು ನಿಂತುಕೊಂಡಿದ್ದೇನೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "koNDu stative posture"
+  },
+  {
+   "id": "cmp_005",
+   "topic": "Compound Verbs",
+   "english": "Understand it.",
+   "canonical": "ತಿಳಿದುಕೊಳ್ಳಿ.",
+   "acceptable": [
+    "ತಿಳಿದುಕೊಳ್ಳಿ.",
+    "ತಿಳ್ಕೊಳ್ಳಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "tiLidukoLLu = grasp"
+  },
+  {
+   "id": "cmp_006",
+   "topic": "Compound Verbs",
+   "english": "Don't get angry.",
+   "canonical": "ಕೋಪ ಮಾಡ್ಕೋಬೇಡ.",
+   "acceptable": [
+    "ಕೋಪ ಮಾಡ್ಕೋಬೇಡ.",
+    "ಕೋಪ ಮಾಡಿಕೊಳ್ಳಬೇಡ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "kopa madikoLLu emotion + negative imperative"
+  },
+  {
+   "id": "cmp_007",
+   "topic": "Compound Verbs",
+   "english": "Clean it up (finish it).",
+   "canonical": "ಸ್ವಚ್ಛ ಮಾಡಿಬಿಡಿ.",
+   "acceptable": [
+    "ಸ್ವಚ್ಛ ಮಾಡಿಬಿಡಿ.",
+    "ಸ್ವಚ್ಛ ಮಾಡ್ಬಿಡಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "biDu completive"
+  },
+  {
+   "id": "cmp_008",
+   "topic": "Compound Verbs",
+   "english": "Buy it.",
+   "canonical": "ತಗೊಳ್ಳಿ.",
+   "acceptable": [
+    "ತಗೊಳ್ಳಿ.",
+    "ತೆಗೆದುಕೊಳ್ಳಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "tegedukoLLu -> tagoLLi (to buy/take)"
+  },
+  {
+   "id": "cmp_009",
+   "topic": "Compound Verbs",
+   "english": "Teach me.",
+   "canonical": "ನನಗೆ ಹೇಳಿಕೊಡಿ.",
+   "acceptable": [
+    "ನನಗೆ ಹೇಳಿಕೊಡಿ.",
+    "ನನಗೆ ಹೇಳ್ಕೊಡಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "heLikoDu = teach"
+  },
+  {
+   "id": "cmp_010",
+   "topic": "Compound Verbs",
+   "english": "I am sleeping.",
+   "canonical": "ನಾನು ಮಲಗ್ಕೊಂಡಿದ್ದೀನಿ.",
+   "acceptable": [
+    "ನಾನು ಮಲಗ್ಕೊಂಡಿದ್ದೀನಿ.",
+    "ನಾನು ಮಲಗಿಕೊಂಡಿದ್ದೇನೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "koNDu stative"
+  },
+  {
+   "id": "cmp_011",
+   "topic": "Compound Verbs",
+   "english": "Send it out.",
+   "canonical": "ಕಳುಹಿಸಿಕೊಡಿ.",
+   "acceptable": [
+    "ಕಳುಹಿಸಿಕೊಡಿ.",
+    "ಕಳ್ಸ್ಕೊಡಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "kaLuhisikoDu benefactive"
+  },
+  {
+   "id": "cmp_012",
+   "topic": "Compound Verbs",
+   "english": "I did it myself.",
+   "canonical": "ನಾನೇ ಮಾಡಿಕೊಂಡೆ.",
+   "acceptable": [
+    "ನಾನೇ ಮಾಡಿಕೊಂಡೆ.",
+    "ನಾನೇ ಮಾಡ್ಕೊಂಡೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "koLLu past reflexive"
+  },
+  {
+   "id": "rel_001",
+   "topic": "Relative Clauses",
+   "english": "The train that goes to Mysore.",
+   "canonical": "ಮೈಸೂರಿಗೆ ಹೋಗುವ ಟ್ರೈನ್.",
+   "acceptable": [
+    "ಮೈಸೂರಿಗೆ ಹೋಗುವ ಟ್ರೈನ್.",
+    "ಮೈಸೂರಿಗೆ ಹೋಗುವ ರೈಲು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "present relative participle -uva"
+  },
+  {
+   "id": "rel_002",
+   "topic": "Relative Clauses",
+   "english": "The letter that I wrote.",
+   "canonical": "ನಾನು ಬರೆದ ಪತ್ರ.",
+   "acceptable": [
+    "ನಾನು ಬರೆದ ಪತ್ರ.",
+    "ನಾನು ಬರೆದ ಲೆಟರ್."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "past relative participle -da"
+  },
+  {
+   "id": "rel_003",
+   "topic": "Relative Clauses",
+   "english": "The work that he did not do.",
+   "canonical": "ಅವನು ಮಾಡದ ಕೆಲಸ.",
+   "acceptable": [
+    "ಅವನು ಮಾಡದ ಕೆಲಸ.",
+    "ಅವನು ಮಾಡದೇ ಇರುವ ಕೆಲಸ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "negative relative participle -ada"
+  },
+  {
+   "id": "rel_004",
+   "topic": "Relative Clauses",
+   "english": "I know the one who is singing.",
+   "canonical": "ಹಾಡುವವನು ನನಗೆ ಗೊತ್ತು.",
+   "acceptable": [
+    "ಹಾಡುವವನು ನನಗೆ ಗೊತ್ತು.",
+    "ಹಾಡುವವರು ನನಗೆ ಗೊತ್ತು.",
+    "ಹಾಡುವವಳು ನನಗೆ ಗೊತ್ತು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "participial noun -uvavanu"
+  },
+  {
+   "id": "rel_005",
+   "topic": "Relative Clauses",
+   "english": "The money that is in the bag.",
+   "canonical": "ಬ್ಯಾಗಲ್ಲಿ ಇರುವ ದುಡ್ಡು.",
+   "acceptable": [
+    "ಬ್ಯಾಗಲ್ಲಿ ಇರುವ ದುಡ್ಡು.",
+    "ಬ್ಯಾಗಿನಲ್ಲಿ ಇರುವ ದುಡ್ಡು.",
+    "ಬ್ಯಾಗಲ್ಲಿ ಇರುವ ಹಣ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "iruva possession clause"
+  },
+  {
+   "id": "rel_006",
+   "topic": "Relative Clauses",
+   "english": "The man who came.",
+   "canonical": "ಬಂದವನು.",
+   "acceptable": [
+    "ಬಂದವನು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "participial noun (the one who came)"
+  },
+  {
+   "id": "rel_007",
+   "topic": "Relative Clauses",
+   "english": "The woman who came.",
+   "canonical": "ಬಂದವಳು.",
+   "acceptable": [
+    "ಬಂದವಳು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "participial noun feminine"
+  },
+  {
+   "id": "rel_008",
+   "topic": "Relative Clauses",
+   "english": "The people who came.",
+   "canonical": "ಬಂದವರು.",
+   "acceptable": [
+    "ಬಂದವರು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "participial noun plural"
+  },
+  {
+   "id": "rel_009",
+   "topic": "Relative Clauses",
+   "english": "The city that goes by the name Mysore.",
+   "canonical": "ಮೈಸೂರು ಎಂಬ ಊರು.",
+   "acceptable": [
+    "ಮೈಸೂರು ಎಂಬ ಊರು.",
+    "ಮೈಸೂರು ಅಂತ ಊರು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "naming via emba/anta, not relative participle"
+  },
+  {
+   "id": "rel_010",
+   "topic": "Relative Clauses",
+   "english": "The phone that is with you.",
+   "canonical": "ನಿಮ್ಮ ಹತ್ತಿರ ಇರುವ ಫೋನ್.",
+   "acceptable": [
+    "ನಿಮ್ಮ ಹತ್ತಿರ ಇರುವ ಫೋನ್."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "iruva clause"
+  },
+  {
+   "id": "rel_011",
+   "topic": "Relative Clauses",
+   "english": "The work I did.",
+   "canonical": "ನಾನು ಮಾಡಿದ ಕೆಲಸ.",
+   "acceptable": [
+    "ನಾನು ಮಾಡಿದ ಕೆಲಸ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "past participle + noun"
+  },
+  {
+   "id": "rel_012",
+   "topic": "Relative Clauses",
+   "english": "Eat what mom made.",
+   "canonical": "ಅಮ್ಮ ಮಾಡಿದ್ದನ್ನು ತಿನ್ನು.",
+   "acceptable": [
+    "ಅಮ್ಮ ಮಾಡಿದ್ದನ್ನು ತಿನ್ನು.",
+    "ಅಮ್ಮ ಮಾಡಿದ್ದನ್ನು ತಿನ್ನಿ.",
+    "ಅಮ್ಮ ಮಾಡಿದ್ದು ತಿನ್ನು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "nominalized clause baredaddannu"
+  },
+  {
+   "id": "cond_001",
+   "topic": "Conditional",
+   "english": "If you study well, you will pass.",
+   "canonical": "ನೀನು ಚೆನ್ನಾಗಿ ಓದಿದರೆ, ಪಾಸ್ ಆಗುತ್ತೀಯ.",
+   "acceptable": [
+    "ನೀನು ಚೆನ್ನಾಗಿ ಓದಿದರೆ, ಪಾಸ್ ಆಗುತ್ತೀಯ.",
+    "ಚೆನ್ನಾಗಿ ಓದಿದರೆ, ಪಾಸ್ ಆಗ್ತೀಯ.",
+    "ನೀನು ಚೆನ್ನಾಗಿ ಓದಿದರೆ, ನೀನು ಪಾಸ್ ಆಗುತ್ತೀಯ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "positive conditional -are"
+  },
+  {
+   "id": "cond_002",
+   "topic": "Conditional",
+   "english": "If you get tired, take rest.",
+   "canonical": "ನಿನಗೆ ಸುಸ್ತಾದರೆ, ವಿಶ್ರಾಂತಿ ತೆಗೆದುಕೊ.",
+   "acceptable": [
+    "ನಿನಗೆ ಸುಸ್ತಾದರೆ, ವಿಶ್ರಾಂತಿ ತೆಗೆದುಕೊ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "conditional + imperative"
+  },
+  {
+   "id": "cond_003",
+   "topic": "Conditional",
+   "english": "If the weather is good, let's go to the park.",
+   "canonical": "ಹವಾಮಾನ ಚೆನ್ನಾಗಿದ್ದರೆ, ಪಾರ್ಕಿಗೆ ಹೋಗೋಣ.",
+   "acceptable": [
+    "ಹವಾಮಾನ ಚೆನ್ನಾಗಿದ್ದರೆ, ಪಾರ್ಕಿಗೆ ಹೋಗೋಣ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "iddare conditional + hortative"
+  },
+  {
+   "id": "cond_004",
+   "topic": "Conditional",
+   "english": "If I had known, I would have come early.",
+   "canonical": "ನನಗೆ ಗೊತ್ತಿದ್ದರೆ, ನಾನು ಬೇಗ ಬರುತ್ತಿದ್ದೆ.",
+   "acceptable": [
+    "ನನಗೆ ಗೊತ್ತಿದ್ದರೆ, ನಾನು ಬೇಗ ಬರುತ್ತಿದ್ದೆ.",
+    "ನನಗೆ ಗೊತ್ತಿದ್ದರೆ, ಬೇಗ ಬರುತ್ತಿದ್ದೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "past unreal conditional"
+  },
+  {
+   "id": "cond_005",
+   "topic": "Conditional",
+   "english": "If it had not rained, we would have played.",
+   "canonical": "ಮಳೆ ಬರದಿದ್ದರೆ, ನಾವು ಆಡುತ್ತಿದ್ದೆವು.",
+   "acceptable": [
+    "ಮಳೆ ಬರದಿದ್ದರೆ, ನಾವು ಆಡುತ್ತಿದ್ದೆವು.",
+    "ಮಳೆ ಬರದೇ ಇದ್ದಿದ್ದರೆ, ನಾವು ಆಡುತ್ತಿದ್ದೆವು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "negative past unreal conditional"
+  },
+  {
+   "id": "cond_006",
+   "topic": "Conditional",
+   "english": "If he does not come, we won't go.",
+   "canonical": "ಅವನು ಬಾರದಿದ್ದರೆ, ನಾವು ಹೋಗುವುದಿಲ್ಲ.",
+   "acceptable": [
+    "ಅವನು ಬಾರದಿದ್ದರೆ, ನಾವು ಹೋಗುವುದಿಲ್ಲ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "negative conditional -adiddare"
+  },
+  {
+   "id": "cond_007",
+   "topic": "Conditional",
+   "english": "If the cat is hungry, it meows.",
+   "canonical": "ಬೆಕ್ಕಿಗೆ ಹಸಿವಾದರೆ, ಅದು ಮ್ಯಾವ್ ಮಾಡುತ್ತದೆ.",
+   "acceptable": [
+    "ಬೆಕ್ಕಿಗೆ ಹಸಿವಾದರೆ, ಅದು ಮ್ಯಾವ್ ಮಾಡುತ್ತದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "general truth conditional"
+  },
+  {
+   "id": "cond_008",
+   "topic": "Conditional",
+   "english": "If I get money, I will buy a house.",
+   "canonical": "ನನಗೆ ದುಡ್ಡು ಸಿಕ್ಕರೆ, ನಾನು ಮನೆ ತಗೋತೀನಿ.",
+   "acceptable": [
+    "ನನಗೆ ದುಡ್ಡು ಸಿಕ್ಕರೆ, ನಾನು ಮನೆ ತಗೋತೀನಿ.",
+    "ನನಗೆ ದುಡ್ಡು ಸಿಕ್ಕರೆ, ನಾನು ಮನೆ ತೆಗೆದುಕೊಳ್ಳುತ್ತೇನೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "sikkare conditional"
+  },
+  {
+   "id": "cond_009",
+   "topic": "Conditional",
+   "english": "If you come, I will be happy.",
+   "canonical": "ನೀವು ಬಂದರೆ, ನನಗೆ ಖುಷಿ ಆಗುತ್ತದೆ.",
+   "acceptable": [
+    "ನೀವು ಬಂದರೆ, ನನಗೆ ಖುಷಿ ಆಗುತ್ತದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "conditional + experiencer"
+  },
+  {
+   "id": "cond_010",
+   "topic": "Conditional",
+   "english": "Even though it was raining, they did not cancel the event.",
+   "canonical": "ಮಳೆ ಬರುತ್ತಿದ್ದರೂ, ಅವರು ಕಾರ್ಯಕ್ರಮವನ್ನು ರದ್ದು ಮಾಡಲಿಲ್ಲ.",
+   "acceptable": [
+    "ಮಳೆ ಬರುತ್ತಿದ್ದರೂ, ಅವರು ಕಾರ್ಯಕ್ರಮವನ್ನು ರದ್ದು ಮಾಡಲಿಲ್ಲ.",
+    "ಮಳೆ ಬರ್ತಾ ಇದ್ರೂ, ಅವರು ಕಾರ್ಯಕ್ರಮವನ್ನು ರದ್ದು ಮಾಡಲಿಲ್ಲ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "concessive -aru (even though), NOT conditional -are"
+  },
+  {
+   "id": "cond_011",
+   "topic": "Conditional",
+   "english": "If it is true, tell me.",
+   "canonical": "ಅದು ನಿಜವಾದರೆ, ನನಗೆ ಹೇಳಿ.",
+   "acceptable": [
+    "ಅದು ನಿಜವಾದರೆ, ನನಗೆ ಹೇಳಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "nijavaadare conditional"
+  },
+  {
+   "id": "cond_012",
+   "topic": "Conditional",
+   "english": "If you don't eat, you will be hungry.",
+   "canonical": "ನೀನು ತಿನ್ನದಿದ್ದರೆ, ನಿನಗೆ ಹಸಿವಾಗುತ್ತದೆ.",
+   "acceptable": [
+    "ನೀನು ತಿನ್ನದಿದ್ದರೆ, ನಿನಗೆ ಹಸಿವಾಗುತ್ತದೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "negative conditional"
+  },
+  {
+   "id": "rep_001",
+   "topic": "Reported Speech",
+   "english": "Priya said, \"I am tired.\"",
+   "canonical": "ಪ್ರಿಯಾ \"ನನಗೆ ಸುಸ್ತಾಗಿದೆ\" ಅಂತ ಹೇಳಿದಳು.",
+   "acceptable": [
+    "ಪ್ರಿಯಾ \"ನನಗೆ ಸುಸ್ತಾಗಿದೆ\" ಅಂತ ಹೇಳಿದಳು.",
+    "ಪ್ರಿಯಾ ನನಗೆ ಸುಸ್ತು ಆಗಿದೆ ಅಂತ ಹೇಳಿದಳು.",
+    "ಪ್ರಿಯಾ ನನಗೆ ಸುಸ್ತಾಗಿದೆ ಅಂತ ಹೇಳಿದ್ಲು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "anta quotative after the quote"
+  },
+  {
+   "id": "rep_002",
+   "topic": "Reported Speech",
+   "english": "Did she say that she will come tomorrow?",
+   "canonical": "ಅವಳು ನಾಳೆ ಬರುತ್ತಾಳೆ ಅಂತ ಹೇಳಿದಳಾ?",
+   "acceptable": [
+    "ಅವಳು ನಾಳೆ ಬರುತ್ತಾಳೆ ಅಂತ ಹೇಳಿದಳಾ?",
+    "ಅವಳು ನಾಳೆ ಬರ್ತಾಳೆ ಅಂತ ಹೇಳಿದ್ಲಾ?"
+   ],
+   "difficulty": "hard",
+   "grammar_note": "anta reported speech question"
+  },
+  {
+   "id": "rep_003",
+   "topic": "Reported Speech",
+   "english": "Dad said no.",
+   "canonical": "ಅಪ್ಪ ಇಲ್ಲ ಅಂತ ಹೇಳಿದರು.",
+   "acceptable": [
+    "ಅಪ್ಪ ಇಲ್ಲ ಅಂತ ಹೇಳಿದರು.",
+    "ಅಪ್ಪ ಇಲ್ಲ ಅಂತ ಹೇಳಿದ್ರು.",
+    "ಅಪ್ಪ ಬೇಡ ಅಂತ ಹೇಳಿದರು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "anta with refusal"
+  },
+  {
+   "id": "rep_004",
+   "topic": "Reported Speech",
+   "english": "I feel that this is expensive.",
+   "canonical": "ಇದು ದುಬಾರಿ ಅಂತ ನನಗೆ ಅನಿಸುತ್ತೆ.",
+   "acceptable": [
+    "ಇದು ದುಬಾರಿ ಅಂತ ನನಗೆ ಅನಿಸುತ್ತೆ.",
+    "ಇದು ದುಬಾರಿ ಅಂತ ನನಗೆ ಅನಿಸುತ್ತದೆ.",
+    "ಇದು ತುಂಬಾ ದುಬಾರಿ ಅಂತ ನನಗೆ ಅನಿಸುತ್ತೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "anta + anisutte (opinion)"
+  },
+  {
+   "id": "rep_005",
+   "topic": "Reported Speech",
+   "english": "I thought that he was at home.",
+   "canonical": "ಅವನು ಮನೆಯಲ್ಲಿ ಇದ್ದಾನೆ ಅಂತ ಅಂದುಕೊಂಡೆ.",
+   "acceptable": [
+    "ಅವನು ಮನೆಯಲ್ಲಿ ಇದ್ದಾನೆ ಅಂತ ಅಂದುಕೊಂಡೆ.",
+    "ಅವನು ಮನೇಲಿ ಇದ್ದಾನೆ ಅಂತ ಅಂದುಕೊಂಡೆ.",
+    "ಅವನು ಮನೆಯಲ್ಲಿ ಇದ್ದಾನೆ ಅಂತ ನಾನು ಅಂದುಕೊಂಡೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "anta + andukoNDe (assumption)"
+  },
+  {
+   "id": "rep_006",
+   "topic": "Reported Speech",
+   "english": "This is (the person called) Lakshmi.",
+   "canonical": "ಇವರು ಲಕ್ಷ್ಮಿ ಅಂತ.",
+   "acceptable": [
+    "ಇವರು ಲಕ್ಷ್ಮಿ ಅಂತ.",
+    "ಇವಳು ಲಕ್ಷ್ಮಿ ಅಂತ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "anta for naming"
+  },
+  {
+   "id": "rep_007",
+   "topic": "Reported Speech",
+   "english": "A dish called Bisi Bele Bath.",
+   "canonical": "ಬಿಸಿ ಬೇಳೆ ಬಾತ್ ಅಂತ ಒಂದು ತಿಂಡಿ.",
+   "acceptable": [
+    "ಬಿಸಿ ಬೇಳೆ ಬಾತ್ ಅಂತ ಒಂದು ತಿಂಡಿ.",
+    "ಬಿಸಿ ಬೇಳೆ ಬಾತ್ ಅಂತ ತಿಂಡಿ.",
+    "ಬಿಸಿಬೇಳೆಬಾತ್ ಅಂತ ಒಂದು ತಿಂಡಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "anta naming a thing"
+  },
+  {
+   "id": "rep_008",
+   "topic": "Reported Speech",
+   "english": "Ask where the bus stop is.",
+   "canonical": "ಬಸ್ ಸ್ಟಾಪ್ ಎಲ್ಲಿ ಅಂತ ಕೇಳಿ.",
+   "acceptable": [
+    "ಬಸ್ ಸ್ಟಾಪ್ ಎಲ್ಲಿ ಅಂತ ಕೇಳಿ.",
+    "ಬಸ್ ಸ್ಟಾಪ್ ಎಲ್ಲಿ ಅಂತ ಕೇಳು.",
+    "ಬಸ್ ನಿಲ್ದಾಣ ಎಲ್ಲಿ ಅಂತ ಕೇಳಿ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "anta with embedded question"
+  },
+  {
+   "id": "rep_009",
+   "topic": "Reported Speech",
+   "english": "Apparently, he went.",
+   "canonical": "ಅವನು ಹೋದ ಅಂತೆ.",
+   "acceptable": [
+    "ಅವನು ಹೋದ ಅಂತೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "ante = hearsay/rumor"
+  },
+  {
+   "id": "rep_010",
+   "topic": "Reported Speech",
+   "english": "The film entitled \"Kantara\".",
+   "canonical": "\"ಕಾಂತಾರ\" ಎಂಬ ಸಿನಿಮಾ.",
+   "acceptable": [
+    "\"ಕಾಂತಾರ\" ಎಂಬ ಸಿನಿಮಾ.",
+    "\"ಕಾಂತಾರ\" ಎಂಬ ಚಿತ್ರ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "emba formal naming"
+  },
+  {
+   "id": "rep_011",
+   "topic": "Reported Speech",
+   "english": "She said that he went.",
+   "canonical": "ಅವನು ಹೋದ ಅಂತ ಅವಳು ಹೇಳಿದಳು.",
+   "acceptable": [
+    "ಅವನು ಹೋದ ಅಂತ ಅವಳು ಹೇಳಿದಳು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "anta reporting"
+  },
+  {
+   "id": "rep_012",
+   "topic": "Reported Speech",
+   "english": "It feels like he won't come.",
+   "canonical": "ಅವನು ಬರಲ್ಲ ಅಂತ ಅನಿಸುತ್ತೆ.",
+   "acceptable": [
+    "ಅವನು ಬರಲ್ಲ ಅಂತ ಅನಿಸುತ್ತೆ.",
+    "ಅವನು ಬರುವುದಿಲ್ಲ ಅಂತ ಅನಿಸುತ್ತೆ.",
+    "ಅವನು ಬರಲ್ಲ ಅಂತ ಅನಿಸುತ್ತದೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "anta + anisutte doubt"
+  },
+  {
+   "id": "neg_017",
+   "topic": "Negation",
+   "english": "She does not sing.",
+   "canonical": "ಅವಳು ಹಾಡಲ್ಲ.",
+   "acceptable": [
+    "ಅವಳು ಹಾಡಲ್ಲ.",
+    "ಅವಳು ಹಾಡುವುದಿಲ್ಲ.",
+    "ಅವಳು ಹಾಡೋದಿಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "action negation -alla"
+  },
+  {
+   "id": "neg_018",
+   "topic": "Negation",
+   "english": "The train did not stop.",
+   "canonical": "ಟ್ರೈನ್ ನಿಲ್ಲಲಿಲ್ಲ.",
+   "acceptable": [
+    "ಟ್ರೈನ್ ನಿಲ್ಲಲಿಲ್ಲ.",
+    "ರೈಲು ನಿಲ್ಲಲಿಲ್ಲ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "past negative -lilla"
+  },
+  {
+   "id": "neg_019",
+   "topic": "Negation",
+   "english": "She has not arrived yet.",
+   "canonical": "ಅವಳು ಇನ್ನೂ ಬಂದಿಲ್ಲ.",
+   "acceptable": [
+    "ಅವಳು ಇನ್ನೂ ಬಂದಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "perfect negative vs past negative"
+  },
+  {
+   "id": "neg_020",
+   "topic": "Negation",
+   "english": "You don't have to pay.",
+   "canonical": "ನೀವು ದುಡ್ಡು ಕೊಡಬೇಕಾಗಿಲ್ಲ.",
+   "acceptable": [
+    "ನೀವು ದುಡ್ಡು ಕೊಡಬೇಕಾಗಿಲ್ಲ.",
+    "ನೀನು ದುಡ್ಡು ಕೊಡಬೇಕಾಗಿಲ್ಲ.",
+    "ನೀವು ಹಣ ಕೊಡಬೇಕಾಗಿಲ್ಲ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "obligation negative bekagilla"
+  },
+  {
+   "id": "case_016",
+   "topic": "Case Suffixes",
+   "english": "This is dad's watch.",
+   "canonical": "ಇದು ಅಪ್ಪನ ವಾಚ್.",
+   "acceptable": [
+    "ಇದು ಅಪ್ಪನ ವಾಚ್.",
+    "ಇದು ಅಪ್ಪನ ಗಡಿಯಾರ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "genitive -na on kinship noun"
+  },
+  {
+   "id": "case_017",
+   "topic": "Case Suffixes",
+   "english": "I am tired because of the heat.",
+   "canonical": "ಬಿಸಿಲಿನಿಂದ ನನಗೆ ಸುಸ್ತಾಗಿದೆ.",
+   "acceptable": [
+    "ಬಿಸಿಲಿನಿಂದ ನನಗೆ ಸುಸ್ತಾಗಿದೆ.",
+    "ಬಿಸಿಲಿಂದ ನನಗೆ ಸುಸ್ತಾಗಿದೆ.",
+    "ಬಿಸಿಲಿನಿಂದ ಸುಸ್ತಾಗಿದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "ablative for cause"
+  },
+  {
+   "id": "tense_016",
+   "topic": "Verb Tenses",
+   "english": "You (respectfully) do.",
+   "canonical": "ನೀವು ಮಾಡುತ್ತೀರಿ.",
+   "acceptable": [
+    "ನೀವು ಮಾಡುತ್ತೀರಿ.",
+    "ನೀವು ಮಾಡ್ತೀರಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "present 2nd honorific"
+  },
+  {
+   "id": "tense_017",
+   "topic": "Verb Tenses",
+   "english": "The dog is running.",
+   "canonical": "ನಾಯಿ ಓಡ್ತಾ ಇದೆ.",
+   "acceptable": [
+    "ನಾಯಿ ಓಡ್ತಾ ಇದೆ.",
+    "ನಾಯಿ ಓಡುತ್ತಾ ಇದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "present continuous neuter"
+  },
+  {
+   "id": "adj_015",
+   "topic": "Adjectives",
+   "english": "This is very important work.",
+   "canonical": "ಇದು ಬಹಳ ಮುಖ್ಯವಾದ ಕೆಲಸ.",
+   "acceptable": [
+    "ಇದು ಬಹಳ ಮುಖ್ಯವಾದ ಕೆಲಸ.",
+    "ಇದು ತುಂಬಾ ಮುಖ್ಯವಾದ ಕೆಲಸ.",
+    "ಇದು ಬಹಳ ಮುಖ್ಯ ಕೆಲಸ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "derived adjective"
+  },
+  {
+   "id": "adj_016",
+   "topic": "Adjectives",
+   "english": "The flower is beautiful.",
+   "canonical": "ಹೂವು ಸುಂದರವಾಗಿದೆ.",
+   "acceptable": [
+    "ಹೂವು ಸುಂದರವಾಗಿದೆ.",
+    "ಹೂವು ಚಂದ ಇದೆ.",
+    "ಹೂವು ಸುಂದರವಾಗಿ ಇದೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "state -aagide vs attributive"
+  },
+  {
+   "id": "adv_015",
+   "topic": "Adverbs",
+   "english": "Before the meal.",
+   "canonical": "ಊಟಕ್ಕೆ ಮುಂಚೆ.",
+   "acceptable": [
+    "ಊಟಕ್ಕೆ ಮುಂಚೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "munche temporal adverb"
+  },
+  {
+   "id": "adv_016",
+   "topic": "Adverbs",
+   "english": "They love madly.",
+   "canonical": "ಅವರು ಹುಚ್ಚಾಗಿ ಪ್ರೀತಿಸ್ತಾರೆ.",
+   "acceptable": [
+    "ಅವರು ಹುಚ್ಚಾಗಿ ಪ್ರೀತಿಸ್ತಾರೆ.",
+    "ಅವರು ಹುಚ್ಚಾಗಿ ಪ್ರೀತಿಸುತ್ತಾರೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "huchchu -> huchchaagi"
+  },
+  {
+   "id": "dat_016",
+   "topic": "Dative Constructions and Modals",
+   "english": "I cannot get up early.",
+   "canonical": "ನನಗೆ ಬೇಗ ಏಳಕ್ಕೆ ಆಗಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಬೇಗ ಏಳಕ್ಕೆ ಆಗಲ್ಲ.",
+    "ನನಗೆ ಬೇಗ ಏಳಲು ಆಗಲ್ಲ.",
+    "ನನಗೆ ಬೇಗ ಏಳೋಕೆ ಆಗಲ್ಲ.",
+    "ನನಗೆ ಬೇಗ ಏಳಲು ಆಗುವುದಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "inability agalla"
+  },
+  {
+   "id": "dat_017",
+   "topic": "Dative Constructions and Modals",
+   "english": "I want more.",
+   "canonical": "ನನಗೆ ಇನ್ನೂ ಬೇಕು.",
+   "acceptable": [
+    "ನನಗೆ ಇನ್ನೂ ಬೇಕು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "innu beku"
+  },
+  {
+   "id": "conj_014",
+   "topic": "Conjunctions",
+   "english": "I like it, but I don't have time.",
+   "canonical": "ನನಗೆ ಇಷ್ಟ, ಆದರೆ ನನಗೆ ಸಮಯ ಇಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಇಷ್ಟ, ಆದರೆ ನನಗೆ ಸಮಯ ಇಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "adare contrast"
+  },
+  {
+   "id": "conj_015",
+   "topic": "Conjunctions",
+   "english": "Coffee as well as tea.",
+   "canonical": "ಕಾಫಿ ಹಾಗೂ ಟೀ.",
+   "acceptable": [
+    "ಕಾಫಿ ಹಾಗೂ ಟೀ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "haagu = as well as"
+  },
+  {
+   "id": "imp_013",
+   "topic": "Impersonal Verbs",
+   "english": "Cooking is difficult.",
+   "canonical": "ಅಡುಗೆ ಮಾಡುವುದು ಕಷ್ಟ.",
+   "acceptable": [
+    "ಅಡುಗೆ ಮಾಡುವುದು ಕಷ್ಟ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "verbal noun as subject"
+  },
+  {
+   "id": "imp_014",
+   "topic": "Impersonal Verbs",
+   "english": "I forgot to come.",
+   "canonical": "ನಾನು ಬರಲು ಮರೆತೆ.",
+   "acceptable": [
+    "ನಾನು ಬರಲು ಮರೆತೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "infinitive + marete"
+  },
+  {
+   "id": "cmp_013",
+   "topic": "Compound Verbs",
+   "english": "Finish writing it.",
+   "canonical": "ಬರೆದುಬಿಡಿ.",
+   "acceptable": [
+    "ಬರೆದುಬಿಡಿ.",
+    "ಬರ್ದ್ಬಿಡಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "biDu completive"
+  },
+  {
+   "id": "cmp_014",
+   "topic": "Compound Verbs",
+   "english": "Hurry up.",
+   "canonical": "ಬೇಗ ಮಾಡಿಕೊಳ್ಳಿ.",
+   "acceptable": [
+    "ಬೇಗ ಮಾಡಿಕೊಳ್ಳಿ.",
+    "ಬೇಗ ಮಾಡ್ಕೊಳ್ಳಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "bega madikoLLu"
+  },
+  {
+   "id": "rel_013",
+   "topic": "Relative Clauses",
+   "english": "The one who is coming.",
+   "canonical": "ಬರುವವನು.",
+   "acceptable": [
+    "ಬರುವವನು.",
+    "ಬರುವವಳು.",
+    "ಬರುವವರು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "participial noun -uvavanu"
+  },
+  {
+   "id": "rel_014",
+   "topic": "Relative Clauses",
+   "english": "The house that I bought.",
+   "canonical": "ನಾನು ತೆಗೆದುಕೊಂಡ ಮನೆ.",
+   "acceptable": [
+    "ನಾನು ತೆಗೆದುಕೊಂಡ ಮನೆ.",
+    "ನಾನು ತಗೊಂಡ ಮನೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "past participle relative"
+  },
+  {
+   "id": "cond_013",
+   "topic": "Conditional",
+   "english": "If you study, you will pass.",
+   "canonical": "ನೀನು ಓದಿದರೆ, ಪಾಸ್ ಆಗ್ತೀಯ.",
+   "acceptable": [
+    "ನೀನು ಓದಿದರೆ, ಪಾಸ್ ಆಗ್ತೀಯ.",
+    "ನೀನು ಓದಿದರೆ, ಪಾಸ್ ಆಗುತ್ತೀಯ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "positive conditional"
+  },
+  {
+   "id": "cond_014",
+   "topic": "Conditional",
+   "english": "Even if you ask, he won't tell.",
+   "canonical": "ನೀನು ಕೇಳಿದರೂ, ಅವನು ಹೇಳಲ್ಲ.",
+   "acceptable": [
+    "ನೀನು ಕೇಳಿದರೂ, ಅವನು ಹೇಳಲ್ಲ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "concessive -aru"
+  },
+  {
+   "id": "rep_013",
+   "topic": "Reported Speech",
+   "english": "He said he is coming.",
+   "canonical": "ಅವನು ಬರ್ತೀನಿ ಅಂತ ಹೇಳಿದ.",
+   "acceptable": [
+    "ಅವನು ಬರ್ತೀನಿ ಅಂತ ಹೇಳಿದ.",
+    "ಅವನು ಬರುತ್ತೇನೆ ಅಂತ ಹೇಳಿದ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "anta direct quote"
+  },
+  {
+   "id": "rep_014",
+   "topic": "Reported Speech",
+   "english": "A town called Udupi.",
+   "canonical": "ಉಡುಪಿ ಅಂತ ಒಂದು ಊರು.",
+   "acceptable": [
+    "ಉಡುಪಿ ಅಂತ ಒಂದು ಊರು.",
+    "ಉಡುಪಿ ಅಂತ ಊರು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "anta naming a place"
+  },
+  {
+   "id": "cmp_015",
+   "topic": "Compound Verbs",
+   "english": "Listen carefully.",
+   "canonical": "ಗಮನವಾಗಿ ಕೇಳಿಸಿಕೊಳ್ಳಿ.",
+   "acceptable": [
+    "ಗಮನವಾಗಿ ಕೇಳಿಸಿಕೊಳ್ಳಿ.",
+    "ಗಮನವಾಗಿ ಕೇಳಿಸ್ಕೊಳ್ಳಿ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "keLisikoLLu = to listen"
+  },
+  {
+   "id": "cmp_016",
+   "topic": "Compound Verbs",
+   "english": "He sat down.",
+   "canonical": "ಅವನು ಕುಳಿತುಕೊಂಡ.",
+   "acceptable": [
+    "ಅವನು ಕುಳಿತುಕೊಂಡ.",
+    "ಅವನು ಕೂತ್ಕೊಂಡ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "koLLu past posture"
+  },
+  {
+   "id": "cmp_017",
+   "topic": "Compound Verbs",
+   "english": "Take this for yourself.",
+   "canonical": "ಇದನ್ನು ತಗೊಳ್ಳಿ.",
+   "acceptable": [
+    "ಇದನ್ನು ತಗೊಳ್ಳಿ.",
+    "ಇದನ್ನು ತೆಗೆದುಕೊಳ್ಳಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "tagoLLi reflexive"
+  },
+  {
+   "id": "cond_015",
+   "topic": "Conditional",
+   "english": "If there is time, I will come.",
+   "canonical": "ಸಮಯ ಇದ್ದರೆ, ನಾನು ಬರ್ತೀನಿ.",
+   "acceptable": [
+    "ಸಮಯ ಇದ್ದರೆ, ನಾನು ಬರ್ತೀನಿ.",
+    "ಸಮಯ ಇದ್ದರೆ, ನಾನು ಬರುತ್ತೇನೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "iddare conditional"
+  },
+  {
+   "id": "cond_016",
+   "topic": "Conditional",
+   "english": "If he had come, we would have gone.",
+   "canonical": "ಅವನು ಬಂದಿದ್ದರೆ, ನಾವು ಹೋಗುತ್ತಿದ್ದೆವು.",
+   "acceptable": [
+    "ಅವನು ಬಂದಿದ್ದರೆ, ನಾವು ಹೋಗುತ್ತಿದ್ದೆವು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "past unreal conditional plural"
+  },
+  {
+   "id": "cond_017",
+   "topic": "Conditional",
+   "english": "If you don't come, I will be sad.",
+   "canonical": "ನೀನು ಬಾರದಿದ್ದರೆ, ನನಗೆ ಬೇಸರ ಆಗುತ್ತದೆ.",
+   "acceptable": [
+    "ನೀನು ಬಾರದಿದ್ದರೆ, ನನಗೆ ಬೇಸರ ಆಗುತ್ತದೆ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "negative conditional -adiddare"
+  },
+  {
+   "id": "imp_015",
+   "topic": "Impersonal Verbs",
+   "english": "Singing is her hobby.",
+   "canonical": "ಹಾಡುವುದು ಅವಳ ಹವ್ಯಾಸ.",
+   "acceptable": [
+    "ಹಾಡುವುದು ಅವಳ ಹವ್ಯಾಸ."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "verbal noun as subject"
+  },
+  {
+   "id": "imp_016",
+   "topic": "Impersonal Verbs",
+   "english": "I like to read.",
+   "canonical": "ನನಗೆ ಓದುವುದು ಇಷ್ಟ.",
+   "acceptable": [
+    "ನನಗೆ ಓದುವುದು ಇಷ್ಟ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "verbal noun + ishta"
+  },
+  {
+   "id": "imp_017",
+   "topic": "Impersonal Verbs",
+   "english": "He started to run.",
+   "canonical": "ಅವನು ಓಡಲು ಶುರು ಮಾಡಿದ.",
+   "acceptable": [
+    "ಅವನು ಓಡಲು ಶುರು ಮಾಡಿದ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "infinitive + shuru madu"
+  },
+  {
+   "id": "rel_015",
+   "topic": "Relative Clauses",
+   "english": "The letter that came yesterday.",
+   "canonical": "ನಿನ್ನೆ ಬಂದ ಪತ್ರ.",
+   "acceptable": [
+    "ನಿನ್ನೆ ಬಂದ ಪತ್ರ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "past relative participle"
+  },
+  {
+   "id": "rel_016",
+   "topic": "Relative Clauses",
+   "english": "The water that is in the pot.",
+   "canonical": "ಮಡಕೆಯಲ್ಲಿ ಇರುವ ನೀರು.",
+   "acceptable": [
+    "ಮಡಕೆಯಲ್ಲಿ ಇರುವ ನೀರು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "iruva locative relative"
+  },
+  {
+   "id": "rel_017",
+   "topic": "Relative Clauses",
+   "english": "Those who did not come.",
+   "canonical": "ಬಾರದವರು.",
+   "acceptable": [
+    "ಬಾರದವರು."
+   ],
+   "difficulty": "hard",
+   "grammar_note": "negative participial noun"
+  }
+ ]
+}

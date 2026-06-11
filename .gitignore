@@ -12,3 +12,5 @@ venv/
 # Content data (e.g. data/vocabulary.json) is tracked; per-user state is not.
 data/progress.json
 data/srs.json
+# Quiz LLM-failure log (created lazily by logic.explain_mistake)
+logs/

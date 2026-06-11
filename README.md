@@ -1,6 +1,6 @@
 # 🪔 Vāṇi
 
-![Tests](https://img.shields.io/badge/tests-159%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/tests-1077%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **An AI-powered personalized language tutor for Kannada learners.**
 
@@ -14,12 +14,14 @@ Vāṇi (ವಾಣಿ) is a Python-based web application designed to assist stud
 Automatically generates and emails structured lessons based on a learning schedule tracked in Google Sheets. Each lesson covers a grammar topic from the Knowledge Base and ends with practice sentences.
 
 ### 🏆 Mastery Quiz
-A dynamic quiz engine that generates 10 English sentences of increasing difficulty for a given topic. The student translates each sentence into Kannada, and the AI grades meaning, spelling, and grammar — updating the topic's "Mastery" status in Google Sheets when the student scores 90%+.
+A deterministic "read-then-quiz" engine. Each topic serves 10 questions of increasing difficulty sampled from a curated 200-item question bank (`knowledge_base/quiz_bank.json`), with the lesson doc readable inline before you start. Grading is deterministic first: answers are normalized (punctuation, quote styles, zero-width characters, interchangeable quotatives) and matched against each question's acceptable forms. Only a non-matching answer gets a single *constrained* LLM equivalence check — the bank's canonical answer is authoritative and the model may only vote yes/no, never invent its own "correct" answer. Scoring 90%+ marks the topic mastered in local progress storage (`data/progress.json`).
 
 ### 💬 Text Chat (Conversation Practice)
 An immersive text-based chatbot powered by Sarvam AI (`sarvam-30b`). The student selects from **8 richly-detailed character personas** (shopkeeper, doctor, train conductor, nosy neighbor, landlord, auto driver, house cleaner, or a traditional priest) and a **grammar focus** (compound verbs, conditionals, etc.), then holds a freeform Kannada conversation. A **Custom Scenario** mode lets you write your own character card for any conversation partner you need to practice with.
 
 After each conversation, a **post-session error log** surfaces every grammar mistake silently tracked during the chat. A "Practice These Errors" button then generates a targeted 5-question mini-quiz drilling exactly the patterns you got wrong.
+
+A deterministic **anti-hallucination guard** filters every error the AI reports: any "correction" whose quoted original text does not actually appear in your message is dropped before it reaches the screen, so the model can never invent mistakes you didn't make. Chat turns also retry automatically (up to 3 attempts) when the API returns a truncated or empty response.
 
 ### 🎙️ Voice Chat (Conversation Practice)
 A parallel voice-based conversation mode that chains three APIs together:
@@ -43,7 +45,7 @@ The entire interface can be toggled between four display modes: English, Kannada
 
 ## ⚠️ Disclaimer
 
-This tool uses Large Language Models (LLMs) to generate content. While instructed to adhere to strict grammar rules, the AI may occasionally produce errors or "hallucinations." It is intended as a study aid, not a replacement for a human instructor.
+This tool uses Large Language Models (LLMs) to generate content. While instructed to adhere to strict grammar rules, the AI may occasionally produce errors or "hallucinations." Several defenses are built in — quiz correctness is decided deterministically against a fixed answer bank, and chat corrections are filtered so the model can only flag text you actually wrote — but generated explanations and conversation content remain LLM output. It is intended as a study aid, not a replacement for a human instructor.
 
 ---
 
@@ -56,9 +58,9 @@ This tool uses Large Language Models (LLMs) to generate content. While instructe
 | **Reading Comprehension AI** | Sarvam AI `sarvam-105b` (128K context for accuracy) |
 | **Speech-to-Text** | Sarvam AI Saaras v3 (REST API) |
 | **Text-to-Speech** | Sarvam AI Bulbul v3 (REST API) |
-| **Database** | Google Sheets (`gspread`) |
+| **Database** | Google Sheets (`gspread`) for the email-lesson schedule; local JSON (`storage.py`) for quiz mastery progress |
 | **Audio Input** | Streamlit native `st.audio_input` (no third-party components) |
-| **Test Suite** | pytest — 159 tests across 5 modules, ~1s runtime, all network calls mocked |
+| **Test Suite** | pytest — 1,077 mocked tests across 7 modules (~1.5s) plus opt-in live-API canaries (`pytest -m live`) |
 | **Environment** | Python 3.10+ |
 
 ---
@@ -68,23 +70,25 @@ This tool uses Large Language Models (LLMs) to generate content. While instructe
 ```
 Kannada_Guru/
 ├── main.py                  # Streamlit UI — pages, tabs, and state management
-├── logic.py                 # Backend: Sarvam chat completions, STT/TTS, grading, email
+├── logic.py                 # Backend: Sarvam chat completions, STT/TTS, quiz grading, email
 ├── config.py                # API keys, model settings, prompts, UI translations
+├── storage.py               # Local progress store (quiz mastery → data/progress.json)
 ├── requirements.txt         # Python dependencies
-├── pytest.ini               # Test runner configuration
-├── tests/                   # Automated test suite (159 tests, ~1s)
-│   ├── conftest.py          # Shared fixtures
-│   ├── test_utilities.py    # Pure unit tests (clean_json, transliteration, UI text)
-│   ├── test_sarvam_chat.py  # Chat API tests (all network calls mocked)
-│   ├── test_sarvam_voice.py # STT/TTS tests (all network calls mocked)
-│   ├── test_google_sheets.py# Google Sheets integration tests
-│   └── test_email.py        # End-to-end email lesson flow tests
-├── knowledge_base/          # Grammar modules (.txt files) used as AI context
-│   ├── 1. case_suffixes_in_kannada.txt
-│   ├── 2. adjectives_in_kannada.txt
-│   ├── 3. verb_tenses_in_kannada.txt
-│   ├── ...
-│   └── 12. reported_speech_in_kannada.txt
+├── pytest.ini               # Test runner config (live-API tests deselected by default)
+├── tests/                   # Automated test suite (1,077 mocked tests + 12 live canaries)
+│   ├── conftest.py                   # Shared fixtures
+│   ├── test_utilities.py             # Pure unit tests (clean_json, transliteration, UI text)
+│   ├── test_sarvam_chat.py           # Chat API: parsing, retries, verbatim-input contract
+│   ├── test_mastery_quiz.py          # Quiz bank integrity + deterministic grading
+│   ├── test_hallucination_guards.py  # Anti-hallucination error filtering
+│   ├── test_live_llm.py              # Opt-in canaries against the real Sarvam API
+│   ├── test_sarvam_voice.py          # STT/TTS tests (all network calls mocked)
+│   ├── test_google_sheets.py         # Google Sheets integration tests
+│   └── test_email.py                 # End-to-end email lesson flow tests
+├── knowledge_base/          # Grammar modules (.md/.txt) used as AI context
+│   ├── quiz_bank.json       # Curated 200-item quiz bank across 12 topics
+│   └── ...                  # Lesson docs (case suffixes, verb tenses, negation, ...)
+├── data/                    # Per-user progress state (NOT committed)
 ├── service_account.json     # Google Cloud credentials (NOT committed)
 ├── .env                     # API keys for local development (NOT committed)
 ├── .gitignore
@@ -103,10 +107,10 @@ You will need credentials from three separate services:
 | Service | What You Need | What It Powers |
 |---------|--------------|----------------|
 | **Sarvam AI** | API subscription key ([dashboard.sarvam.ai](https://dashboard.sarvam.ai)) | All text generation (chat, quizzes, lessons, grading) + Voice STT/TTS |
-| **Google Cloud** | Service Account JSON with Sheets + Drive API access | Quiz tracking, mastery status updates |
+| **Google Cloud** | Service Account JSON with Sheets + Drive API access | Email-lesson schedule tracking |
 | **Gmail** | App Password — not your regular login password ([Google's guide](https://support.google.com/accounts/answer/185833)) | Email lesson delivery |
 
-You will also need a **Google Sheet** with columns: `Topic`, `Status`, `Date Sent` — populated with the grammar topics you want to study. The service account must have edit access to this sheet.
+You will also need a **Google Sheet** with columns: `Topic`, `Status`, `Date Sent` — populated with the grammar topics you want emailed to you. The service account must have edit access to this sheet. (The Mastery Quiz does not use Sheets; its progress is stored locally.)
 
 ### 2. Installation
 
@@ -159,22 +163,34 @@ The app will be available at `http://localhost:8501`.
 
 ## 🧪 Testing
 
-The test suite covers all backend logic without requiring real API credentials — all network calls (Sarvam chat, STT, TTS, Google Sheets, Gmail) are mocked.
+The main suite covers all backend logic without requiring real API credentials — all network calls (Sarvam chat, STT, TTS, Google Sheets, Gmail) are mocked.
 
 ```bash
 pip install pytest
-python -m pytest tests/ -v
+python -m pytest -q
 ```
 
-**159 tests across 5 modules, completing in ~1 second:**
+**1,077 tests across 7 modules, completing in ~1.5 seconds:**
 
 | Module | What It Tests |
 |--------|--------------|
 | `test_utilities.py` | `clean_json`, `toggle_script`, `humanize_transliteration`, `get_ui_text`, `load_knowledge_base` |
-| `test_sarvam_chat.py` | Chat turns, quiz generation, answer grading, writing critique, reading comprehension |
+| `test_sarvam_chat.py` | Chat turns (parsing, persona/grammar injection, 3-attempt retry paths), answer grading, writing critique, reading comprehension, and a **verbatim-input contract**: adversarial user text (quotes, braces, newlines, emoji, mixed script) must reach the LLM prompt completely unaltered |
+| `test_mastery_quiz.py` | Quiz bank schema and integrity (parametrized over all 200 items), answer normalization (quotative folding, punctuation, zero-width chars), deterministic grading, constrained LLM judge fail-closed behavior, explanation fallbacks |
+| `test_hallucination_guards.py` | The anti-hallucination filter: fabricated "corrections" are dropped, genuine ones survive, including for Roman-typed input |
 | `test_sarvam_voice.py` | STT/TTS success paths, error handling, timeouts, payload validation (2500-char truncation, custom speaker/pace) |
-| `test_google_sheets.py` | Credential routing (Streamlit Secrets vs local file), topic filtering, `update_mastery` cell writes |
+| `test_google_sheets.py` | Credential routing (Streamlit Secrets vs local file), topic filtering, sheet cell writes |
 | `test_email.py` | Topic selection, HTML email construction, sheet status updates, SMTP/auth error handling |
+
+### Live-API canaries (opt-in)
+
+A small `@pytest.mark.live` layer probes the **real** Sarvam model for hallucinated corrections: grammatically perfect Kannada must come back with no errors flagged, and anything the model does flag must quote text that actually exists in the input. These tests cost API credits and are deselected by default (`addopts = -m "not live"` in `pytest.ini`):
+
+```bash
+python -m pytest -m live -q
+```
+
+Note: the Sarvam starter tier intermittently returns truncated/empty completions (`finish_reason=length`); the app retries these automatically, but live runs can still occasionally fail on consecutive API spikes.
 
 ---
 

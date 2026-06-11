@@ -3,7 +3,7 @@ Layer 2 — Sarvam chat API tests (all network calls mocked).
 
 Strategy:
   - generate_content / generate_chat_turn_ai: mock logic._sarvam_chat_client
-  - All higher-level functions (generate_quiz, grade_answer_ai, etc.):
+  - All higher-level functions (grade_answer_ai, critique_text_ai, etc.):
     mock logic.generate_content so we control what the AI "returns"
     and test only the parsing/error-handling around that call.
 """
@@ -17,7 +17,6 @@ import logic
 from logic import (
     generate_content,
     generate_chat_turn_ai,
-    generate_quiz,
     grade_answer_ai,
     critique_text_ai,
     generate_kannada_article_ai,
@@ -94,6 +93,38 @@ class TestGenerateContent:
             result = generate_content("prompt", FAKE_CONTEXT)
         assert "API Error" in result
 
+    def test_empty_response_retries_then_succeeds(self):
+        # Sarvam's transient empty completion (finish_reason="length",
+        # 0 chars) must be retried, not returned to the caller.
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = [_resp(""), _resp("ಸರಿ")]
+        with patch("logic._sarvam_chat_client", return_value=mock_client):
+            result = generate_content("prompt", FAKE_CONTEXT)
+        assert result == "ಸರಿ"
+        assert mock_client.chat.completions.create.call_count == 2
+
+    def test_none_content_retries_then_succeeds(self):
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = [_resp(None), _resp("ok")]
+        with patch("logic._sarvam_chat_client", return_value=mock_client):
+            assert generate_content("prompt", FAKE_CONTEXT) == "ok"
+
+    def test_exception_then_success_recovers(self):
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = [
+            Exception("timeout"), _resp("recovered")]
+        with patch("logic._sarvam_chat_client", return_value=mock_client):
+            assert generate_content("prompt", FAKE_CONTEXT) == "recovered"
+
+    def test_persistently_empty_returns_empty_after_all_attempts(self):
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = [
+            _resp(""), _resp(""), _resp("")]
+        with patch("logic._sarvam_chat_client", return_value=mock_client):
+            result = generate_content("prompt", FAKE_CONTEXT)
+        assert result == ""
+        assert mock_client.chat.completions.create.call_count == 3
+
     def test_fallback_context_when_none_provided(self):
         mock_client = _make_client("ok")
         with patch("logic._sarvam_chat_client", return_value=mock_client):
@@ -134,13 +165,15 @@ class TestGenerateChatTurnAi:
         assert result["bot_reply_english_translation"] == "Hello! Show your ticket."
 
     def test_success_extracts_errors_list(self):
+        # The flagged 'original' must actually be in the user's message —
+        # otherwise the hallucination guard (correctly) drops it.
         chat_json_with_error = json.dumps({
             "kannada": "ಸರಿ",
             "english": "OK",
             "errors": [{"original": "ನಾನ್", "correction": "ನಾನು", "reason": "Typo"}],
         })
         client = _make_client(chat_json_with_error)
-        result = self._call(client)
+        result = self._call(client, user_message="ನಾನ್ ಬರ್ತೀನಿ.")
         assert len(result["user_errors"]) == 1
         assert result["user_errors"][0]["correction"] == "ನಾನು"
 
@@ -238,35 +271,169 @@ class TestGenerateChatTurnAi:
 
 
 # ===========================================================================
-# generate_quiz
+# generate_chat_turn_ai — retry robustness (MAX_ATTEMPTS = 3)
+# Bad/empty/exceptional responses must NOT surface an error to the user
+# until every attempt is exhausted; truncation (finish_reason="length")
+# escalates max_tokens, observed live with Sarvam on 2026-06-11.
 # ===========================================================================
 
-class TestGenerateQuiz:
+def _resp(content, finish="stop"):
+    """Mock one chat.completions.create() response with a finish_reason."""
+    r = MagicMock()
+    r.choices[0].message.content = content
+    r.choices[0].finish_reason = finish
+    return r
 
-    def test_returns_10_sentences(self):
-        sentences = [f"Sentence {i}." for i in range(10)]
-        with patch("logic.generate_content", return_value=json.dumps(sentences)):
-            result = generate_quiz("Case Suffixes", FAKE_CONTEXT)
-        assert len(result) == 10
 
-    def test_returns_list_of_strings(self):
-        sentences = [f"Sentence {i}." for i in range(10)]
-        with patch("logic.generate_content", return_value=json.dumps(sentences)):
-            result = generate_quiz("Verb Tenses", FAKE_CONTEXT)
-        assert all(isinstance(s, str) for s in result)
+def _make_client_seq(*responses):
+    """Client whose create() yields each response (or raises Exceptions) in order."""
+    client = MagicMock()
+    client.chat.completions.create.side_effect = [
+        r if isinstance(r, Exception) else _resp(r) for r in responses
+    ]
+    return client
 
-    def test_topic_name_appears_in_prompt(self):
-        with patch("logic.generate_content", return_value=json.dumps(["x"] * 10)) as mock_gen:
-            generate_quiz("Compound Verbs", FAKE_CONTEXT)
-        prompt_arg = mock_gen.call_args.args[0]
-        assert "Compound Verbs" in prompt_arg
 
-    def test_bad_json_returns_error_list(self):
-        with patch("logic.generate_content", return_value="NOT JSON"):
-            result = generate_quiz("Any Topic", FAKE_CONTEXT)
-        assert isinstance(result, list)
-        assert len(result) == 1
-        assert "Error" in result[0]
+class TestChatTurnRetries:
+
+    def _call(self, mock_client, *, user_message="ನನ್ನ ಹೆಸರು ಜಾನ್."):
+        with patch("logic._sarvam_chat_client", return_value=mock_client):
+            return generate_chat_turn_ai(
+                user_message, [], config.GRAMMAR_GOALS[0],
+                "The Train Conductor", "Kannada (Script)")
+
+    def test_empty_first_response_retries_and_succeeds(self):
+        client = _make_client_seq("", CHAT_JSON)
+        result = self._call(client)
+        assert result["bot_reply_kannada"] == "ನಮಸ್ಕಾರ! ಟಿಕೆಟ್ ತೋರಿಸಿ."
+        assert client.chat.completions.create.call_count == 2
+
+    def test_none_content_first_response_retries_and_succeeds(self):
+        client = _make_client_seq(None, CHAT_JSON)
+        result = self._call(client)
+        assert "error" not in result
+        assert client.chat.completions.create.call_count == 2
+
+    def test_non_json_first_response_retries_and_succeeds(self):
+        client = _make_client_seq("ಕ್ಷಮಿಸಿ, JSON ಅಲ್ಲ.", CHAT_JSON)
+        result = self._call(client)
+        assert "error" not in result
+        assert client.chat.completions.create.call_count == 2
+
+    def test_missing_kannada_key_first_response_retries_and_succeeds(self):
+        bad = json.dumps({"english": "Hi", "errors": []})
+        client = _make_client_seq(bad, CHAT_JSON)
+        result = self._call(client)
+        assert "error" not in result
+        assert client.chat.completions.create.call_count == 2
+
+    def test_api_exception_first_attempt_retries_and_succeeds(self):
+        client = _make_client_seq(Exception("connection reset"), CHAT_JSON)
+        result = self._call(client)
+        assert "error" not in result
+        assert client.chat.completions.create.call_count == 2
+
+    def test_retry_resends_identical_messages(self):
+        client = _make_client_seq("", CHAT_JSON)
+        self._call(client)
+        first, second = client.chat.completions.create.call_args_list
+        assert first.kwargs["messages"] == second.kwargs["messages"]
+
+    def test_length_truncation_retries_within_tier_cap(self):
+        # Sarvam's starter tier rejects max_tokens > 4096 with HTTP 400, so a
+        # truncated turn must retry at the SAME capped budget, never above it.
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            _resp("", finish="length"), _resp(CHAT_JSON)]
+        result = self._call(client)
+        assert "error" not in result
+        for c in client.chat.completions.create.call_args_list:
+            assert c.kwargs["max_tokens"] == config.SARVAM_MAX_TOKENS
+
+    def test_all_bad_responses_returns_diagnostic_error(self):
+        client = _make_client_seq("junk one", "junk two", "junk three")
+        result = self._call(client)
+        assert "error" in result
+        assert client.chat.completions.create.call_count == 3
+        assert "junk three" in result["error"]  # final raw output surfaced
+
+    def test_all_exceptions_returns_error_dict(self):
+        client = _make_client_seq(
+            Exception("boom1"), Exception("boom2"), Exception("boom3"))
+        result = self._call(client)
+        assert result == {"error": "boom3"}
+
+
+# ===========================================================================
+# Verbatim input contract — the user's exact text must reach the LLM
+# unaltered (no stripping, escaping, or paraphrase), for every function
+# that forwards user-typed content. Past hallucinated 'corrections' make
+# this the first line of defence: the model must see what the user wrote.
+# ===========================================================================
+
+ADVERSARIAL_INPUTS = [
+    'ಅವಳು "ಇಲ್ಲ" ಅಂತ ಹೇಳಿದಳು yesterday',          # straight quotes + English
+    "it's {not} JSON: {\"kannada\": \"fake\"}",      # braces + JSON-like text
+    "ನಾನು ಮನೆಗೆ\nಹೋಗ್ತೀನಿ\tnow",                    # newline + tab
+    "back\\slash ಮತ್ತು ```json fence```",            # backslash + md fence
+    "ನಾನು ‘ಬರ್ತೀನಿ’ — okay? 😅",                    # curly quotes + emoji
+]
+
+
+class TestVerbatimInputContract:
+
+    @pytest.mark.parametrize("text", ADVERSARIAL_INPUTS)
+    def test_chat_turn_last_message_is_exact_user_text(self, text):
+        client = _make_client(CHAT_JSON)
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_chat_turn_ai(text, [], config.GRAMMAR_GOALS[0],
+                                  "The Doctor", "Kannada (Script)")
+        messages = client.chat.completions.create.call_args.kwargs["messages"]
+        assert messages[-1] == {"role": "user", "content": text}
+
+    def test_chat_history_passed_unmodified_and_in_order(self):
+        history = [
+            {"role": "user", "content": ADVERSARIAL_INPUTS[0]},
+            {"role": "assistant", "content": '{"kannada": "ಸರಿ {x}", "english": "ok"}'},
+            {"role": "user", "content": ADVERSARIAL_INPUTS[2]},
+        ]
+        client = _make_client(CHAT_JSON)
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_chat_turn_ai("ಸರಿ", history, config.GRAMMAR_GOALS[0],
+                                  "The Doctor", "Kannada (Script)")
+        messages = client.chat.completions.create.call_args.kwargs["messages"]
+        # system + 3 history turns + new user message, history verbatim.
+        assert messages[1:4] == history
+        assert messages[-1]["content"] == "ಸರಿ"
+
+    @pytest.mark.parametrize("text", ADVERSARIAL_INPUTS)
+    def test_grade_answer_ai_receives_exact_answer(self, text):
+        response = json.dumps({"is_correct": True, "feedback": "ok",
+                               "correct_translation": "ಸರಿ"})
+        with patch("logic.generate_content", return_value=response) as mock_gen:
+            grade_answer_ai("I go home.", text, FAKE_CONTEXT)
+        assert text in mock_gen.call_args.args[0]
+
+    @pytest.mark.parametrize("text", ADVERSARIAL_INPUTS)
+    def test_critique_text_ai_receives_exact_text(self, text):
+        response = json.dumps({"analysis": [], "overall_summary": "ok"})
+        with patch("logic.generate_content", return_value=response) as mock_gen:
+            critique_text_ai(text, "Formal", FAKE_CONTEXT)
+        assert text in mock_gen.call_args.args[0]
+
+    @pytest.mark.parametrize("text", ADVERSARIAL_INPUTS)
+    def test_grade_reading_ai_receives_exact_answer(self, text):
+        response = json.dumps({"is_correct": True, "feedback": "ok",
+                               "detailed_explanation": "ok"})
+        with patch("logic.generate_content", return_value=response) as mock_gen:
+            grade_reading_ai("question", "article", text, FAKE_CONTEXT)
+        assert text in mock_gen.call_args.args[0]
+
+    @pytest.mark.parametrize("text", ADVERSARIAL_INPUTS)
+    def test_comprehension_questions_receive_exact_article(self, text):
+        with patch("logic.generate_content", return_value="[]") as mock_gen:
+            generate_comprehension_questions(text, FAKE_CONTEXT)
+        assert text in mock_gen.call_args.args[0]
 
 
 # ===========================================================================

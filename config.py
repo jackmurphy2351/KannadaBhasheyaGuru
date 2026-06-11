@@ -39,6 +39,9 @@ KNOWLEDGE_DIR = "knowledge_base"
 SARVAM_CHAT_BASE_URL = "https://api.sarvam.ai/v1"
 SARVAM_CHAT_MODEL = "sarvam-30b"
 SARVAM_READING_MODEL = "sarvam-105b"
+# Completion budget per call. The starter subscription tier hard-caps this at
+# 4096 for sarvam-30b (HTTP 400 above it) — raise only after a plan upgrade.
+SARVAM_MAX_TOKENS = 4096
 
 # --- SARVAM AI SETTINGS ---
 SARVAM_API_KEY = get_secret("SARVAM_API_KEY")
@@ -124,6 +127,31 @@ GRAMMAR_TOPICS = [
     {"name": "Reported Speech",
      "file": "12. reported_speech_in_kannada.md", "level": "Advanced"},
 ]
+
+# --- MASTERY QUIZ TOPIC REGISTRY ---
+# Maps quiz_bank.json topic names to their knowledge_base lesson doc(s) and a
+# display level for the dropdown. Keys MUST exactly match the bank's top-level
+# "topics" array — logic.get_quiz_topics() validates this at load so the
+# dropdown and the question pool can never drift apart. "files" is always a
+# list (logic.load_topic_doc accepts one).
+QUIZ_TOPIC_DOCS = {
+    "Adjectives": {"files": ["2. adjectives_in_kannada.md"], "level": "Core"},
+    "Adverbs": {"files": ["6. adverbs_in_kannada.md"], "level": "Core"},
+    "Case Suffixes": {"files": ["1. case_suffixes_in_kannada.md"], "level": "Core"},
+    "Compound Verbs": {"files": ["9. compound_verbs.md"], "level": "Advanced"},
+    "Conditional": {"files": ["11. conditional_in_kannada.md"], "level": "Advanced"},
+    "Conjunctions": {"files": ["7. conjunctions_in_kannada.md"], "level": "Core"},
+    "Dative Constructions and Modals":
+        {"files": ["5. dative_constructions_modals_in_kannada.md"], "level": "Core"},
+    "Impersonal Verbs": {"files": ["8. impersonal_verbs_in_kannada.md"], "level": "Advanced"},
+    "Negation": {"files": ["4. negation_in_kannada.md"], "level": "Core"},
+    "Relative Clauses": {"files": ["10. relative_clauses_in_kannada.md"], "level": "Advanced"},
+    "Reported Speech": {"files": ["12. reported_speech_in_kannada.md"], "level": "Advanced"},
+    # The bank has one combined Verb Tenses topic; load all tense modules.
+    "Verb Tenses": {"files": ["03_verb_basics.md", "03a_verb_present.md",
+                              "03b_verb_past.md", "03c_verb_present_continuous.md",
+                              "03d_iru_vs_aagu.md"], "level": "Core"},
+}
 
 # --- UI TRANSLATION DICTIONARY ---
 UI_TEXT = {

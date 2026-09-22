@@ -1109,6 +1109,170 @@ def render_voice_chat(lang_mode):
 # STREAMLIT UI (main)
 # ============================================================================
 
+# ---------------------------------------------------------------------------
+# Shared quiz runner
+#
+# The Mastery Quiz and the Daily Review present questions identically — same
+# grading path, same feedback tiers, same history list — and differ only in
+# where the questions come from and what happens at the end. They therefore
+# share one renderer. The earlier copy-paste between two quiz UIs is how the
+# same "question shown twice" bug had to be fixed twice.
+#
+# Session state is namespaced by `prefix`, so the two can be part-way through
+# independently: <prefix>_questions / _history / _index / _score / _context.
+# ---------------------------------------------------------------------------
+
+def quiz_key(prefix, field):
+    """Session-state key for one field of a quiz session."""
+    return f"{prefix}_{field}"
+
+
+def init_quiz_state(prefix):
+    """Create this quiz session's state keys once."""
+    defaults = {"questions": [], "history": [], "index": 0, "score": 0,
+                "context": "", "topic": None, "recorded": False}
+    for field, default in defaults.items():
+        st.session_state.setdefault(quiz_key(prefix, field), default)
+
+
+def start_quiz(prefix, questions, topic, context):
+    """Begin a new run, clearing any previous one."""
+    st.session_state[quiz_key(prefix, "questions")] = questions
+    st.session_state[quiz_key(prefix, "topic")] = topic
+    st.session_state[quiz_key(prefix, "context")] = context
+    st.session_state[quiz_key(prefix, "history")] = []
+    st.session_state[quiz_key(prefix, "index")] = 0
+    st.session_state[quiz_key(prefix, "score")] = 0
+    st.session_state[quiz_key(prefix, "recorded")] = False
+
+
+def end_quiz(prefix):
+    """Return to the setup screen for this quiz."""
+    st.session_state[quiz_key(prefix, "questions")] = []
+
+
+def render_quiz_result(entry, lang_mode):
+    """Render one graded answer.
+
+    The correct answer shown always comes from the bank item, so LLM feedback
+    can never override it.
+    """
+    canonical = logic.toggle_script(entry['item']['canonical'], lang_mode)
+    if entry['tier'] == "exact":
+        st.success("Correct! ✅")
+        st.info(f"Standard Kannada: {canonical}")
+    elif entry['tier'] == "variant":
+        st.success("Correct! ✅ Your variant is also valid.")
+        st.info(f"Standard / literary form for reference: {canonical}")
+    elif entry['tier'] == "accepted":
+        st.success("Correct! ✅ Your phrasing works too.")
+        st.info(f"Reference answer for comparison: {canonical}")
+    else:
+        st.error("Incorrect.")
+        st.write(f"**Correct Answer:** {canonical}")
+        st.write(logic.toggle_script(entry['feedback'], lang_mode))
+
+
+def render_quiz_runner(prefix, lang_mode, show_topic=False):
+    """Render the current question or its feedback.
+
+    Returns True once every question has been answered and advanced past, at
+    which point the caller renders its own results screen.
+    """
+    questions = st.session_state[quiz_key(prefix, "questions")]
+    total = len(questions)
+    history = st.session_state[quiz_key(prefix, "history")]
+    q_idx = st.session_state[quiz_key(prefix, "index")]
+
+    # History — only questions BEFORE the current one; the current question's
+    # result renders once below (it used to appear twice).
+    prev_entries = history[:q_idx]
+    if prev_entries:
+        st.markdown("### Previous Answers")
+        for i, entry in enumerate(prev_entries):
+            with st.expander(f"Q{i + 1}: {entry['item']['english']}", expanded=False):
+                st.write(f"**Your Answer:** {entry['user_answer']}")
+                render_quiz_result(entry, lang_mode)
+        st.markdown("---")
+
+    if q_idx >= total:
+        return True
+
+    item = questions[q_idx]
+    st.progress(q_idx / total)
+    if show_topic:
+        st.caption(item["topic"])
+    st.markdown(f"### Q{q_idx + 1}: {item['english']}")
+
+    if len(history) == q_idx:
+        st.write(logic.get_ui_text("LBL_TRANS", lang_mode))
+        user_ans = st.text_input("Answer", key=f"{prefix}_input_{q_idx}",
+                                 label_visibility="collapsed")
+
+        if st.button(logic.get_ui_text("BTN_SUBMIT", lang_mode),
+                     key=f"{prefix}_submit_{q_idx}"):
+            # Deterministic match against the bank's acceptable forms decides
+            # the fast path; a non-match gets one constrained LLM equivalence
+            # check (Kannada has many valid surface forms) before being marked
+            # wrong.
+            tier = logic.classify_answer(user_ans, item)
+            feedback = ""
+            if tier == "incorrect":
+                quiz_ctx = st.session_state[quiz_key(prefix, "context")] or \
+                    st.session_state.context
+                with st.spinner("Checking your phrasing..."):
+                    if logic.judge_equivalence(user_ans, item, quiz_ctx):
+                        tier = "accepted"
+                if tier == "incorrect":
+                    with st.spinner("Preparing explanation..."):
+                        feedback = logic.explain_mistake(
+                            user_ans, item, quiz_ctx,
+                        )["feedback"]
+
+            history.append({
+                'item': item,
+                'user_answer': user_ans,
+                'tier': tier,
+                'feedback': feedback,
+            })
+            if tier != "incorrect":
+                st.session_state[quiz_key(prefix, "score")] += 1
+            # Persist and reschedule. Runs here, once per question, because
+            # this branch ends in a rerun; putting it in the render path would
+            # re-grade the same answer on every rerun.
+            logic.record_quiz_answer(item, tier)
+            st.rerun()
+    else:
+        render_quiz_result(history[-1], lang_mode)
+        is_last = (q_idx == total - 1)
+        label = "See Results 🏁" if is_last else logic.get_ui_text("BTN_NEXT", lang_mode)
+        if st.button(label, key=f"{prefix}_next_{q_idx}"):
+            st.session_state[quiz_key(prefix, "index")] += 1
+            st.rerun()
+    return False
+
+
+def render_progress_panel(lang_mode):
+    """Durable per-topic history: attempts, best score, and what is due."""
+    stats = storage.get_topic_stats()
+    due = storage.get_due_counts_by_topic()
+    if not stats and not due:
+        return
+    with st.expander(f"📊 {logic.get_ui_text('LBL_YOUR_PROGRESS', lang_mode)}",
+                     expanded=False):
+        for topic in sorted(set(stats) | set(due)):
+            row = stats.get(topic)
+            bits = []
+            if row:
+                bits.append(f"{row['attempts']} attempt"
+                            f"{'s' if row['attempts'] != 1 else ''}")
+                bits.append(f"best {row['best']}/{row['total']}")
+                bits.append(f"last {row['last_attempt'][:10]}")
+            if due.get(topic):
+                bits.append(f"**{due[topic]} due**")
+            st.markdown(f"- **{topic}** — {' · '.join(bits)}")
+
+
 def main():
     st.set_page_config(page_title="Vāṇi", page_icon="🪔", layout="wide")
     local_css()
@@ -1132,6 +1296,7 @@ def main():
         "Conversation Practice": "NAV_CHAT",
         "Send Email Lesson": "NAV_EMAIL",
         "Mastery Quiz": "NAV_QUIZ",
+        "Daily Review": "NAV_REVIEW",
         "Writing Critique": "NAV_WRITE",
         "Reading Comprehension": "NAV_READ"
     }
@@ -1458,26 +1623,24 @@ def main():
     # --- MODE: MASTERY QUIZ ---
     elif mode == "Mastery Quiz":
         st.subheader(logic.get_ui_text("TITLE_QUIZ", lang_mode))
-
-        if "quiz_questions" not in st.session_state:
-            st.session_state.quiz_questions = []
-            st.session_state.quiz_history = []
-            st.session_state.current_q_index = 0
-            st.session_state.quiz_score = 0
-            st.session_state.quiz_attempts = {}  # topic -> [{"score", "total"}]
+        init_quiz_state("quiz")
 
         # State 1: Setup (read-then-quiz — every topic is always available)
         if not st.session_state.quiz_questions:
             topics = logic.get_quiz_topics()
-            # Build a labelled list: beginners first, ✓ for mastered topics.
+
+            # Beginners first; ✓ for mastered, a count for anything due.
             def _label(t):
                 check = "✓ " if t["mastered"] else ""
-                return f"{check}{t['name']}  ·  {t['level']}"
+                due = f"  ·  {t['due']} due" if t["due"] else ""
+                return f"{check}{t['name']}  ·  {t['level']}{due}"
 
             labels = [_label(t) for t in topics]
             st.write(logic.get_ui_text("LBL_TOPIC", lang_mode))
             selected_label = st.selectbox("Topic", labels, label_visibility="collapsed")
             selected = topics[labels.index(selected_label)]
+
+            render_progress_panel(lang_mode)
 
             # Read-then-quiz: show the lesson doc inline before testing.
             doc_text = logic.load_topic_doc(selected["file"])
@@ -1488,125 +1651,102 @@ def main():
             if st.button(logic.get_ui_text("BTN_START_QUIZ", lang_mode)):
                 # Deterministic: questions come from the fixed bank, no LLM.
                 # The topic doc is kept only as context for explain_mistake.
-                st.session_state.quiz_questions = logic.build_quiz(selected["name"], n=10)
-                st.session_state.quiz_topic = selected["name"]
-                st.session_state.quiz_context = doc_text or st.session_state.context
-                st.session_state.quiz_score = 0
-                st.session_state.current_q_index = 0
-                st.session_state.quiz_history = []
+                start_quiz("quiz",
+                           logic.build_quiz(selected["name"], n=10),
+                           selected["name"],
+                           doc_text or st.session_state.context)
                 st.rerun()
 
-        # State 2: Active Quiz
-        else:
+        # State 2: active quiz, then results once every question is done
+        elif render_quiz_runner("quiz", lang_mode):
+            score = st.session_state.quiz_score
             total = len(st.session_state.quiz_questions)
+            topic = st.session_state.quiz_topic
+            st.markdown(f"## Score: {score}/{total}")
 
-            # Result renderer. The displayed correct answer always comes
-            # from the bank item — LLM feedback can never override it.
-            def render_quiz_result(entry):
-                canonical = logic.toggle_script(entry['item']['canonical'], lang_mode)
-                if entry['tier'] == "exact":
-                    st.success("Correct! ✅")
-                    st.info(f"Standard Kannada: {canonical}")
-                elif entry['tier'] == "variant":
-                    st.success("Correct! ✅ Your variant is also valid.")
-                    st.info(f"Standard / literary form for reference: {canonical}")
-                elif entry['tier'] == "accepted":
-                    st.success("Correct! ✅ Your phrasing works too.")
-                    st.info(f"Reference answer for comparison: {canonical}")
-                else:
-                    st.error("Incorrect.")
-                    st.write(f"**Correct Answer:** {canonical}")
-                    st.write(logic.toggle_script(entry['feedback'], lang_mode))
-
-            # History — only questions BEFORE the current one; the current
-            # question's result renders once below (it used to appear twice).
-            prev_entries = st.session_state.quiz_history[
-                :st.session_state.current_q_index]
-            if prev_entries:
-                st.markdown("### Previous Answers")
-                for i, entry in enumerate(prev_entries):
-                    with st.expander(f"Q{i + 1}: {entry['item']['english']}", expanded=False):
-                        st.write(f"**Your Answer:** {entry['user_answer']}")
-                        render_quiz_result(entry)
-                st.markdown("---")
-
-            # Current Question
-            if st.session_state.current_q_index < total:
-                q_idx = st.session_state.current_q_index
-                item = st.session_state.quiz_questions[q_idx]
-
-                st.progress(q_idx / total)
-                st.markdown(f"### Q{q_idx + 1}: {item['english']}")
-
-                if len(st.session_state.quiz_history) == q_idx:
-                    st.write(logic.get_ui_text("LBL_TRANS", lang_mode))
-                    user_ans = st.text_input("Answer", key=f"input_{q_idx}", label_visibility="collapsed")
-
-                    if st.button(logic.get_ui_text("BTN_SUBMIT", lang_mode)):
-                        # Deterministic match against the bank's acceptable
-                        # forms decides the fast path; a non-match gets one
-                        # constrained LLM equivalence check (Kannada has many
-                        # valid surface forms) before being marked wrong.
-                        tier = logic.classify_answer(user_ans, item)
-                        feedback = ""
-                        if tier == "incorrect":
-                            quiz_ctx = st.session_state.get(
-                                "quiz_context", st.session_state.context)
-                            with st.spinner("Checking your phrasing..."):
-                                if logic.judge_equivalence(user_ans, item, quiz_ctx):
-                                    tier = "accepted"
-                            if tier == "incorrect":
-                                with st.spinner("Preparing explanation..."):
-                                    feedback = logic.explain_mistake(
-                                        user_ans, item, quiz_ctx,
-                                    )["feedback"]
-
-                        st.session_state.quiz_history.append({
-                            'item': item,
-                            'user_answer': user_ans,
-                            'tier': tier,
-                            'feedback': feedback,
-                        })
-                        if tier != "incorrect":
-                            st.session_state.quiz_score += 1
-                        # Record the attempt once, on the final submit — the
-                        # results view reruns and must not double-count.
-                        if q_idx == total - 1:
-                            st.session_state.quiz_attempts.setdefault(
-                                st.session_state.quiz_topic, []
-                            ).append({"score": st.session_state.quiz_score, "total": total})
-                        st.rerun()
-                else:
-                    render_quiz_result(st.session_state.quiz_history[-1])
-
-                    is_last_question = (st.session_state.current_q_index == total - 1)
-
-                    if is_last_question:
-                        btn_label = "See Results 🏁"
-                    else:
-                        btn_label = logic.get_ui_text("BTN_NEXT", lang_mode)
-
-                    if st.button(btn_label):
-                        st.session_state.current_q_index += 1
-                        st.rerun()
-            else:
-                score = st.session_state.quiz_score
-                st.markdown(f"## Score: {score}/{total}")
-                attempts = st.session_state.quiz_attempts.get(st.session_state.quiz_topic, [])
-                if attempts:
-                    best = max(a["score"] for a in attempts)
-                    st.caption(f"Attempts this session: {len(attempts)} · best: {best}/{total}")
+            # Record the finished attempt exactly once. This is the results
+            # render path, which reruns on every interaction, so an unguarded
+            # write here would log the same attempt repeatedly and keep
+            # rewriting mastered_at.
+            if not st.session_state.quiz_recorded:
+                storage.record_attempt(topic, score, total)
                 if score >= (total * 0.9):
-                    st.success("Topic Mastered! 🎉")
-                    storage.set_mastered(
-                        st.session_state.quiz_topic, score=f"{score}/{total}"
-                    )
-                else:
-                    st.warning("Not yet! Keep trying.")
+                    storage.set_mastered(topic, score=f"{score}/{total}")
+                st.session_state.quiz_recorded = True
 
-                if st.button(logic.get_ui_text("BTN_BACK", lang_mode)):
-                    st.session_state.quiz_questions = []
+            attempts = storage.get_attempts(topic=topic)
+            if len(attempts) > 1:
+                best = max(a["score"] for a in attempts)
+                st.caption(f"Attempts: {len(attempts)} · best: {best}/{total}")
+            if score >= (total * 0.9):
+                st.success("Topic Mastered! 🎉")
+            else:
+                st.warning("Not yet! Keep trying.")
+
+            missed = sum(1 for e in st.session_state.quiz_history
+                         if e["tier"] == "incorrect")
+            if missed:
+                st.info(f"📌 {missed} item{'s' if missed != 1 else ''} "
+                        f"scheduled for review — see **Daily Review**.")
+
+            if st.button(logic.get_ui_text("BTN_BACK", lang_mode)):
+                end_quiz("quiz")
+                st.rerun()
+
+    # --- MODE: DAILY REVIEW (spaced repetition) ---
+    elif mode == "Daily Review":
+        st.subheader(logic.get_ui_text("TITLE_REVIEW", lang_mode))
+        init_quiz_state("review")
+
+        if not st.session_state.review_questions:
+            summary = logic.get_review_summary()
+            col_a, col_b = st.columns(2)
+            col_a.metric(logic.get_ui_text("LBL_DUE_NOW", lang_mode),
+                         summary["due"])
+            col_b.metric(logic.get_ui_text("LBL_TRACKED", lang_mode),
+                         summary["tracked"])
+
+            if summary["due"]:
+                due_by_topic = storage.get_due_counts_by_topic()
+                st.markdown("  \n".join(
+                    f"- **{t}** — {n} due"
+                    for t, n in sorted(due_by_topic.items())))
+                if st.button(logic.get_ui_text("BTN_START_REVIEW", lang_mode)):
+                    # Mixed topics, soonest-due first. Context is the whole
+                    # knowledge base since a session can span topics.
+                    start_quiz("review",
+                               logic.build_review_quiz(n=10),
+                               None,
+                               st.session_state.context)
                     st.rerun()
+            elif summary["tracked"]:
+                # Items exist but none are ripe yet. FSRS puts a freshly
+                # missed item minutes away, not seconds, so this is the normal
+                # state straight after a quiz — say when, not "go take a quiz".
+                st.info(logic.get_ui_text("LBL_ALL_CAUGHT_UP", lang_mode))
+                if summary["next_due"]:
+                    when = storage.from_iso(summary["next_due"])
+                    st.caption(
+                        f"{logic.get_ui_text('LBL_NEXT_DUE', lang_mode)}: "
+                        f"{when.strftime('%Y-%m-%d %H:%M UTC')}")
+            else:
+                st.info(logic.get_ui_text("LBL_NOTHING_TRACKED", lang_mode))
+
+            render_progress_panel(lang_mode)
+
+        elif render_quiz_runner("review", lang_mode, show_topic=True):
+            score = st.session_state.review_score
+            total = len(st.session_state.review_questions)
+            st.markdown(f"## {logic.get_ui_text('LBL_REVIEW_DONE', lang_mode)} "
+                        f"{score}/{total}")
+            remaining = logic.get_review_summary()["due"]
+            if remaining:
+                st.info(f"{remaining} still due.")
+            else:
+                st.success("Everything due has been reviewed. 🎉")
+            if st.button(logic.get_ui_text("BTN_BACK", lang_mode)):
+                end_quiz("review")
+                st.rerun()
 
     # --- MODE: WRITING CRITIQUE ---
     elif mode == "Writing Critique":

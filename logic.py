@@ -20,6 +20,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 # Import settings from our new config file
 import config
+import srs
 import storage
 
 
@@ -356,10 +357,13 @@ def get_quiz_topics():
         raise ValueError(
             f"config.QUIZ_TOPIC_DOCS out of sync with quiz bank "
             f"(unmapped: {missing}, stale: {extra})")
+    mastered = storage.get_progress()["mastered"]
+    due_counts = storage.get_due_counts_by_topic()
     topics = [{"name": t,
                "file": config.QUIZ_TOPIC_DOCS[t]["files"],
                "level": config.QUIZ_TOPIC_DOCS[t]["level"],
-               "mastered": storage.is_mastered(t)}
+               "mastered": t in mastered,
+               "due": due_counts.get(t, 0)}
               for t in bank["topics"]]
     topics.sort(key=lambda t: (t["level"] != "Core", t["name"]))  # Core first
     return topics
@@ -404,6 +408,67 @@ def classify_answer(user_answer, item):
     if normalize_answer(user_answer) == normalize_answer(item["canonical"]):
         return "exact"
     return "variant" if check_answer(user_answer, item) else "incorrect"
+
+
+def get_bank_item(item_id):
+    """Return the bank item with this id, or None if it no longer exists."""
+    for item in load_quiz_bank()["items"]:
+        if item["id"] == item_id:
+            return item
+    return None
+
+
+def record_quiz_answer(item, tier, now=None):
+    """Persist one graded answer and reschedule the item.
+
+    Called for every submitted answer, right or wrong: FSRS needs the successes
+    to lengthen intervals as much as it needs the misses to shorten them.
+    Failures are swallowed with a printed warning — a storage problem must not
+    take down a quiz the learner is in the middle of.
+    """
+    try:
+        stored = storage.get_card(item["id"])
+        result = srs.review(stored["fsrs_json"] if stored else None, tier,
+                            now=now)
+        storage.upsert_card(
+            item_id=item["id"],
+            topic=item["topic"],
+            fsrs_json=result["fsrs_json"],
+            due=storage.to_iso(result["due"]),
+            state=result["state"],
+            stability=result["stability"],
+            difficulty=result["difficulty"],
+            last_review=storage.to_iso(result["last_review"]),
+        )
+        storage.log_review(item["id"], tier, result["rating"],
+                           topic=item["topic"], at=now)
+        return result
+    except Exception as e:  # pragma: no cover - defensive
+        print(f"[srs] failed to record review for {item.get('id')}: {e}")
+        return None
+
+
+def build_review_quiz(n=10, topic=None, now=None):
+    """Return due bank items, soonest-due first, for a review session.
+
+    Ids that no longer resolve against the bank are skipped rather than raised
+    on: an item can be renamed or dropped from the bank while a learner still
+    has a card for it, and that should cost them one review, not the session.
+    """
+    rows = storage.get_due_cards(topic=topic, now=now)
+    items = []
+    for row in rows:
+        item = get_bank_item(row["item_id"])
+        if item is not None:
+            items.append(item)
+        if n is not None and len(items) >= n:
+            break
+    return items
+
+
+def get_review_summary(now=None):
+    """Counts for the Review dashboard: tracked, due, and next due time."""
+    return storage.get_srs_summary(now=now)
 
 
 def judge_equivalence(user_answer, item, context):

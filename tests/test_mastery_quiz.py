@@ -17,6 +17,7 @@ import json
 import os
 import re
 import unicodedata
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -400,16 +401,23 @@ class TestGetQuizTopics:
 
     def test_topics_come_from_bank(self, seeded_session, monkeypatch):
         monkeypatch.setattr(config, "QUIZ_TOPIC_DOCS", self.REAL_DOCS_SUBSET)
-        with patch("logic.storage.is_mastered", return_value=False):
-            topics = get_quiz_topics()
+        topics = get_quiz_topics()
         assert [t["name"] for t in topics] == ["Topic A", "Topic B"]  # Core first
 
     def test_topic_dict_shape(self, seeded_session, monkeypatch):
         monkeypatch.setattr(config, "QUIZ_TOPIC_DOCS", self.REAL_DOCS_SUBSET)
-        with patch("logic.storage.is_mastered", return_value=True):
-            t = get_quiz_topics()[0]
-        assert t == {"name": "Topic A", "file": ["a.md"],
-                     "level": "Core", "mastered": True}
+        storage.set_mastered("Topic A", score="10/10")
+        t = get_quiz_topics()[0]
+        assert t == {"name": "Topic A", "file": ["a.md"], "level": "Core",
+                     "mastered": True, "due": 0}
+
+    def test_topic_reports_due_count(self, seeded_session, monkeypatch):
+        monkeypatch.setattr(config, "QUIZ_TOPIC_DOCS", self.REAL_DOCS_SUBSET)
+        storage.upsert_card("x_001", "Topic A", "{}",
+                            storage.to_iso(storage.utcnow()))
+        by_name = {t["name"]: t for t in get_quiz_topics()}
+        assert by_name["Topic A"]["due"] == 1
+        assert by_name["Topic B"]["due"] == 0
 
     def test_out_of_sync_mapping_raises(self, seeded_session, monkeypatch):
         monkeypatch.setattr(config, "QUIZ_TOPIC_DOCS",
@@ -771,16 +779,205 @@ class TestQuizHistoryRendering:
         with open(path, encoding="utf-8") as f:
             return f.read()
 
-    def test_mastery_quiz_history_excludes_current_question(self):
-        assert re.search(
-            r"quiz_history\[\s*:st\.session_state\.current_q_index\]",
-            self._main_source())
+    def test_quiz_history_excludes_current_question(self):
+        # The current question renders its own result below; including it in
+        # "Previous Answers" showed it twice.
+        assert re.search(r"prev_entries\s*=\s*history\[\s*:\s*q_idx\s*\]",
+                         self._main_source())
 
     def test_error_quiz_history_excludes_current_question(self):
         assert re.search(
             r"error_quiz_history\[\s*:st\.session_state\.error_quiz_index\]",
             self._main_source())
 
+    def test_one_shared_runner_serves_both_quizzes(self):
+        # The duplicate-history bug had to be fixed twice because the mastery
+        # quiz and the review quiz were separate copies of the same UI.
+        src = self._main_source()
+        assert src.count("def render_quiz_runner(") == 1
+        assert src.count('render_quiz_runner("quiz"') == 1
+        assert src.count('render_quiz_runner("review"') == 1
+
+
+class TestQuizPersistenceWiring:
+    """Source guards on main.py — there is no Streamlit test harness here, so
+    these assert the wiring the SRS depends on is actually present."""
+
+    _main_source = staticmethod(TestQuizHistoryRendering._main_source)
+
+    def test_every_answer_is_recorded(self):
+        src = self._main_source()
+        assert "logic.record_quiz_answer(item, tier)" in src
+
+    def test_answer_is_recorded_in_the_submit_path_not_the_render_path(self):
+        # It must sit in the branch that ends in st.rerun(), or the same answer
+        # would be re-graded and rescheduled on every rerun.
+        src = self._main_source()
+        submit_idx = src.index("if st.button(logic.get_ui_text(\"BTN_SUBMIT\"")
+        record_idx = src.index("logic.record_quiz_answer(item, tier)")
+        rerun_idx = src.index("st.rerun()", record_idx)
+        assert submit_idx < record_idx < rerun_idx
+
+    def test_attempt_and_mastery_writes_are_guarded(self):
+        # The results screen reruns on every interaction; unguarded writes
+        # would log the attempt repeatedly and keep rewriting mastered_at.
+        src = self._main_source()
+        guard = src.index("if not st.session_state.quiz_recorded:")
+        assert guard < src.index("storage.record_attempt(topic, score, total)")
+        assert guard < src.index("storage.set_mastered(topic,")
+
+    def test_review_mode_is_registered_in_navigation(self):
+        assert '"Daily Review": "NAV_REVIEW"' in self._main_source()
+
+
+# ===========================================================================
+# SRS orchestration: logic.py joins storage (persistence) to srs (scheduling)
+# and back to the quiz bank. These are the seams the UI calls.
+# ===========================================================================
+
+import srs  # noqa: E402  (placed with the SRS tests it belongs to)
+
+
+class TestGetBankItem:
+
+    def test_resolves_a_real_id(self):
+        assert logic.get_bank_item("neg_001")["id"] == "neg_001"
+
+    def test_unknown_id_returns_none(self):
+        assert logic.get_bank_item("does_not_exist") is None
+
+
+class TestRecordQuizAnswer:
+
+    ITEM = {"id": "neg_001", "topic": "Negation"}
+
+    def test_creates_a_card_on_first_answer(self):
+        assert storage.get_card("neg_001") is None
+        logic.record_quiz_answer(self.ITEM, "exact")
+        card = storage.get_card("neg_001")
+        assert card is not None
+        assert card["topic"] == "Negation"
+
+    def test_logs_the_review_with_its_rating(self):
+        logic.record_quiz_answer(self.ITEM, "incorrect")
+        assert storage.get_review_counts("neg_001") == {"reps": 1, "lapses": 1}
+
+    @pytest.mark.parametrize("tier,rating", [
+        ("incorrect", 1), ("accepted", 2), ("variant", 3), ("exact", 4)])
+    def test_every_tier_is_recorded(self, tier, rating):
+        result = logic.record_quiz_answer(self.ITEM, tier)
+        assert result["rating"] == rating
+
+    def test_correct_answers_are_recorded_too(self):
+        # FSRS needs successes to lengthen intervals, not just misses.
+        logic.record_quiz_answer(self.ITEM, "exact")
+        assert storage.get_card("neg_001") is not None
+
+    def test_second_answer_updates_rather_than_duplicates(self):
+        now = storage.utcnow()
+        first = logic.record_quiz_answer(self.ITEM, "exact", now=now)
+        logic.record_quiz_answer(self.ITEM, "exact", now=first["due"])
+        assert len(storage.get_due_cards(now=first["due"])) == 0
+        assert storage.get_review_counts("neg_001")["reps"] == 2
+
+    def test_a_miss_makes_the_item_due_again_soon(self):
+        now = storage.utcnow()
+        logic.record_quiz_answer(self.ITEM, "incorrect", now=now)
+        later = now + timedelta(hours=1)
+        assert [c["item_id"] for c in storage.get_due_cards(now=later)] == \
+            ["neg_001"]
+
+    def test_a_storage_failure_does_not_break_the_quiz(self):
+        # A learner mid-quiz must not lose the session to a disk problem.
+        with patch("logic.storage.upsert_card", side_effect=OSError("disk")):
+            assert logic.record_quiz_answer(self.ITEM, "exact") is None
+
+
+class TestBuildReviewQuiz:
+
+    def test_empty_when_nothing_is_due(self):
+        assert logic.build_review_quiz() == []
+
+    def test_returns_real_bank_items(self):
+        logic.record_quiz_answer({"id": "neg_001", "topic": "Negation"},
+                                 "incorrect")
+        items = logic.build_review_quiz(now=storage.utcnow() + timedelta(days=1))
+        assert [i["id"] for i in items] == ["neg_001"]
+        assert "english" in items[0] and "acceptable" in items[0]
+
+    def test_orders_by_due_date(self):
+        now = storage.utcnow()
+        storage.upsert_card("neg_002", "Negation", "{}",
+                            storage.to_iso(now - timedelta(minutes=1)))
+        storage.upsert_card("neg_001", "Negation", "{}",
+                            storage.to_iso(now - timedelta(minutes=5)))
+        assert [i["id"] for i in logic.build_review_quiz(now=now)] == \
+            ["neg_001", "neg_002"]
+
+    def test_respects_the_limit(self):
+        now = storage.utcnow()
+        for i in range(1, 6):
+            storage.upsert_card(f"neg_00{i}", "Negation", "{}",
+                                storage.to_iso(now - timedelta(minutes=i)))
+        assert len(logic.build_review_quiz(n=3, now=now)) == 3
+
+    def test_filters_by_topic(self):
+        now = storage.utcnow()
+        storage.upsert_card("neg_001", "Negation", "{}", storage.to_iso(now))
+        storage.upsert_card("adv_001", "Adverbs", "{}", storage.to_iso(now))
+        items = logic.build_review_quiz(topic="Adverbs", now=now)
+        assert [i["id"] for i in items] == ["adv_001"]
+
+    def test_unresolvable_ids_are_skipped_not_raised(self):
+        # A card can outlive its bank item if the bank is edited. That should
+        # cost one review, not the whole session.
+        now = storage.utcnow()
+        storage.upsert_card("ghost_999", "Negation", "{}", storage.to_iso(now))
+        storage.upsert_card("neg_001", "Negation", "{}",
+                            storage.to_iso(now + timedelta(seconds=1)))
+        items = logic.build_review_quiz(now=now + timedelta(minutes=1))
+        assert [i["id"] for i in items] == ["neg_001"]
+
+    def test_mixes_topics_in_one_session(self):
+        now = storage.utcnow()
+        storage.upsert_card("neg_001", "Negation", "{}", storage.to_iso(now))
+        storage.upsert_card("adv_001", "Adverbs", "{}", storage.to_iso(now))
+        topics = {i["topic"] for i in logic.build_review_quiz(now=now)}
+        assert topics == {"Negation", "Adverbs"}
+
+
+class TestReviewSummary:
+
+    def test_zero_state(self):
+        assert logic.get_review_summary() == \
+            {"tracked": 0, "due": 0, "next_due": None}
+
+    def test_counts_tracked_and_due(self):
+        now = storage.utcnow()
+        logic.record_quiz_answer({"id": "neg_001", "topic": "Negation"},
+                                 "exact", now=now)
+        summary = logic.get_review_summary(now=now)
+        assert summary["tracked"] == 1
+        assert summary["due"] == 0
+        assert summary["next_due"] is not None
+
+
+class TestEndToEndQuizRound:
+
+    def test_a_full_quiz_round_persists_and_resurfaces_the_misses(self):
+        """The whole point: answer ten, miss three, get those three back."""
+        now = storage.utcnow()
+        items = logic.build_quiz("Negation", n=10, seed=1)
+        assert len(items) == 10
+        for i, item in enumerate(items):
+            tier = "incorrect" if i < 3 else "exact"
+            logic.record_quiz_answer(item, tier, now=now)
+        storage.record_attempt("Negation", 7, 10, at=now)
+
+        later = now + timedelta(hours=1)
+        due_ids = {i["id"] for i in logic.build_review_quiz(now=later)}
+        assert due_ids == {it["id"] for it in items[:3]}
+        assert storage.get_attempts()[0]["score"] == 7
 
 # ===========================================================================
 # Literary first-person past (-ೆನು).

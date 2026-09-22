@@ -1,6 +1,6 @@
 # 🪔 Vāṇi
 
-![Tests](https://img.shields.io/badge/tests-1306%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/tests-1412%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **An AI-powered personalized language tutor for Kannada learners.**
 
@@ -14,7 +14,26 @@ Vāṇi (ವಾಣಿ) is a Python-based web application designed to assist stud
 Automatically generates and emails structured lessons based on a learning schedule tracked in Google Sheets. Each lesson covers a grammar topic from the Knowledge Base and ends with practice sentences.
 
 ### 🏆 Mastery Quiz
-A deterministic "read-then-quiz" engine. Each topic serves 10 questions of increasing difficulty sampled from a curated 200-item question bank (`knowledge_base/quiz_bank.json`), with the lesson doc readable inline before you start. Grading is deterministic first: answers are normalized (punctuation, quote styles, zero-width characters, interchangeable quotatives) and matched against each question's acceptable forms. Only a non-matching answer gets a single *constrained* LLM equivalence check — the bank's canonical answer is authoritative and the model may only vote yes/no, never invent its own "correct" answer. Scoring 90%+ marks the topic mastered in local progress storage (`data/progress.json`).
+A deterministic "read-then-quiz" engine. Each topic serves 10 questions of increasing difficulty sampled from a curated 200-item question bank (`knowledge_base/quiz_bank.json`), with the lesson doc readable inline before you start. Grading is deterministic first: answers are normalized (punctuation, quote styles, zero-width characters, interchangeable quotatives) and matched against each question's acceptable forms. Only a non-matching answer gets a single *constrained* LLM equivalence check — the bank's canonical answer is authoritative and the model may only vote yes/no, never invent its own "correct" answer. Scoring 90%+ marks the topic mastered in local progress storage (`data/vani.db`), and every miss is scheduled into the Daily Review queue.
+
+### 🔁 Daily Review (Spaced Repetition)
+
+Every quiz answer is remembered. Miss a question and it comes back — first in
+minutes, then days, then weeks, on an [FSRS](https://github.com/open-spaced-repetition/py-fsrs)
+schedule that stretches the interval each time you get it right and collapses
+it when you slip. Answers you get right are recorded too, because a scheduler
+needs your successes to know how far to push the next interval.
+
+The four grading tiers map onto FSRS's four ratings, so nothing is thrown away:
+an exact match counts as *Easy*, a valid alternate form as *Good*, a phrasing
+the LLM judge had to rescue as *Hard*, and a miss as *Again*. Interval fuzzing
+is switched off, so the same answer at the same moment always schedules the
+same way.
+
+**Daily Review** shows what is due across every topic, mixes them into one
+session, and runs it through the same question UI as the Mastery Quiz. Progress
+survives closing the app: mastery, every attempt with its score and date, and
+each item's scheduling state live in SQLite at `data/vani.db`, keyed by profile.
 
 ### 💬 Text Chat (Conversation Practice)
 An immersive text-based chatbot powered by Sarvam AI (`sarvam-105b`). The student selects from **8 richly-detailed character personas** (shopkeeper, doctor, train conductor, nosy neighbor, landlord, auto driver, house cleaner, or a traditional priest) and a **grammar focus** (compound verbs, conditionals, etc.), then holds a freeform Kannada conversation. A **Custom Scenario** mode lets you write your own character card for any conversation partner you need to practice with.
@@ -59,7 +78,8 @@ This tool uses Large Language Models (LLMs) to generate content. While instructe
 | **Text-to-Speech** | Sarvam AI Bulbul v3 (REST API) |
 | **Database** | Google Sheets (`gspread`) for the email-lesson schedule; local JSON (`storage.py`) for quiz mastery progress |
 | **Audio Input** | Streamlit native `st.audio_input` (no third-party components) |
-| **Test Suite** | pytest — 1,306 mocked tests across 7 modules (~1.5s) plus opt-in live-API canaries (`pytest -m live`) |
+| **Spaced Repetition** | [`fsrs`](https://pypi.org/project/fsrs/) (FSRS-6) over SQLite |
+| **Test Suite** | pytest — 1,412 mocked tests across 9 modules (~2s) plus opt-in live-API canaries (`pytest -m live`) |
 | **Environment** | Python 3.10+ |
 
 ---
@@ -71,14 +91,17 @@ Kannada_Guru/
 ├── main.py                  # Streamlit UI — pages, tabs, and state management
 ├── logic.py                 # Backend: Sarvam chat completions, STT/TTS, quiz grading, email
 ├── config.py                # API keys, model settings, prompts, UI translations
-├── storage.py               # Local progress store (quiz mastery → data/progress.json)
+├── storage.py               # Persistence: mastery, attempts, SRS cards → data/vani.db
+├── srs.py                   # FSRS scheduling (pure; no UI, config or storage deps)
 ├── requirements.txt         # Python dependencies
 ├── pytest.ini               # Test runner config (live-API tests deselected by default)
-├── tests/                   # Automated test suite (1,306 mocked tests + 12 live canaries)
-│   ├── conftest.py                   # Shared fixtures
+├── tests/                   # Automated test suite (1,412 mocked tests + 12 live canaries)
+│   ├── conftest.py                   # Shared fixtures + autouse DB isolation
 │   ├── test_utilities.py             # Pure unit tests (clean_json, transliteration, UI text)
 │   ├── test_sarvam_chat.py           # Chat API: parsing, retries, verbatim-input contract
-│   ├── test_mastery_quiz.py          # Quiz bank integrity + deterministic grading
+│   ├── test_mastery_quiz.py          # Quiz bank integrity, grading, SRS orchestration
+│   ├── test_storage.py               # SQLite persistence, migration, profile isolation
+│   ├── test_srs.py                   # FSRS scheduling, tier mapping, serialization
 │   ├── test_hallucination_guards.py  # Anti-hallucination error filtering
 │   ├── test_live_llm.py              # Opt-in canaries against the real Sarvam API
 │   ├── test_sarvam_voice.py          # STT/TTS tests (all network calls mocked)
@@ -169,13 +192,15 @@ pip install pytest
 python -m pytest -q
 ```
 
-**1,306 tests across 7 modules, completing in ~1.5 seconds:**
+**1,412 tests across 9 modules, completing in ~2 seconds:**
 
 | Module | What It Tests |
 |--------|--------------|
 | `test_utilities.py` | `clean_json`, `toggle_script`, `humanize_transliteration`, `get_ui_text`, `load_knowledge_base` |
 | `test_sarvam_chat.py` | Chat turns (parsing, persona/grammar injection, 3-attempt retry paths), answer grading, writing critique, reading comprehension, and a **verbatim-input contract**: adversarial user text (quotes, braces, newlines, emoji, mixed script) must reach the LLM prompt completely unaltered |
-| `test_mastery_quiz.py` | Quiz bank schema and integrity (parametrized over all 200 items), answer normalization (quotative folding, punctuation, zero-width chars), deterministic grading, constrained LLM judge fail-closed behavior, explanation fallbacks |
+| `test_mastery_quiz.py` | Quiz bank schema and integrity (parametrized over all 200 items), answer normalization (quotative folding, punctuation, zero-width chars), deterministic grading, constrained LLM judge fail-closed behavior, explanation fallbacks, SRS orchestration and a full quiz→review round trip |
+| `test_storage.py` | SQLite schema and migration, the one-time `progress.json` import, mastery/attempt/card/review round trips, due-date boundaries with an injected clock, profile isolation, transactional rollback |
+| `test_srs.py` | Tier→rating mapping, interval growth and collapse, reproducibility with fuzzing off, `Card` serialization round trips, timezone handling |
 | `test_hallucination_guards.py` | The anti-hallucination filter: fabricated "corrections" are dropped, genuine ones survive, including for Roman-typed input |
 | `test_sarvam_voice.py` | STT/TTS success paths, error handling, timeouts, payload validation (2500-char truncation, custom speaker/pace) |
 | `test_google_sheets.py` | Credential routing (Streamlit Secrets vs local file), topic filtering, sheet cell writes |

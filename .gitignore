@@ -12,5 +12,9 @@ venv/
 # Content data (e.g. data/vocabulary.json) is tracked; per-user state is not.
 data/progress.json
 data/srs.json
+# SQLite progress + spaced-repetition store (and its WAL sidecars).
+data/*.db
+data/*.db-wal
+data/*.db-shm
 # Quiz LLM-failure log (created lazily by logic.explain_mistake)
 logs/

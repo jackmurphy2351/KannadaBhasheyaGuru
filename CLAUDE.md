@@ -14,10 +14,11 @@ App runs at `http://localhost:8501`.
 
 Four-file Python/Streamlit app:
 
-- **`main.py`** — Streamlit UI (sidebar navigation, session state, custom CSS). Six modes: Home, Conversation Practice (Text + Voice Chat tabs), Send Email Lesson, Mastery Quiz, Writing Critique, Reading Comprehension.
+- **`main.py`** — Streamlit UI (sidebar navigation, session state, custom CSS). Seven modes: Home, Conversation Practice (Text + Voice Chat tabs), Send Email Lesson, Mastery Quiz, Daily Review, Writing Critique, Reading Comprehension.
 - **`logic.py`** — All backend logic: Sarvam chat completions API calls, Sarvam STT/TTS REST calls, Google Sheets read/write, Gmail SMTP, quiz grading, text critique, transliteration.
 - **`config.py`** — Centralized config: API key loading (Streamlit Secrets or `.env`), Sarvam model settings (incl. `SARVAM_MAX_TOKENS`), Sarvam voice options, UI translation strings (4 language modes), character personas, grammar topics, quiz topic→doc mapping.
-- **`storage.py`** — Portable local-data layer (no Streamlit/Google deps). Persists quiz mastery to `data/progress.json`.
+- **`storage.py`** — Portable persistence layer (no Streamlit/Google/`logic` deps). SQLite at `data/vani.db`: mastery, quiz attempts, SRS cards, review history. Everything is keyed by `profile_id` (default `"local"`) so multi-user is a UI change, not a migration.
+- **`srs.py`** — FSRS scheduling (no Streamlit/`config`/`storage`/`logic` deps — `config` imports Streamlit, so importing it here would drag the UI into the scheduler).
 
 ### Key Design Decisions
 
@@ -27,7 +28,11 @@ Four-file Python/Streamlit app:
 
 **Reasoning, Retries & Token Cap:** `sarvam-105b` is a reasoning model and reasoning tokens are billed as completion tokens, so with reasoning on they consume `SARVAM_MAX_TOKENS` before any visible answer is emitted — the documented cause of `finish_reason="length"` with zero output. `config.SARVAM_REASONING_EFFORT = None` disables it (measured: 238 completion tokens/3.0s → 7 tokens/0.4s on a trivial prompt) and is sent via `extra_body` so an explicit null reaches the wire — a bare `reasoning_effort=None` kwarg is indistinguishable from "unset" to the openai SDK. Both `generate_chat_turn_ai()` and `generate_content()` still retry up to 3 attempts with identical messages. `config.SARVAM_MAX_TOKENS = 4096` is the starter-tier hard cap (Pro is 16384) — requests above it fail with HTTP 400, so never "fix" truncation by raising it.
 
-**Deterministic Mastery Quiz:** Questions come from the fixed bank `knowledge_base/quiz_bank.json` (200 items, 12 topics; validated on load), not from the LLM and not from Google Sheets. Correctness is decided by `check_answer()` normalization against each item's `acceptable` forms; only non-matches get one constrained yes/no LLM check (`judge_equivalence`, fail-closed) — the LLM never supplies its own answer. Mastery persists locally via `storage.py`. Token folding in `normalize_answer()`: ಅಂತ/ಅಂತಾ/ಎಂದು are interchangeable quotatives; ಅಂತೆ (hearsay) and ಎಂಬ (naming-only, never reported speech — explicit user correction) must NEVER be folded.
+**Spaced Repetition (FSRS):** Every submitted answer is persisted and rescheduled by `logic.record_quiz_answer()`, correct ones included — FSRS needs successes to lengthen intervals as much as misses to shorten them. The quiz's four grading tiers map straight onto FSRS's four ratings: `incorrect`→Again, `accepted`→Hard, `variant`→Good, `exact`→Easy. "accepted" sits below "variant" deliberately: needing the LLM judge to vouch for a phrasing is weaker evidence of recall than matching a form the bank lists. **Fuzzing is disabled** (`srs.ENABLE_FUZZING = False`) — FSRS otherwise randomizes each interval, which is pointless across a 200-item bank and would make the same answer at the same moment produce a different due date every call. An FSRS `Card` has no reps/lapses fields, so those are derived from the `reviews` table. Due items surface in the **Daily Review** mode via `logic.build_review_quiz()`; ids that no longer resolve against the bank are skipped, not raised on.
+
+**Shared Quiz Runner:** `render_quiz_runner(prefix, ...)` in `main.py` serves both the Mastery Quiz and Daily Review, with session state namespaced by `prefix`. They were separate copies once, which is why the same "question rendered twice" bug had to be fixed twice. Do not fork it again.
+
+**Deterministic Mastery Quiz:** Questions come from the fixed bank `knowledge_base/quiz_bank.json` (200 items, 12 topics; validated on load), not from the LLM and not from Google Sheets. Correctness is decided by `check_answer()` normalization against each item's `acceptable` forms; only non-matches get one constrained yes/no LLM check (`judge_equivalence`, fail-closed) — the LLM never supplies its own answer. Mastery, attempts and SRS state persist via `storage.py`. Token folding in `normalize_answer()`: ಅಂತ/ಅಂತಾ/ಎಂದು are interchangeable quotatives; ಅಂತೆ (hearsay) and ಎಂಬ (naming-only, never reported speech — explicit user correction) must NEVER be folded.
 
 **Voice Chat Always Uses Kannada Script:** The TTS API requires Kannada Script input, so voice chat mode forces `Kannada (Script)` internally regardless of the user's display preference.
 
@@ -55,13 +60,18 @@ Required in `.env` (local) or Streamlit Secrets (deployed):
 
 ### Google Sheets Schema
 
-The tracker sheet needs columns: `Topic`, `Status`, `Date Sent`. It is used only by the email-lesson flow: `send_email_lesson()` picks the first row with an empty `Status` and marks it `"Sent"`. Quiz mastery is NOT tracked in Sheets — it lives in `data/progress.json` via `storage.py`.
+The tracker sheet needs columns: `Topic`, `Status`, `Date Sent`. It is used only by the email-lesson flow: `send_email_lesson()` picks the first row with an empty `Status` and marks it `"Sent"`. Quiz mastery is NOT tracked in Sheets — it lives in `data/vani.db` via `storage.py`. The legacy `data/progress.json` is imported once on first open and then left alone as a backup.
 
 ## Testing
 
 ```bash
-python -m pytest -q          # full mocked suite (~1,300 tests, ~1.5s, no network)
+python -m pytest -q          # full mocked suite (~1,400 tests, ~2s, no network)
 python -m pytest -m live -q  # opt-in canaries against the real Sarvam API (costs credits)
 ```
+
+An autouse `isolated_db` fixture in `tests/conftest.py` repoints `storage.DB_FILE`
+and `storage.PROGRESS_FILE` at `tmp_path` for **every** test. Never remove it:
+those paths resolve relative to the repo, so without it any test touching a
+storage function reads and writes the developer's own progress.
 
 Live tests (`tests/test_live_llm.py`) are deselected by default via `addopts = -m "not live"` in `pytest.ini`. They verify the real model never hallucinates corrections; do NOT assert on model *sensitivity* (whether it flags a given mistake) — that is nondeterministic.

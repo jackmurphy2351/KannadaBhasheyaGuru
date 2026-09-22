@@ -179,6 +179,7 @@ UI_TEXT = {
     "NAV_WRITE": {"EN": "Writing Critique", "KN": "ಬರವಣಿಗೆ ವಿಮರ್ಶೆ"},
     "NAV_READ": {"EN": "Reading Comprehension", "KN": "ಓದುವ ಗ್ರಹಿಕೆ"},
     "NAV_CHAT": {"EN": "Conversation Practice", "KN": "ಸಂಭಾಷಣೆಯ ಅಭ್ಯಾಸ"},
+    "NAV_REVIEW": {"EN": "Daily Review", "KN": "ದಿನದ ಪುನರಾವರ್ತನೆ"},
 
     # Headers & Titles
     "TITLE_HOME": {"EN": "Overview", "KN": "ಅವಲೋಕನ"},
@@ -186,6 +187,24 @@ UI_TEXT = {
     "TITLE_QUIZ": {"EN": "Mastery Quiz", "KN": "ಪಾಂಡಿತ್ಯ ಪರೀಕ್ಷೆ"},
     "TITLE_WRITE": {"EN": "Writing Critique", "KN": "ಬರವಣಿಗೆ ವಿಮರ್ಶೆ"},
     "TITLE_READ": {"EN": "Reading Comprehension", "KN": "ಓದುವ ಗ್ರಹಿಕೆ"},
+    "TITLE_REVIEW": {"EN": "Daily Review", "KN": "ದಿನದ ಪುನರಾವರ್ತನೆ"},
+
+    # Spaced repetition
+    "BTN_START_REVIEW": {"EN": "Start Review", "KN": "ಪುನರಾವರ್ತನೆ ಪ್ರಾರಂಭಿಸಿ"},
+    # Two different empty states. Telling someone who just missed three
+    # questions to "take a quiz" is wrong — their reviews exist, they are
+    # simply a minute away.
+    "LBL_NOTHING_TRACKED": {
+        "EN": "Nothing to review yet. Take a Mastery Quiz and anything you miss will come back here, on a schedule.",
+        "KN": "ಇನ್ನೂ ಪುನರಾವರ್ತನೆಗೆ ಏನೂ ಇಲ್ಲ. ಪಾಂಡಿತ್ಯ ಪರೀಕ್ಷೆ ಮಾಡಿ; ತಪ್ಪಿದ ಪ್ರಶ್ನೆಗಳು ವೇಳಾಪಟ್ಟಿಯಂತೆ ಇಲ್ಲಿಗೆ ಮರಳುತ್ತವೆ."},
+    "LBL_ALL_CAUGHT_UP": {
+        "EN": "You are all caught up. Nothing is due at the moment.",
+        "KN": "ನೀವು ಎಲ್ಲವನ್ನೂ ಮುಗಿಸಿದ್ದೀರಿ. ಸದ್ಯಕ್ಕೆ ಯಾವುದೂ ಬಾಕಿ ಇಲ್ಲ."},
+    "LBL_DUE_NOW": {"EN": "Due now", "KN": "ಈಗ ಬಾಕಿ"},
+    "LBL_TRACKED": {"EN": "Items tracked", "KN": "ಒಟ್ಟು ಪ್ರಶ್ನೆಗಳು"},
+    "LBL_NEXT_DUE": {"EN": "Next review", "KN": "ಮುಂದಿನ ಪುನರಾವರ್ತನೆ"},
+    "LBL_YOUR_PROGRESS": {"EN": "Your progress", "KN": "ನಿಮ್ಮ ಪ್ರಗತಿ"},
+    "LBL_REVIEW_DONE": {"EN": "Review complete.", "KN": "ಪುನರಾವರ್ತನೆ ಮುಗಿಯಿತು."},
 
     # Descriptions & Long Text
     "WELCOME_MSG": {

@@ -7,6 +7,27 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import storage
+
+
+# ---------------------------------------------------------------------------
+# Data isolation
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def isolated_db(tmp_path, monkeypatch):
+    """Point every test at a throwaway database.
+
+    Autouse and unconditional on purpose. storage.DB_FILE and PROGRESS_FILE
+    resolve relative to the repo, so without this any test that reaches a
+    storage function reads and writes the developer's own progress — which is
+    exactly what happened before the SQLite migration, when nothing redirected
+    these paths at all.
+    """
+    monkeypatch.setattr(storage, "DB_FILE", str(tmp_path / "vani.db"))
+    monkeypatch.setattr(storage, "PROGRESS_FILE", str(tmp_path / "progress.json"))
+    yield tmp_path
+
 
 # ---------------------------------------------------------------------------
 # OpenAI / Sarvam chat response helpers

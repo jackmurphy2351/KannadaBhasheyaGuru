@@ -5,3 +5,8 @@ oauth2client
 python-dotenv
 indic-transliteration
 requests
+# Spaced repetition. Pinned to a major: py-fsrs has made breaking API changes
+# between majors (Card.get_retrievability moved to the Scheduler; the custom
+# parameter tuple grew from 19 to 21), and srs.py serializes Card state into
+# the database, so an unnoticed major bump could silently change scheduling.
+fsrs>=6.3,<7

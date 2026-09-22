@@ -657,3 +657,97 @@ class TestGradeReadingAi:
         assert isinstance(result, dict)
         assert result["is_correct"] is False
         assert "detailed_explanation" in result
+
+
+# ===========================================================================
+# Sarvam model migration (2026-09).
+#
+# sarvam-30b and sarvam-m are both retired; the chat completions API answers
+# a request for either with HTTP 400 naming sarvam-105b as the replacement.
+# sarvam-105b is a reasoning model whose reasoning tokens are billed as
+# completion tokens, so leaving reasoning on spends SARVAM_MAX_TOKENS before
+# any visible answer is produced — the finish_reason="length" + zero-output
+# failure the retry loops were built to survive.
+# ===========================================================================
+
+RETIRED_MODELS = {"sarvam-30b", "sarvam-m", "sarvam-30b-16k", "sarvam-105b-32k"}
+
+
+class TestModelMigration:
+
+    def test_no_retired_model_is_configured(self):
+        for name in ("SARVAM_CHAT_MODEL", "SARVAM_READING_MODEL"):
+            assert getattr(config, name) not in RETIRED_MODELS, name
+
+    def test_chat_model_is_a_served_model(self):
+        assert config.SARVAM_CHAT_MODEL in {
+            "sarvam-105b", "sarvam-105b-conversations"}
+
+    def test_generate_content_requests_the_configured_model(self):
+        client = _make_client("hello")
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_content("p", FAKE_CONTEXT)
+        assert client.chat.completions.create.call_args.kwargs["model"] == \
+            config.SARVAM_CHAT_MODEL
+
+    def test_chat_turn_requests_the_configured_model(self):
+        client = _make_client(CHAT_JSON)
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_chat_turn_ai("hi", [], "None", "The Doctor", "Kannada (Script)")
+        assert client.chat.completions.create.call_args.kwargs["model"] == \
+            config.SARVAM_CHAT_MODEL
+
+
+class TestReasoningEffort:
+
+    @staticmethod
+    def _extra_body(client):
+        return client.chat.completions.create.call_args.kwargs["extra_body"]
+
+    def test_generate_content_sends_reasoning_effort(self):
+        client = _make_client("hello")
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_content("p", FAKE_CONTEXT)
+        assert self._extra_body(client) == {
+            "reasoning_effort": config.SARVAM_REASONING_EFFORT}
+
+    def test_chat_turn_sends_reasoning_effort(self):
+        client = _make_client(CHAT_JSON)
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_chat_turn_ai("hi", [], "None", "The Doctor", "Kannada (Script)")
+        assert self._extra_body(client) == {
+            "reasoning_effort": config.SARVAM_REASONING_EFFORT}
+
+    def test_sent_via_extra_body_not_a_bare_kwarg(self):
+        # A bare reasoning_effort=None kwarg is indistinguishable from "unset"
+        # to the openai SDK, which would silently leave reasoning enabled.
+        client = _make_client("hello")
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_content("p", FAKE_CONTEXT)
+        assert "reasoning_effort" not in \
+            client.chat.completions.create.call_args.kwargs
+
+
+class TestGraderTemperature:
+
+    def test_generate_content_omits_temperature_by_default(self):
+        client = _make_client("hello")
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_content("p", FAKE_CONTEXT)
+        assert "temperature" not in \
+            client.chat.completions.create.call_args.kwargs
+
+    def test_generate_content_passes_temperature_when_given(self):
+        client = _make_client("hello")
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_content("p", FAKE_CONTEXT, temperature=0)
+        assert client.chat.completions.create.call_args.kwargs["temperature"] == 0
+
+    def test_judge_equivalence_grades_at_temperature_zero(self):
+        # A yes/no verdict must not vary between identical calls.
+        item = {"id": "x_001", "english": "e", "canonical": "c",
+                "acceptable": ["c"], "grammar_note": "n"}
+        verdict = json.dumps({"equivalent": True, "reason": "ok"})
+        with patch("logic.generate_content", return_value=verdict) as mock_gen:
+            logic.judge_equivalence("something else", item, "ctx")
+        assert mock_gen.call_args.kwargs.get("temperature") == 0

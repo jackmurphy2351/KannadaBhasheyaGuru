@@ -252,4 +252,13 @@ class TestSarvamTextToSpeech:
         with patch("logic.requests.post", return_value=mock_resp) as mock_post:
             sarvam_text_to_speech(self.KANNADA_TEXT)
         payload = mock_post.call_args.kwargs.get("json") or mock_post.call_args[1].get("json")
-        assert payload["target_language_code"] == config.SARVAM_TTS_LANGUAGE
+        assert payload["language_code"] == config.SARVAM_TTS_LANGUAGE
+
+    def test_does_not_send_legacy_language_field(self):
+        # "target_language_code" is not in the documented TTS request body;
+        # sending it risks the language being ignored or a future 400.
+        mock_resp = _mock_post_response({"audios": [self.ENCODED_AUDIO]})
+        with patch("logic.requests.post", return_value=mock_resp) as mock_post:
+            sarvam_text_to_speech(self.KANNADA_TEXT)
+        payload = mock_post.call_args.kwargs.get("json") or mock_post.call_args[1].get("json")
+        assert "target_language_code" not in payload

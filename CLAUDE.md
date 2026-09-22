@@ -21,11 +21,11 @@ Four-file Python/Streamlit app:
 
 ### Key Design Decisions
 
-**LLM Output Parsing:** `generate_chat_turn_ai()` in `logic.py` uses `response_format={"type": "json_object"}` with the Sarvam chat completions API. The model returns a JSON object with `kannada`, `english`, and `errors` keys. `clean_json()` in `logic.py` parses it deterministically (handles markdown-fenced responses). The earlier plain-text `KANNADA:`/`ENGLISH:`/`ERRORS:` label approach was abandoned because sarvam-30b frequently dropped the labels; `json_object` mode is significantly more reliable.
+**LLM Output Parsing:** `generate_chat_turn_ai()` in `logic.py` uses `response_format={"type": "json_object"}` with the Sarvam chat completions API. The model returns a JSON object with `kannada`, `english`, and `errors` keys. `clean_json()` in `logic.py` parses it deterministically (handles markdown-fenced responses). The earlier plain-text `KANNADA:`/`ENGLISH:`/`ERRORS:` label approach was abandoned because the then-current sarvam-30b frequently dropped the labels; `json_object` mode is significantly more reliable.
 
 **Anti-Hallucination Guard (chat errors):** The model has historically invented "corrections" for text the user never wrote. `_filter_hallucinated_errors()` in `logic.py` drops any reported error whose `original` does not actually occur in the user's message (lenient matching: NFC, punctuation/zero-width stripped, whitespace collapsed, plus a Roman-transliteration fallback for Roman-typed input). It runs inside `generate_chat_turn_ai()`, so Text Chat, Voice Chat, and the post-chat error quiz are all covered. Tests: `tests/test_hallucination_guards.py`.
 
-**API Retries & Token Cap:** Sarvam transiently returns `finish_reason="length"` with zero visible output (hidden tokens consume the completion budget). Both `generate_chat_turn_ai()` and `generate_content()` retry up to 3 attempts with identical messages. `config.SARVAM_MAX_TOKENS = 4096` is the starter-tier hard cap — requests above it fail with HTTP 400, so never "fix" truncation by raising it.
+**Reasoning, Retries & Token Cap:** `sarvam-105b` is a reasoning model and reasoning tokens are billed as completion tokens, so with reasoning on they consume `SARVAM_MAX_TOKENS` before any visible answer is emitted — the documented cause of `finish_reason="length"` with zero output. `config.SARVAM_REASONING_EFFORT = None` disables it (measured: 238 completion tokens/3.0s → 7 tokens/0.4s on a trivial prompt) and is sent via `extra_body` so an explicit null reaches the wire — a bare `reasoning_effort=None` kwarg is indistinguishable from "unset" to the openai SDK. Both `generate_chat_turn_ai()` and `generate_content()` still retry up to 3 attempts with identical messages. `config.SARVAM_MAX_TOKENS = 4096` is the starter-tier hard cap (Pro is 16384) — requests above it fail with HTTP 400, so never "fix" truncation by raising it.
 
 **Deterministic Mastery Quiz:** Questions come from the fixed bank `knowledge_base/quiz_bank.json` (200 items, 12 topics; validated on load), not from the LLM and not from Google Sheets. Correctness is decided by `check_answer()` normalization against each item's `acceptable` forms; only non-matches get one constrained yes/no LLM check (`judge_equivalence`, fail-closed) — the LLM never supplies its own answer. Mastery persists locally via `storage.py`. Token folding in `normalize_answer()`: ಅಂತ/ಅಂತಾ/ಎಂದು are interchangeable quotatives; ಅಂತೆ (hearsay) and ಎಂಬ (naming-only, never reported speech — explicit user correction) must NEVER be folded.
 
@@ -39,8 +39,7 @@ Four-file Python/Streamlit app:
 
 | Service | Purpose | Notes |
 |---|---|---|
-| Sarvam AI chat (`sarvam-30b`) | Conversation, grading, quizzes, critiques | OpenAI-compatible endpoint; `json_object` mode for chat turns |
-| Sarvam AI chat (`sarvam-105b`) | Reading comprehension | 128K context; used via `use_reading_model=True` flag in `generate_content()` |
+| Sarvam AI chat (`sarvam-105b`) | Everything: conversation, grading, quizzes, critiques, reading comprehension | OpenAI-compatible endpoint at `/v1`; `json_object` mode for chat turns; reasoning disabled. **`sarvam-30b` and `sarvam-m` are retired — both now return HTTP 400.** |
 | Sarvam AI STT | Audio → Kannada transcript | Max 30s/request, WAV input |
 | Sarvam AI TTS | Kannada text → audio | Max 2500 chars/request, base64 WAV output |
 | Google Sheets + Drive | Email-lesson schedule tracking | Requires `service_account.json` |
@@ -61,8 +60,8 @@ The tracker sheet needs columns: `Topic`, `Status`, `Date Sent`. It is used only
 ## Testing
 
 ```bash
-python -m pytest -q          # full mocked suite (~1,077 tests, ~1.5s, no network)
+python -m pytest -q          # full mocked suite (~1,300 tests, ~1.5s, no network)
 python -m pytest -m live -q  # opt-in canaries against the real Sarvam API (costs credits)
 ```
 
-Live tests (`tests/test_live_llm.py`) are deselected by default via `addopts = -m "not live"` in `pytest.ini`. They verify the real model never hallucinates corrections; do NOT assert on model *sensitivity* (whether it flags a given mistake) — that is nondeterministic on sarvam-30b.
+Live tests (`tests/test_live_llm.py`) are deselected by default via `addopts = -m "not live"` in `pytest.ini`. They verify the real model never hallucinates corrections; do NOT assert on model *sensitivity* (whether it flags a given mistake) — that is nondeterministic.

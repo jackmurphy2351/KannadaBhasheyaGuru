@@ -34,21 +34,32 @@ RECEIVER_EMAIL = get_secret("GMAIL_USER")
 KNOWLEDGE_DIR = "knowledge_base"
 
 # --- SARVAM CHAT MODEL SETTINGS ---
-# sarvam-30b: 64K context, strong Kannada + speed balance (default for most tasks)
-# sarvam-105b: 128K context, highest Kannada accuracy (used for reading comprehension)
+# sarvam-105b: 128K context, Sarvam's flagship. It is the only general chat
+# model still served: sarvam-m was deprecated 2026-06-05 and sarvam-30b now
+# returns HTTP 400 ("has been deprecated. Please use one of the available
+# models instead: sarvam-105b, sarvam-105b-conversations").
 SARVAM_CHAT_BASE_URL = "https://api.sarvam.ai/v1"
-SARVAM_CHAT_MODEL = "sarvam-30b"
+SARVAM_CHAT_MODEL = "sarvam-105b"
 SARVAM_READING_MODEL = "sarvam-105b"
 # Completion budget per call. The starter subscription tier hard-caps this at
-# 4096 for sarvam-30b (HTTP 400 above it) — raise only after a plan upgrade.
+# 4096 (HTTP 400 above it) — raise only after a plan upgrade.
 SARVAM_MAX_TOKENS = 4096
+# sarvam-105b is a reasoning model and reasoning tokens are billed as
+# completion tokens, so they eat SARVAM_MAX_TOKENS before any visible answer is
+# produced — the documented cause of the finish_reason="length" + zero-output
+# responses the retry loops in logic.py exist to survive. None disables
+# reasoning entirely. Measured on a trivial prompt: 238 completion tokens and
+# 3.0s with reasoning, 7 tokens and 0.4s without. Set to "low"/"high"/"max" to
+# re-enable, but re-run `pytest -m live` if you do: those canaries are what
+# prove the model still refuses to invent grammar corrections.
+SARVAM_REASONING_EFFORT = None
 
 # --- SARVAM AI SETTINGS ---
 SARVAM_API_KEY = get_secret("SARVAM_API_KEY")
 SARVAM_BASE_URL = "https://api.sarvam.ai"
 
 # STT (Speech-to-Text) config
-SARVAM_STT_MODEL = "saaras:v3"       # Latest model, supports Kannada auto-detect
+SARVAM_STT_MODEL = "saaras:v3"       # Documented default; saaras:v4 (GA 2026-09-02) also works
 SARVAM_STT_LANGUAGE = "kn-IN"        # Kannada BCP-47 code
 
 # TTS (Text-to-Speech) config

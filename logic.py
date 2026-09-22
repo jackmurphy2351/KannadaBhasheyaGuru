@@ -93,8 +93,13 @@ def _sarvam_chat_client():
     )
 
 
-def generate_content(user_prompt, context_override=None, use_reading_model=False):
+def generate_content(user_prompt, context_override=None, use_reading_model=False,
+                     temperature=None):
     """Helper to call Sarvam chat completions API.
+
+    ``temperature`` is passed through when given; graders that must be
+    reproducible (judge_equivalence) pass 0. Leaving it None uses the server
+    default, which varies with whether reasoning is active.
 
     Retries up to 3 attempts: Sarvam transiently returns empty/null
     completions (finish_reason="length" with 0 visible chars — hidden tokens
@@ -115,6 +120,9 @@ def generate_content(user_prompt, context_override=None, use_reading_model=False
     result = ""
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
+            kwargs = {}
+            if temperature is not None:
+                kwargs["temperature"] = temperature
             response = client.chat.completions.create(
                 model=model,
                 messages=[
@@ -122,6 +130,11 @@ def generate_content(user_prompt, context_override=None, use_reading_model=False
                     {"role": "user", "content": full_prompt},
                 ],
                 max_tokens=config.SARVAM_MAX_TOKENS,
+                # Sent via extra_body so an explicit null reaches the wire:
+                # the openai SDK uses its own sentinel for "unset", and None
+                # as a normal kwarg is ambiguous between the two meanings.
+                extra_body={"reasoning_effort": config.SARVAM_REASONING_EFFORT},
+                **kwargs,
             )
             # Sarvam can return a null completion (message.content is None);
             # coalesce to "" so downstream string handling never sees None.
@@ -437,7 +450,10 @@ def judge_equivalence(user_answer, item, context):
     raw, last_exc = "", None
     for _attempt in range(2):  # initial try + one retry
         try:
-            raw = generate_content(prompt, context)
+            # temperature=0: a yes/no grading verdict must not vary between
+            # identical calls, or the same answer is right on one attempt and
+            # wrong on the next.
+            raw = generate_content(prompt, context, temperature=0)
             if raw and not raw.startswith("API Error"):
                 data = clean_json(raw)
                 if isinstance(data, dict) and isinstance(
@@ -759,6 +775,7 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
                 messages=messages,
                 response_format={"type": "json_object"},
                 max_tokens=config.SARVAM_MAX_TOKENS,
+                extra_body={"reasoning_effort": config.SARVAM_REASONING_EFFORT},
             )
             raw_text = response.choices[0].message.content or ""
             finish_reason = response.choices[0].finish_reason
@@ -947,7 +964,9 @@ def sarvam_text_to_speech(text, speaker=None, pace=None):
     }
     payload = {
         "text": text,
-        "target_language_code": config.SARVAM_TTS_LANGUAGE,
+        # Field is "language_code" in the current TTS schema; the older
+        # "target_language_code" name is not in the documented request body.
+        "language_code": config.SARVAM_TTS_LANGUAGE,
         "model": config.SARVAM_TTS_MODEL,
         "speaker": speaker or config.SARVAM_TTS_SPEAKER,
         "pace": pace or config.SARVAM_TTS_PACE,

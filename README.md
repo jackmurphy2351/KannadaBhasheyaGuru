@@ -1,6 +1,6 @@
 # 🪔 Vāṇi
 
-![Tests](https://img.shields.io/badge/tests-1077%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/tests-1306%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **An AI-powered personalized language tutor for Kannada learners.**
 
@@ -17,7 +17,7 @@ Automatically generates and emails structured lessons based on a learning schedu
 A deterministic "read-then-quiz" engine. Each topic serves 10 questions of increasing difficulty sampled from a curated 200-item question bank (`knowledge_base/quiz_bank.json`), with the lesson doc readable inline before you start. Grading is deterministic first: answers are normalized (punctuation, quote styles, zero-width characters, interchangeable quotatives) and matched against each question's acceptable forms. Only a non-matching answer gets a single *constrained* LLM equivalence check — the bank's canonical answer is authoritative and the model may only vote yes/no, never invent its own "correct" answer. Scoring 90%+ marks the topic mastered in local progress storage (`data/progress.json`).
 
 ### 💬 Text Chat (Conversation Practice)
-An immersive text-based chatbot powered by Sarvam AI (`sarvam-30b`). The student selects from **8 richly-detailed character personas** (shopkeeper, doctor, train conductor, nosy neighbor, landlord, auto driver, house cleaner, or a traditional priest) and a **grammar focus** (compound verbs, conditionals, etc.), then holds a freeform Kannada conversation. A **Custom Scenario** mode lets you write your own character card for any conversation partner you need to practice with.
+An immersive text-based chatbot powered by Sarvam AI (`sarvam-105b`). The student selects from **8 richly-detailed character personas** (shopkeeper, doctor, train conductor, nosy neighbor, landlord, auto driver, house cleaner, or a traditional priest) and a **grammar focus** (compound verbs, conditionals, etc.), then holds a freeform Kannada conversation. A **Custom Scenario** mode lets you write your own character card for any conversation partner you need to practice with.
 
 After each conversation, a **post-session error log** surfaces every grammar mistake silently tracked during the chat. A "Practice These Errors" button then generates a targeted 5-question mini-quiz drilling exactly the patterns you got wrong.
 
@@ -27,7 +27,7 @@ A deterministic **anti-hallucination guard** filters every error the AI reports:
 A parallel voice-based conversation mode that chains three APIs together:
 
 1. **Sarvam AI STT** (Speech-to-Text) — transcribes the student's spoken Kannada via the Saaras v3 model.
-2. **Sarvam AI** (`sarvam-30b`) — generates an in-character conversational response (same personas and grammar focus as text chat).
+2. **Sarvam AI** (`sarvam-105b`) — generates an in-character conversational response (same personas and grammar focus as text chat).
 3. **Sarvam AI TTS** (Text-to-Speech) — speaks the bot's Kannada reply aloud using the Bulbul v3 model with a selectable voice and adjustable speech pace.
 
 The student configures a persona, grammar focus, AI voice, and speech pace, then records audio clips directly in the browser. The bot's spoken replies play back inline. Grammar errors are logged and displayed in a post-conversation review, just like text chat.
@@ -54,13 +54,12 @@ This tool uses Large Language Models (LLMs) to generate content. While instructe
 | Component | Technology |
 |-----------|------------|
 | **Frontend** | [Streamlit](https://streamlit.io/) |
-| **Conversational AI** | Sarvam AI `sarvam-30b` (chat, quizzes, lessons, grading) |
-| **Reading Comprehension AI** | Sarvam AI `sarvam-105b` (128K context for accuracy) |
+| **Conversational AI** | Sarvam AI `sarvam-105b` (chat, quizzes, lessons, grading, reading comprehension; 128K context, reasoning disabled) |
 | **Speech-to-Text** | Sarvam AI Saaras v3 (REST API) |
 | **Text-to-Speech** | Sarvam AI Bulbul v3 (REST API) |
 | **Database** | Google Sheets (`gspread`) for the email-lesson schedule; local JSON (`storage.py`) for quiz mastery progress |
 | **Audio Input** | Streamlit native `st.audio_input` (no third-party components) |
-| **Test Suite** | pytest — 1,077 mocked tests across 7 modules (~1.5s) plus opt-in live-API canaries (`pytest -m live`) |
+| **Test Suite** | pytest — 1,306 mocked tests across 7 modules (~1.5s) plus opt-in live-API canaries (`pytest -m live`) |
 | **Environment** | Python 3.10+ |
 
 ---
@@ -75,7 +74,7 @@ Kannada_Guru/
 ├── storage.py               # Local progress store (quiz mastery → data/progress.json)
 ├── requirements.txt         # Python dependencies
 ├── pytest.ini               # Test runner config (live-API tests deselected by default)
-├── tests/                   # Automated test suite (1,077 mocked tests + 12 live canaries)
+├── tests/                   # Automated test suite (1,306 mocked tests + 12 live canaries)
 │   ├── conftest.py                   # Shared fixtures
 │   ├── test_utilities.py             # Pure unit tests (clean_json, transliteration, UI text)
 │   ├── test_sarvam_chat.py           # Chat API: parsing, retries, verbatim-input contract
@@ -170,7 +169,7 @@ pip install pytest
 python -m pytest -q
 ```
 
-**1,077 tests across 7 modules, completing in ~1.5 seconds:**
+**1,306 tests across 7 modules, completing in ~1.5 seconds:**
 
 | Module | What It Tests |
 |--------|--------------|
@@ -207,7 +206,7 @@ The voice chat feature lives under **Conversation Practice → 🎙️ Voice Cha
                                                 ▼
                                        ┌──────────────────┐
                                        │  Sarvam AI        │
-                                       │  (sarvam-30b)     │
+                                       │  (sarvam-105b)    │
                                        └────────┬─────────┘
                                                 │ Kannada reply
                                                 ▼

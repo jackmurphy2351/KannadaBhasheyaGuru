@@ -282,7 +282,15 @@ _PUNCT_RE = re.compile("[.!?,;:।॥\"'“”‘’«»]")
 # nouns ("a novel called Parva"), never for reported speech, so it is not
 # a general substitute for ಅಂತ/ಎಂದು. Where an ಎಂಬ answer might be valid
 # (naming contexts), judge_equivalence decides contextually.
-_TOKEN_EQUIV = {"ಅಂತಾ": "ಅಂತ", "ಎಂದು": "ಅಂತ"}
+#
+# Lexical synonyms: fold ONLY same-meaning noun pairs where no quiz topic
+# tests the word choice itself, so a student is never marked wrong for
+# picking the other word. ಚಹಾ rejected for ಟೀ ("tea") was a real false
+# correction (2026-06-11). Folding is whole-token, so e.g. ಟೀಚರ್ is safe.
+_TOKEN_EQUIV = {
+    "ಅಂತಾ": "ಅಂತ", "ಎಂದು": "ಅಂತ",
+    "ಚಹಾ": "ಟೀ", "ಚಾ": "ಟೀ",
+}
 
 
 def _validate_quiz_bank(bank):
@@ -416,7 +424,8 @@ def judge_equivalence(user_answer, item, context):
     - ಅಂತ / ಅಂತಾ / ಎಂದು quotative variants
     - presence or absence of quotation marks or other punctuation
     - natural word-order variations
-    - synonyms and loanword spelling variants that keep the meaning
+    - synonyms and native-word/loanword swaps that keep the meaning
+      (e.g. ಚಹಾ for ಟೀ "tea", ಶಿಕ್ಷಕ for ಟೀಚರ್ "teacher")
 
     Mark NOT equivalent only for real errors: wrong tense, wrong person or
     gender agreement, wrong case suffix, missing required grammar (e.g. the

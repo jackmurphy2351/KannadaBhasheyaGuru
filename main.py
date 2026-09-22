@@ -1350,9 +1350,13 @@ def main():
                         total = len(st.session_state.error_quiz_questions)
                         st.markdown("### 🎯 Error Practice Mini-Quiz")
 
-                        if st.session_state.error_quiz_history:
+                        # Only questions BEFORE the current one — the current
+                        # question's result renders once below.
+                        eq_prev = st.session_state.error_quiz_history[
+                            :st.session_state.error_quiz_index]
+                        if eq_prev:
                             st.markdown("#### Previous Answers")
-                            for i, item in enumerate(st.session_state.error_quiz_history):
+                            for i, item in enumerate(eq_prev):
                                 with st.expander(f"Q{i + 1}: {item['question']}", expanded=False):
                                     st.write(f"**Your Answer:** {item['user_answer']}")
                                     feed = logic.toggle_script(item['feedback'], st.session_state.chat_script_mode)
@@ -1514,10 +1518,13 @@ def main():
                     st.write(f"**Correct Answer:** {canonical}")
                     st.write(logic.toggle_script(entry['feedback'], lang_mode))
 
-            # History
-            if st.session_state.quiz_history:
+            # History — only questions BEFORE the current one; the current
+            # question's result renders once below (it used to appear twice).
+            prev_entries = st.session_state.quiz_history[
+                :st.session_state.current_q_index]
+            if prev_entries:
                 st.markdown("### Previous Answers")
-                for i, entry in enumerate(st.session_state.quiz_history):
+                for i, entry in enumerate(prev_entries):
                     with st.expander(f"Q{i + 1}: {entry['item']['english']}", expanded=False):
                         st.write(f"**Your Answer:** {entry['user_answer']}")
                         render_quiz_result(entry)

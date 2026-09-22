@@ -635,3 +635,148 @@ class TestVerbatimAnswerPassing:
         with patch("logic.generate_content", return_value=good) as mock_gen:
             explain_mistake(ans, self.ITEM, "ctx")
         assert ans in mock_gen.call_args.args[0]
+
+
+# ===========================================================================
+# Lexical synonym folding (ಟೀ / ಚಹಾ / ಚಾ) — a learner must never be marked
+# wrong for choosing the native word over the loanword (or vice versa) when
+# the word choice is not the grammar point being tested.
+# ===========================================================================
+
+class TestTeaSynonymFolding:
+
+    def test_tea_synonyms_fold_together(self):
+        base = normalize_answer("ಕಾಫಿ ಹಾಗೂ ಟೀ.")
+        assert normalize_answer("ಕಾಫಿ ಹಾಗೂ ಚಹಾ.") == base
+        assert normalize_answer("ಕಾಫಿ ಹಾಗೂ ಚಾ.") == base
+
+    def test_folding_is_whole_token_only(self):
+        # ಟೀಚರ್ ("teacher") contains ಟೀ as a substring but must be untouched.
+        assert "ಟೀಚರ್" in normalize_answer("ಅವನು ಟೀಚರ್ ಅಲ್ಲ.")
+
+    def test_folding_does_not_equate_unrelated_words(self):
+        assert normalize_answer("ಚಹಾ") != normalize_answer("ಕಾಫಿ")
+        # ಚಳಿ ("cold weather") shares a prefix glyph with ಚಾ but is its own word.
+        assert normalize_answer("ಚಳಿ") != normalize_answer("ಟೀ")
+
+    @staticmethod
+    def _swap_tea_word(token):
+        core = token.strip(".!?,")
+        if core == "ಟೀ":
+            return token.replace("ಟೀ", "ಚಹಾ")
+        if core in ("ಚಹಾ", "ಚಾ"):
+            return token.replace(core, "ಟೀ")
+        return token
+
+    @pytest.mark.parametrize("item", BANK["items"], ids=lambda it: it["id"])
+    def test_tea_word_choice_never_decides_correctness(self, item):
+        # For every acceptable form in the whole bank, swapping the tea word
+        # for its synonym must still pass — no topic tests tea vocabulary.
+        for form in item["acceptable"]:
+            tokens = form.split()
+            if not any(t.strip(".!?,") in ("ಟೀ", "ಚಹಾ", "ಚಾ") for t in tokens):
+                continue
+            swapped = " ".join(self._swap_tea_word(t) for t in tokens)
+            assert check_answer(swapped, item) is True, repr(swapped)
+
+    def test_no_normalized_form_shared_across_items(self):
+        # Folding must never make two different bank items accept the same
+        # normalized answer — that would make grading ambiguous.
+        owners = {}
+        for item in BANK["items"]:
+            for form in item["acceptable"]:
+                n = normalize_answer(form)
+                assert owners.setdefault(n, item["id"]) == item["id"], (
+                    f"{n!r} accepted by both {owners[n]} and {item['id']}")
+
+
+# ===========================================================================
+# Regression: full replay of the 2026-06-11 Conjunctions quiz session.
+# Q8 (ಕಾಫಿ ಹಾಗೂ ಚಹಾ) was falsely marked incorrect — the bank listed only the
+# loanword ಟೀ and the LLM judge failed to rescue the synonym. Every verdict
+# below is now decided deterministically, with the judge needed only where
+# the session genuinely relied on it.
+# ===========================================================================
+
+class TestSessionRegressions20260611:
+
+    # (item id, the user's exact answer, expected deterministic tier)
+    DETERMINISTIC = [
+        ("conj_003", "ನಿಮಗೆ ಅನ್ನ ಅಥವಾ ಚಪಾತಿ ಬೇಕು?", "variant"),    # Q1
+        ("conj_001", "ಅನ್ನ ಮತ್ತು ಸಾಂಬಾರ್.", "exact"),               # Q2
+        ("conj_011", "ಇವತ್ತು ಅಥವಾ ನಾಳೆ.", "exact"),                 # Q4
+        ("conj_006", "ಮಳೆ ಬಂತು, ಅದಕ್ಕೆ ನಾನು ಮನೆಯಲ್ಲಿ ಇದ್ದೆ.", "exact"),  # Q5
+        ("conj_004", "ಮನೆ ಚಿಕ್ಕದು, ಆದರೆ ಒಳ್ಳೆಯದು.", "variant"),      # Q6
+        ("conj_015", "ಕಾಫಿ ಹಾಗೂ ಚಹಾ.", "exact"),                    # Q8 ← the bug
+    ]
+
+    @pytest.mark.parametrize("item_id,answer,tier",
+                             DETERMINISTIC, ids=lambda v: str(v)[:12])
+    def test_correct_answers_pass_without_llm(self, item_id, answer, tier):
+        with patch("logic.generate_content") as mock_gen:
+            assert classify_answer(answer, ITEMS[item_id]) == tier
+        mock_gen.assert_not_called()
+
+    def test_q3_wrong_verb_forms_still_rejected(self):
+        # ಹಾಡದ / ನೃತ್ಯ ಮಾಡದಳು are genuinely wrong past forms — the synonym
+        # work must not loosen grading into accepting real errors.
+        assert classify_answer(
+            "ಅವನು ಹಾಡದ ಮತ್ತು ಅವಳು ನೃತ್ಯ ಮಾಡದಳು.", ITEMS["conj_002"]
+        ) == "incorrect"
+
+    # Answers the session accepted only via the LLM judge: the deterministic
+    # layer must keep saying incorrect (so they reach the judge), and a
+    # true verdict must be honoured.
+    JUDGE_RESCUED = [
+        ("conj_005", "ನನಗೆ ನಿದ್ರೆ ಆಗಿದೆ, ಯಾಕೆಂದರೆ ನಾನು ಮಲಗಲಿಲ್ಲ."),   # Q7
+        ("conj_009", "ಈಗ ತಿನ್ನಿ, ಇಲ್ಲಾದರೆ ಊಟವು ಚಳಿಯಾಗುತ್ತದೆ."),       # Q9
+        ("conj_012", "ಬಸ್ ದಿಂದ ಬನ್ನಿ, ಇಲ್ಲಾಂದ್ರೆ ಆಟೋ ತೊಗೋಳಿ."),      # Q10
+    ]
+
+    @pytest.mark.parametrize("item_id,answer",
+                             JUDGE_RESCUED, ids=lambda v: str(v)[:12])
+    def test_paraphrases_fall_through_to_judge(self, item_id, answer, quiz_log):
+        assert classify_answer(answer, ITEMS[item_id]) == "incorrect"
+        verdict = json.dumps({"equivalent": True, "reason": "valid paraphrase"})
+        with patch("logic.generate_content", return_value=verdict):
+            assert judge_equivalence(answer, ITEMS[item_id], "ctx") is True
+
+    def test_judge_prompt_whitelists_tea_synonym(self):
+        # The judge prompt must name ಚಹಾ/ಟೀ explicitly so the model treats
+        # native-word/loanword swaps as acceptable, not as mistakes.
+        verdict = json.dumps({"equivalent": False, "reason": "no"})
+        with patch("logic.generate_content", return_value=verdict) as mock_gen:
+            judge_equivalence("ಏನೋ ಒಂದು", ITEMS["conj_015"], "ctx")
+        prompt = mock_gen.call_args.args[0]
+        assert "ಚಹಾ" in prompt and "ಟೀ" in prompt
+
+    def test_tea_items_accept_synonym_directly(self):
+        # The two other live tea items: folding covers both spellings.
+        assert classify_answer("ನಿಮಗೆ ಚಹಾ ಬೇಕಾ?", ITEMS["dat_014"]) == "exact"
+        assert check_answer("ಈ ಚಾ ಬಿಸಿ ಅಲ್ಲ.", ITEMS["neg_007"]) is True
+
+
+# ===========================================================================
+# UI regression: the "Previous Answers" history must exclude the question
+# currently on screen — it renders its own result below, so including it
+# showed the just-answered question twice (seen as a duplicated Q10).
+# ===========================================================================
+
+class TestQuizHistoryRendering:
+
+    @staticmethod
+    def _main_source():
+        path = os.path.join(
+            os.path.dirname(os.path.abspath(logic.__file__)), "main.py")
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+
+    def test_mastery_quiz_history_excludes_current_question(self):
+        assert re.search(
+            r"quiz_history\[\s*:st\.session_state\.current_q_index\]",
+            self._main_source())
+
+    def test_error_quiz_history_excludes_current_question(self):
+        assert re.search(
+            r"error_quiz_history\[\s*:st\.session_state\.error_quiz_index\]",
+            self._main_source())

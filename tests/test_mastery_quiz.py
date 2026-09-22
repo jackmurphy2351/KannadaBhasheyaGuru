@@ -780,3 +780,86 @@ class TestQuizHistoryRendering:
         assert re.search(
             r"error_quiz_history\[\s*:st\.session_state\.error_quiz_index\]",
             self._main_source())
+
+
+# ===========================================================================
+# Literary first-person past (-ೆನು).
+#
+# Kannada's 1sg past has a colloquial ending (ಹೋದೆ) and a literary one
+# (ಹೋದೆನು). The bank listed only the colloquial form, so a learner writing
+# correct literary Kannada was marked wrong unless the LLM judge happened to
+# rescue them — which it did only about two times in three. Correctness is not
+# a coin flip, so the valid forms belong in the bank.
+# ===========================================================================
+
+class TestLiteraryFirstPersonPast:
+
+    # The audited set: item id -> (colloquial, literary).
+    AUDITED = {
+        "case_003": ("ಕರೆದೆ", "ಕರೆದೆನು"),
+        "case_004": ("ಕುಡಿದೆ", "ಕುಡಿದೆನು"),
+        "case_007": ("ತಿಂದೆ", "ತಿಂದೆನು"),
+        "case_015": ("ಕಳಿಸಿದೆ", "ಕಳಿಸಿದೆನು"),
+        "tense_003": ("ಹೋದೆ", "ಹೋದೆನು"),
+        "tense_004": ("ಕೊಟ್ಟೆ", "ಕೊಟ್ಟೆನು"),
+        "tense_005": ("ತಿಂದೆ", "ತಿಂದೆನು"),
+        "adv_005": ("ಗೆದ್ದೆ", "ಗೆದ್ದೆನು"),
+        "conj_006": ("ಇದ್ದೆ", "ಇದ್ದೆನು"),
+        "conj_010": ("ಮಲಗಿದೆ", "ಮಲಗಿದೆನು"),
+        "imp_001": ("ಹೋದೆ", "ಹೋದೆನು"),
+        "imp_006": ("ಬಂದೆ", "ಬಂದೆನು"),
+        "cond_004": ("ಬರುತ್ತಿದ್ದೆ", "ಬರುತ್ತಿದ್ದೆನು"),
+    }
+
+    @pytest.mark.parametrize("item_id,pair", sorted(AUDITED.items()))
+    def test_literary_form_is_accepted_deterministically(self, item_id, pair):
+        colloquial, literary = pair
+        item = ITEMS[item_id]
+        literary_forms = [f for f in item["acceptable"] if literary in f]
+        assert literary_forms, f"{item_id} has no {literary} form"
+        for form in literary_forms:
+            # No LLM: the deterministic layer must decide this on its own.
+            with patch("logic.generate_content") as mock_gen:
+                assert check_answer(form, item) is True, form
+            mock_gen.assert_not_called()
+
+    @pytest.mark.parametrize("item_id,pair", sorted(AUDITED.items()))
+    def test_colloquial_form_still_accepted(self, item_id, pair):
+        colloquial, _ = pair
+        item = ITEMS[item_id]
+        for form in item["acceptable"]:
+            if colloquial in form and "ೆನು" not in form:
+                assert check_answer(form, item) is True, form
+
+    @pytest.mark.parametrize("item_id,pair", sorted(AUDITED.items()))
+    def test_canonical_stays_the_colloquial_form(self, item_id, pair):
+        # The learner is shown the canonical answer; it should stay the form
+        # they would actually say.
+        colloquial, literary = pair
+        item = ITEMS[item_id]
+        assert item["canonical"] == item["acceptable"][0]
+        assert literary not in item["canonical"]
+
+    # Forms that look like a 1sg past but are not, and must NOT have grown an
+    # -ೆನು variant. These are what a naive regex over the bank would break.
+    @pytest.mark.parametrize("item_id,not_a_past", [
+        ("neg_016", "ಮಾಡದೆ"),    # negative gerund "without doing"
+        ("case_008", "ಇದೆ"),      # 3sg "there is"
+        ("adj_005", "ಬಿಸಿಯಾಗಿದೆ"),  # 3sg state -aagide
+        ("cond_007", "ಮಾಡುತ್ತದೆ"),  # 3sg present
+        ("case_009", "ಊಟಕ್ಕೆ"),    # dative -kke
+    ])
+    def test_lookalikes_were_not_touched(self, item_id, not_a_past):
+        item = ITEMS[item_id]
+        assert any(not_a_past in f for f in item["acceptable"])
+        assert not any("ೆನು" in f for f in item["acceptable"]), \
+            f"{item_id}: {not_a_past} is not a 1sg past and must not gain -enu"
+
+    def test_every_literary_form_belongs_to_exactly_one_item(self):
+        # Adding forms must not make two items accept the same answer.
+        owners = {}
+        for item in BANK["items"]:
+            for form in item["acceptable"]:
+                n = normalize_answer(form)
+                assert owners.setdefault(n, item["id"]) == item["id"], \
+                    f"{n!r} accepted by both {owners[n]} and {item['id']}"

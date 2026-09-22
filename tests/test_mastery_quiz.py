@@ -829,6 +829,35 @@ class TestQuizPersistenceWiring:
     def test_review_mode_is_registered_in_navigation(self):
         assert '"Daily Review": "NAV_REVIEW"' in self._main_source()
 
+    def test_the_learners_answer_is_shown_with_the_verdict(self):
+        # The input box is gone by the time the verdict renders, so without
+        # this there is nothing to compare the correction against.
+        assert '**Your answer:** {entry[\'user_answer\']}' in self._main_source()
+
+    def test_answer_is_not_printed_twice_in_mastery_history(self):
+        # render_quiz_result prints the answer itself now, so the mastery
+        # quiz's history expander must not also print it. (The chat error
+        # quiz is a separate UI with its own expander and is unaffected.)
+        src = self._main_source()
+        body = src[src.index("def render_quiz_runner("):
+                   src.index("def render_progress_panel(")]
+        assert body.count("user_answer") == 1, body.count("user_answer")
+
+    def test_error_quiz_also_shows_the_learners_answer(self):
+        # The post-chat quiz had the same gap: a verdict with nothing to
+        # compare it against.
+        assert "**Your answer:** {last['user_answer']}" in self._main_source()
+
+    def test_unreachable_judge_does_not_grade_the_answer(self):
+        # A network blip must not mark a learner wrong, nor schedule the item
+        # as a lapse. The question stays open for another submit.
+        src = self._main_source()
+        none_check = src.index("if verdict is None:")
+        stop = src.index("st.stop()", none_check)
+        append = src.index("history.append({", none_check)
+        record = src.index("logic.record_quiz_answer(item, tier)", none_check)
+        assert none_check < stop < append and stop < record
+
 
 # ===========================================================================
 # SRS orchestration: logic.py joins storage (persistence) to srs (scheduling)

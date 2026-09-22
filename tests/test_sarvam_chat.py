@@ -751,3 +751,135 @@ class TestGraderTemperature:
         with patch("logic.generate_content", return_value=verdict) as mock_gen:
             logic.judge_equivalence("something else", item, "ctx")
         assert mock_gen.call_args.kwargs.get("temperature") == 0
+
+
+# ===========================================================================
+# Transient failures.
+#
+# A learner hit a network blip mid-quiz (2026-09-22). All three retries fired
+# in the same millisecond and failed, judge_equivalence fell back to its
+# fail-closed False, and a probably-correct answer was marked wrong with a
+# generic explanation. Reaching the API and being told "no" are different
+# outcomes and must stay distinguishable.
+# ===========================================================================
+
+def _status_error(code):
+    """Build an APIStatusError carrying a real status code."""
+    from openai import APIStatusError
+    response = MagicMock()
+    response.status_code = code
+    err = APIStatusError("boom", response=response, body=None)
+    return err
+
+
+class TestRetryClassification:
+
+    def test_4xx_is_not_retried(self):
+        # A bad request fails identically every time; retrying only stalls the
+        # learner. sarvam-30b's deprecation 400 used to burn all 3 attempts.
+        client = MagicMock()
+        client.chat.completions.create.side_effect = _status_error(400)
+        with patch("logic._sarvam_chat_client", return_value=client):
+            with patch("logic.time.sleep") as slept:
+                generate_content("p", FAKE_CONTEXT)
+        assert client.chat.completions.create.call_count == 1
+        slept.assert_not_called()
+
+    def test_5xx_is_retried(self):
+        client = MagicMock()
+        client.chat.completions.create.side_effect = _status_error(503)
+        with patch("logic._sarvam_chat_client", return_value=client):
+            with patch("logic.time.sleep"):
+                generate_content("p", FAKE_CONTEXT)
+        assert client.chat.completions.create.call_count == 3
+
+    def test_connection_error_is_retried(self):
+        from openai import APIConnectionError
+        client = MagicMock()
+        client.chat.completions.create.side_effect = \
+            APIConnectionError(request=MagicMock())
+        with patch("logic._sarvam_chat_client", return_value=client):
+            with patch("logic.time.sleep"):
+                generate_content("p", FAKE_CONTEXT)
+        assert client.chat.completions.create.call_count == 3
+
+    def test_unknown_exception_is_still_retried(self):
+        # Assuming an unfamiliar error is permanent is the costlier mistake.
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            Exception("???"), _resp("recovered")]
+        with patch("logic._sarvam_chat_client", return_value=client):
+            with patch("logic.time.sleep"):
+                assert generate_content("p", FAKE_CONTEXT) == "recovered"
+
+    def test_backoff_grows_between_attempts(self):
+        from openai import APIConnectionError
+        client = MagicMock()
+        client.chat.completions.create.side_effect = \
+            APIConnectionError(request=MagicMock())
+        with patch("logic._sarvam_chat_client", return_value=client):
+            with patch("logic.time.sleep") as slept:
+                generate_content("p", FAKE_CONTEXT)
+        delays = [c.args[0] for c in slept.call_args_list]
+        assert delays == sorted(delays) and len(delays) == 2, delays
+        assert all(d > 0 for d in delays)
+
+    def test_no_sleep_after_the_final_attempt(self):
+        from openai import APIConnectionError
+        client = MagicMock()
+        client.chat.completions.create.side_effect = \
+            APIConnectionError(request=MagicMock())
+        with patch("logic._sarvam_chat_client", return_value=client):
+            with patch("logic.time.sleep") as slept:
+                generate_content("p", FAKE_CONTEXT)
+        # 3 attempts means at most 2 waits; never a trailing one.
+        assert slept.call_count == 2
+
+
+class TestUnreachableIsNotAVerdict:
+
+    @pytest.fixture(autouse=True)
+    def _quiz_log(self, tmp_path, monkeypatch):
+        """Keep judge failures out of the repo's real logs/ directory."""
+        monkeypatch.setattr(logic, "QUIZ_ERROR_LOG",
+                            str(tmp_path / "quiz_errors.log"))
+
+    ITEM = {"id": "adj_001", "english": "This is a big house.",
+            "canonical": "ಇದು ದೊಡ್ಡ ಮನೆ.", "acceptable": ["ಇದು ದೊಡ್ಡ ಮನೆ."],
+            "grammar_note": "pure adjective, zero copula"}
+
+    def test_connection_failure_is_marked_unreachable(self):
+        from openai import APIConnectionError
+        client = MagicMock()
+        client.chat.completions.create.side_effect = \
+            APIConnectionError(request=MagicMock())
+        with patch("logic._sarvam_chat_client", return_value=client):
+            with patch("logic.time.sleep"):
+                result = generate_content("p", FAKE_CONTEXT)
+        assert result.startswith(logic.API_UNREACHABLE_PREFIX)
+
+    def test_4xx_is_an_error_but_not_unreachable(self):
+        # We reached the service; it rejected us. That is a real answer.
+        client = MagicMock()
+        client.chat.completions.create.side_effect = _status_error(400)
+        with patch("logic._sarvam_chat_client", return_value=client):
+            result = generate_content("p", FAKE_CONTEXT)
+        assert result.startswith("API Error")
+        assert not result.startswith(logic.API_UNREACHABLE_PREFIX)
+
+    def test_judge_returns_none_when_unreachable(self):
+        unreachable = f"{logic.API_UNREACHABLE_PREFIX} Connection error."
+        with patch("logic.generate_content", return_value=unreachable):
+            verdict = logic.judge_equivalence("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM, "ctx")
+        # None, not False: a network blip is not a judgement about the learner.
+        assert verdict is None
+
+    def test_judge_still_fails_closed_on_a_real_bad_response(self):
+        # Garbage from a reachable model is still a refusal to vouch.
+        with patch("logic.generate_content", return_value="not json at all"):
+            assert logic.judge_equivalence("x", self.ITEM, "ctx") is False
+
+    def test_judge_returns_false_not_none_on_a_negative_verdict(self):
+        verdict = json.dumps({"equivalent": False, "reason": "wrong"})
+        with patch("logic.generate_content", return_value=verdict):
+            assert logic.judge_equivalence("x", self.ITEM, "ctx") is False

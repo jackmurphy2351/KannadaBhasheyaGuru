@@ -1151,12 +1151,16 @@ def end_quiz(prefix):
     st.session_state[quiz_key(prefix, "questions")] = []
 
 
-def render_quiz_result(entry, lang_mode):
+def render_quiz_result(entry, lang_mode, show_answer=True):
     """Render one graded answer.
 
     The correct answer shown always comes from the bank item, so LLM feedback
-    can never override it.
+    can never override it. The learner's own answer is shown beside it: without
+    it there is nothing to compare the correction against, since the input box
+    is gone by the time the verdict appears.
     """
+    if show_answer:
+        st.write(f"**Your answer:** {entry['user_answer']}")
     canonical = logic.toggle_script(entry['item']['canonical'], lang_mode)
     if entry['tier'] == "exact":
         st.success("Correct! ✅")
@@ -1191,7 +1195,6 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False):
         st.markdown("### Previous Answers")
         for i, entry in enumerate(prev_entries):
             with st.expander(f"Q{i + 1}: {entry['item']['english']}", expanded=False):
-                st.write(f"**Your Answer:** {entry['user_answer']}")
                 render_quiz_result(entry, lang_mode)
         st.markdown("---")
 
@@ -1221,8 +1224,20 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False):
                 quiz_ctx = st.session_state[quiz_key(prefix, "context")] or \
                     st.session_state.context
                 with st.spinner("Checking your phrasing..."):
-                    if logic.judge_equivalence(user_ans, item, quiz_ctx):
-                        tier = "accepted"
+                    verdict = logic.judge_equivalence(user_ans, item, quiz_ctx)
+                if verdict is None:
+                    # The API was unreachable, so there is no verdict. Grading
+                    # the answer wrong here would punish a network blip, and
+                    # scheduling it as a lapse would corrupt the SRS interval
+                    # for an item the learner may well know. Keep the question
+                    # open and let them submit again.
+                    st.error(
+                        "Couldn't reach the grading service, so this answer "
+                        "wasn't checked. Your answer is still below — press "
+                        "Submit again when you're back online.")
+                    st.stop()
+                if verdict:
+                    tier = "accepted"
                 if tier == "incorrect":
                     with st.spinner("Preparing explanation..."):
                         feedback = logic.explain_mistake(
@@ -1564,6 +1579,10 @@ def main():
                                         st.rerun()
                             else:
                                 last = st.session_state.error_quiz_history[-1]
+                                # Same reason as the mastery quiz: the input
+                                # box is gone, so without this there is nothing
+                                # to compare the correction against.
+                                st.write(f"**Your answer:** {last['user_answer']}")
                                 feed_text = logic.toggle_script(last['feedback'], st.session_state.chat_script_mode)
                                 corr_text = logic.toggle_script(last['correct_translation'], st.session_state.chat_script_mode)
                                 if last['correct']:

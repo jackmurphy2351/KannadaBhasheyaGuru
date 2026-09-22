@@ -5,6 +5,7 @@ import json
 import random
 import re
 import smtplib
+import time
 import unicodedata
 import base64
 import requests
@@ -14,7 +15,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from indic_transliteration import sanscript
 
-from openai import OpenAI
+from openai import (OpenAI, APIConnectionError, APIStatusError,
+                    RateLimitError)
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -94,6 +96,34 @@ def _sarvam_chat_client():
     )
 
 
+# Marks a failure to *reach* the API, as opposed to a bad answer from it.
+# Callers that make a judgement about the learner must tell these apart: a
+# network blip means we have no verdict, not a negative one.
+API_UNREACHABLE_PREFIX = "API Error: unreachable:"
+
+_RETRY_BASE_DELAY = 0.6
+
+
+def _is_retryable(exc):
+    """Everything is worth another attempt except a 4xx.
+
+    A client error — bad request, bad key, unknown model — fails identically
+    every time, so retrying only makes the learner wait; the sarvam-30b
+    deprecation used to burn all three attempts on a guaranteed 400. Anything
+    else, including an exception we do not recognise, gets retried: assuming an
+    unfamiliar error is permanent is the more expensive mistake.
+    """
+    if isinstance(exc, APIStatusError) and 400 <= exc.status_code < 500:
+        return False
+    return True
+
+
+def _unreachable(exc):
+    """True if we never got a verdict from the model, for any reason."""
+    return isinstance(exc, (APIConnectionError, RateLimitError)) or (
+        isinstance(exc, APIStatusError) and exc.status_code >= 500)
+
+
 def generate_content(user_prompt, context_override=None, use_reading_model=False,
                      temperature=None):
     """Helper to call Sarvam chat completions API.
@@ -143,7 +173,14 @@ def generate_content(user_prompt, context_override=None, use_reading_model=False
             if result.strip():
                 return result
         except Exception as e:
-            result = f"API Error: {e}"
+            # Retrying a connection error in the same instant just fails three
+            # times in a millisecond, which is what used to happen: a brief
+            # blip burned every attempt and the learner got a wrong verdict.
+            result = (f"{API_UNREACHABLE_PREFIX} {e}" if _unreachable(e)
+                      else f"API Error: {e}")
+            if not _is_retryable(e) or attempt == MAX_ATTEMPTS:
+                break
+            time.sleep(_RETRY_BASE_DELAY * (2 ** (attempt - 1)))
     return result
 
 
@@ -515,9 +552,10 @@ def judge_equivalence(user_answer, item, context):
     raw, last_exc = "", None
     for _attempt in range(2):  # initial try + one retry
         try:
-            # temperature=0: a yes/no grading verdict must not vary between
-            # identical calls, or the same answer is right on one attempt and
-            # wrong on the next.
+            # temperature=0 narrows variance between identical calls. It does
+            # not eliminate it — this model is not reproducible even at 0 — so
+            # the bank's acceptable forms, not this judge, remain the place to
+            # encode an answer that must always pass.
             raw = generate_content(prompt, context, temperature=0)
             if raw and not raw.startswith("API Error"):
                 data = clean_json(raw)
@@ -527,6 +565,12 @@ def judge_equivalence(user_answer, item, context):
         except Exception as e:
             last_exc = e
     _log_quiz_error(item["id"], user_answer, raw, last_exc)
+    if raw.startswith(API_UNREACHABLE_PREFIX):
+        # We never reached the model, so we have no verdict. Returning False
+        # here would mark a possibly-correct answer wrong because the network
+        # hiccuped. None means "could not check" and the caller must not treat
+        # it as a judgement.
+        return None
     return False
 
 

@@ -843,6 +843,16 @@ class TestQuizPersistenceWiring:
                    src.index("def render_progress_panel(")]
         assert body.count("user_answer") == 1, body.count("user_answer")
 
+    def test_known_errors_bypass_the_judge_entirely(self):
+        # A bank-recorded near-miss must be graded without the model, so the
+        # verdict cannot vary between runs.
+        src = self._main_source()
+        known = src.index("known = logic.match_common_error(user_ans, item)")
+        branch = src.index("if known:", known)
+        judge = src.index("logic.judge_equivalence(user_ans, item", known)
+        assert known < branch < judge
+        assert "elif tier == \"incorrect\":" in src
+
     def test_error_quiz_also_shows_the_learners_answer(self):
         # The post-chat quiz had the same gap: a verdict with nothing to
         # compare it against.
@@ -1089,3 +1099,141 @@ class TestLiteraryFirstPersonPast:
                 n = normalize_answer(form)
                 assert owners.setdefault(n, item["id"]) == item["id"], \
                     f"{n!r} accepted by both {owners[n]} and {item['id']}"
+
+
+# ===========================================================================
+# Known near-misses (`common_errors`).
+#
+# LLMs are non-deterministic; chasing a reproducible verdict out of one is
+# futile. So an answer that must always be graded wrong is recorded in the
+# bank, alongside what it actually means, and never reaches the judge at all.
+# ಈ ಮನೆ ದೊಡ್ಡದು ("This house is a big one") was being accepted roughly two
+# times in three — a coin flip on correctness.
+# ===========================================================================
+
+class TestCommonErrors:
+
+    ITEM = ITEMS["adj_001"]
+
+    def test_the_reported_answer_is_a_known_error(self):
+        entry = logic.match_common_error("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM)
+        assert entry is not None
+        assert entry["means"] == "This house is a big one."
+
+    def test_matching_never_calls_the_model(self):
+        with patch("logic.generate_content") as mock_gen:
+            assert logic.match_common_error("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM)
+        mock_gen.assert_not_called()
+
+    def test_verdict_is_stable_across_repeated_calls(self):
+        # The whole point: the same input gives the same answer, every time.
+        results = {bool(logic.match_common_error("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM))
+                   for _ in range(50)}
+        assert results == {True}
+
+    def test_matching_tolerates_punctuation_and_spacing(self):
+        # The learner typed a space before the full stop in the real session.
+        for variant in ("ಈ ಮನೆ ದೊಡ್ಡದು .", "ಈ ಮನೆ ದೊಡ್ಡದು", "ಈ  ಮನೆ  ದೊಡ್ಡದು."):
+            assert logic.match_common_error(variant, self.ITEM), variant
+
+    def test_a_correct_answer_is_not_a_common_error(self):
+        assert logic.match_common_error(self.ITEM["canonical"], self.ITEM) is None
+
+    def test_an_unrelated_wrong_answer_is_not_a_common_error(self):
+        # Unknown wrong answers still go to the judge and the LLM explainer.
+        assert logic.match_common_error("ಏನೋ ಒಂದು.", self.ITEM) is None
+
+    def test_empty_answer_is_not_a_common_error(self):
+        for empty in ("", "   ", None):
+            assert logic.match_common_error(empty, self.ITEM) is None
+
+    def test_items_without_the_field_are_unaffected(self):
+        assert logic.match_common_error("anything", ITEMS["neg_001"]) is None
+
+    def test_still_graded_incorrect_by_the_deterministic_layer(self):
+        assert classify_answer("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM) == "incorrect"
+        assert check_answer("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM) is False
+
+
+class TestCommonErrorExplanation:
+
+    ITEM = ITEMS["adj_001"]
+
+    def test_says_what_the_learner_actually_wrote(self):
+        entry = logic.match_common_error("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM)
+        text = logic.explain_common_error(entry, self.ITEM)
+        assert "This house is a big one" in text
+        assert "This is a big house" in text
+
+    def test_includes_the_grammar_point(self):
+        entry = logic.match_common_error("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM)
+        assert self.ITEM["grammar_note"] in \
+            logic.explain_common_error(entry, self.ITEM)
+
+    def test_explanation_needs_no_model(self):
+        entry = logic.match_common_error("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM)
+        with patch("logic.generate_content") as mock_gen:
+            logic.explain_common_error(entry, self.ITEM)
+        mock_gen.assert_not_called()
+
+    def test_no_doubled_punctuation_around_the_quotes(self):
+        # Both stored strings end in a full stop of their own.
+        entry = logic.match_common_error("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM)
+        text = logic.explain_common_error(entry, self.ITEM)
+        assert ".\u201d." not in text and ".." not in text
+
+    def test_explanation_is_identical_every_time(self):
+        entry = logic.match_common_error("ಈ ಮನೆ ದೊಡ್ಡದು.", self.ITEM)
+        texts = {logic.explain_common_error(entry, self.ITEM) for _ in range(20)}
+        assert len(texts) == 1
+
+
+class TestCommonErrorsSchema:
+
+    def _bank_with(self, item_extra):
+        bank = _make_fake_bank()
+        bank["items"][0].update(item_extra)
+        return bank
+
+    def test_every_shipped_common_error_is_well_formed(self):
+        for item in BANK["items"]:
+            for entry in item.get("common_errors") or []:
+                assert entry["form"].strip() and entry["means"].strip()
+
+    def test_no_shipped_common_error_is_also_accepted(self):
+        # Would make the same answer simultaneously right and wrong.
+        for item in BANK["items"]:
+            accepted = {normalize_answer(a) for a in item["acceptable"]}
+            for entry in item.get("common_errors") or []:
+                assert normalize_answer(entry["form"]) not in accepted
+
+    def test_validator_rejects_a_common_error_that_is_accepted(self):
+        bank = _make_fake_bank()
+        item = bank["items"][0]
+        item["common_errors"] = [{"form": item["canonical"], "means": "x"}]
+        with pytest.raises(ValueError, match="also an accepted answer"):
+            logic._validate_quiz_bank(bank)
+
+    def test_validator_rejects_a_malformed_entry(self):
+        bank = _make_fake_bank()
+        bank["items"][0]["common_errors"] = [{"form": "ಏನೋ"}]  # no 'means'
+        with pytest.raises(ValueError, match="'form' and 'means'"):
+            logic._validate_quiz_bank(bank)
+
+    def test_validator_rejects_duplicates(self):
+        bank = _make_fake_bank()
+        bank["items"][0]["common_errors"] = [
+            {"form": "ಏನೋ ಒಂದು.", "means": "a"},
+            {"form": "ಏನೋ ಒಂದು", "means": "b"},
+        ]
+        with pytest.raises(ValueError, match="duplicate common error"):
+            logic._validate_quiz_bank(bank)
+
+    def test_validator_rejects_a_non_list(self):
+        bank = _make_fake_bank()
+        bank["items"][0]["common_errors"] = {"form": "x", "means": "y"}
+        with pytest.raises(ValueError, match="must be a list"):
+            logic._validate_quiz_bank(bank)
+
+    def test_the_field_stays_optional(self):
+        logic._validate_quiz_bank(_make_fake_bank())  # must not raise

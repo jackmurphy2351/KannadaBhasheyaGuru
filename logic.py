@@ -366,7 +366,42 @@ def _validate_quiz_bank(bank):
             raise ValueError(
                 f"quiz_bank item '{iid}': topic {item.get('topic')!r} "
                 f"not in top-level topics array")
+        _validate_common_errors(item, iid)
     return bank
+
+
+def _validate_common_errors(item, iid):
+    """Check the optional 'common_errors' list.
+
+    Each entry is a near-miss the learner is likely to write, paired with what
+    it actually means, so the quiz can reject it and say why without asking the
+    model. An entry that is also an accepted form would make the item both
+    right and wrong, so that is rejected here rather than at grading time.
+    """
+    entries = item.get("common_errors")
+    if entries is None:
+        return
+    if not isinstance(entries, list):
+        raise ValueError(
+            f"quiz_bank item '{iid}': 'common_errors' must be a list")
+    accepted = {normalize_answer(a) for a in item["acceptable"]}
+    seen = set()
+    for entry in entries:
+        if not isinstance(entry, dict) or not entry.get("form") \
+                or not entry.get("means"):
+            raise ValueError(
+                f"quiz_bank item '{iid}': every common_errors entry needs "
+                f"'form' and 'means'")
+        norm = normalize_answer(entry["form"])
+        if norm in accepted:
+            raise ValueError(
+                f"quiz_bank item '{iid}': common error {entry['form']!r} is "
+                f"also an accepted answer")
+        if norm in seen:
+            raise ValueError(
+                f"quiz_bank item '{iid}': duplicate common error "
+                f"{entry['form']!r}")
+        seen.add(norm)
 
 
 def _load_quiz_bank_from_disk(path=None):
@@ -445,6 +480,40 @@ def classify_answer(user_answer, item):
     if normalize_answer(user_answer) == normalize_answer(item["canonical"]):
         return "exact"
     return "variant" if check_answer(user_answer, item) else "incorrect"
+
+
+def match_common_error(user_answer, item):
+    """Return the matching common-error entry for this answer, or None.
+
+    A hit here is decided the same way a correct answer is — by normalizing
+    and comparing against the bank — so a known near-miss is graded the same
+    way every time, without a model in the loop.
+    """
+    norm = normalize_answer(user_answer)
+    if not norm:
+        return None
+    for entry in item.get("common_errors") or []:
+        if normalize_answer(entry["form"]) == norm:
+            return entry
+    return None
+
+
+def explain_common_error(entry, item):
+    """Build the feedback for a known near-miss, with no LLM call.
+
+    The learner's real problem is usually that they wrote a different correct
+    sentence, so the useful thing to tell them is what they actually said,
+    next to what was asked.
+    """
+    # Both stored strings carry their own full stop; strip them so the
+    # sentence is not punctuated twice at each quote.
+    wrote = entry["means"].strip().rstrip(".")
+    asked = item["english"].strip().rstrip(".")
+    return (
+        f"What you wrote means \u201c{wrote}\u201d \u2014 but the sentence asked "
+        f"for was \u201c{asked}\u201d. "
+        f"Key grammar point: {item['grammar_note']}."
+    )
 
 
 def get_bank_item(item_id):

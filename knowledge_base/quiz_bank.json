@@ -597,7 +597,17 @@
     "ಇದು ದೊಡ್ಡ ಮನೆ."
    ],
    "difficulty": "easy",
-   "grammar_note": "pure adjective, zero copula"
+   "grammar_note": "pure adjective, zero copula",
+   "common_errors": [
+    {
+     "form": "ಈ ಮನೆ ದೊಡ್ಡದು.",
+     "means": "This house is a big one."
+    },
+    {
+     "form": "ಈ ಮನೆ ದೊಡ್ಡದಾಗಿದೆ.",
+     "means": "This house is big."
+    }
+   ]
   },
   {
    "id": "adj_002",

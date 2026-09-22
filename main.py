@@ -1223,6 +1223,16 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False):
             if tier == "incorrect":
                 quiz_ctx = st.session_state[quiz_key(prefix, "context")] or \
                     st.session_state.context
+                known = logic.match_common_error(user_ans, item)
+            else:
+                known = None
+
+            if known:
+                # A near-miss the bank already knows about. It is graded wrong
+                # every time and explained from stored text, so the verdict
+                # never depends on the model agreeing with itself twice.
+                feedback = logic.explain_common_error(known, item)
+            elif tier == "incorrect":
                 with st.spinner("Checking your phrasing..."):
                     verdict = logic.judge_equivalence(user_ans, item, quiz_ctx)
                 if verdict is None:

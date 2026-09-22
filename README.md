@@ -1,6 +1,6 @@
 # 🪔 Vāṇi
 
-![Tests](https://img.shields.io/badge/tests-1412%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/tests-1494%20passing-brightgreen) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **An AI-powered personalized language tutor for Kannada learners.**
 
@@ -14,7 +14,7 @@ Vāṇi (ವಾಣಿ) is a Python-based web application designed to assist stud
 Automatically generates and emails structured lessons based on a learning schedule tracked in Google Sheets. Each lesson covers a grammar topic from the Knowledge Base and ends with practice sentences.
 
 ### 🏆 Mastery Quiz
-A deterministic "read-then-quiz" engine. Each topic serves 10 questions of increasing difficulty sampled from a curated 200-item question bank (`knowledge_base/quiz_bank.json`), with the lesson doc readable inline before you start. Grading is deterministic first: answers are normalized (punctuation, quote styles, zero-width characters, interchangeable quotatives) and matched against each question's acceptable forms. Only a non-matching answer gets a single *constrained* LLM equivalence check — the bank's canonical answer is authoritative and the model may only vote yes/no, never invent its own "correct" answer. Scoring 90%+ marks the topic mastered in local progress storage (`data/vani.db`), and every miss is scheduled into the Daily Review queue.
+A deterministic "read-then-quiz" engine. Each topic serves 10 questions of increasing difficulty sampled from a curated 200-item question bank (`knowledge_base/quiz_bank.json`), with the lesson doc readable inline before you start. Grading is deterministic first: answers are normalized (punctuation, quote styles, zero-width characters, interchangeable quotatives) and matched against each question's acceptable forms. Answers the bank lists as known near-misses (`common_errors`) are rejected deterministically and explained from stored text — telling you what your sentence actually means — without any model call. Only an unrecognized non-matching answer gets a single *constrained* LLM equivalence check — the bank's canonical answer is authoritative and the model may only vote yes/no, never invent its own "correct" answer. Scoring 90%+ marks the topic mastered in local progress storage (`data/vani.db`), and every miss is scheduled into the Daily Review queue.
 
 ### 🔁 Daily Review (Spaced Repetition)
 
@@ -79,7 +79,7 @@ This tool uses Large Language Models (LLMs) to generate content. While instructe
 | **Database** | Google Sheets (`gspread`) for the email-lesson schedule; local JSON (`storage.py`) for quiz mastery progress |
 | **Audio Input** | Streamlit native `st.audio_input` (no third-party components) |
 | **Spaced Repetition** | [`fsrs`](https://pypi.org/project/fsrs/) (FSRS-6) over SQLite |
-| **Test Suite** | pytest — 1,412 mocked tests across 9 modules (~2s) plus opt-in live-API canaries (`pytest -m live`) |
+| **Test Suite** | pytest — 1,494 mocked tests across 9 modules (~5s) plus opt-in live-API canaries (`pytest -m live`) |
 | **Environment** | Python 3.10+ |
 
 ---
@@ -95,7 +95,7 @@ Kannada_Guru/
 ├── srs.py                   # FSRS scheduling (pure; no UI, config or storage deps)
 ├── requirements.txt         # Python dependencies
 ├── pytest.ini               # Test runner config (live-API tests deselected by default)
-├── tests/                   # Automated test suite (1,412 mocked tests + 12 live canaries)
+├── tests/                   # Automated test suite (1,494 mocked tests + 12 live canaries)
 │   ├── conftest.py                   # Shared fixtures + autouse DB isolation
 │   ├── test_utilities.py             # Pure unit tests (clean_json, transliteration, UI text)
 │   ├── test_sarvam_chat.py           # Chat API: parsing, retries, verbatim-input contract
@@ -192,7 +192,7 @@ pip install pytest
 python -m pytest -q
 ```
 
-**1,412 tests across 9 modules, completing in ~2 seconds:**
+**1,494 tests across 9 modules, completing in ~5 seconds:**
 
 | Module | What It Tests |
 |--------|--------------|

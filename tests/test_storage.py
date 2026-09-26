@@ -35,9 +35,11 @@ class TestSchema:
 
     def test_schema_version_is_stamped(self):
         storage.get_progress()
+        assert storage.get_schema_version() == storage.SCHEMA_VERSION
         with sqlite3.connect(storage.DB_FILE) as conn:
-            assert conn.execute("PRAGMA user_version").fetchone()[0] == \
-                storage.SCHEMA_VERSION
+            row = conn.execute(
+                "SELECT value FROM schema_meta WHERE key = 'version'").fetchone()
+        assert int(row[0]) == storage.SCHEMA_VERSION
 
     def test_migration_is_idempotent(self):
         storage.set_mastered("Negation", score="10/10")
@@ -50,7 +52,26 @@ class TestSchema:
         with sqlite3.connect(storage.DB_FILE) as conn:
             names = {r[0] for r in conn.execute(
                 "SELECT name FROM sqlite_master WHERE type='table'")}
-        assert {"cards", "reviews", "attempts", "mastery"} <= names
+        assert {"cards", "reviews", "attempts", "mastery", "users",
+                "sessions", "login_failures", "schema_meta"} <= names
+
+    def test_v1_database_upgrades_with_progress_intact(self, isolated_db):
+        # A database written by the v1 code: tables present, version held only
+        # in PRAGMA user_version, no schema_meta and no account tables.
+        with sqlite3.connect(storage.DB_FILE) as conn:
+            conn.executescript(storage._SCHEMA_V1)
+            conn.execute(
+                "INSERT INTO mastery VALUES ('local', 'Negation', '9/10', ?)",
+                (_iso(),))
+            conn.execute("PRAGMA user_version = 1")
+        # A progress.json that must NOT be re-imported: v1 already did that.
+        with open(storage.PROGRESS_FILE, "w", encoding="utf-8") as f:
+            json.dump({"mastered": {"Adverbs": {"score": "10/10"}}}, f)
+
+        assert storage.get_schema_version() == storage.SCHEMA_VERSION
+        assert storage.is_mastered("Negation")
+        assert not storage.is_mastered("Adverbs")
+        assert storage.list_users() == []
 
 
 class TestProgressJsonImport:
@@ -344,3 +365,99 @@ class TestDurability:
         # The earlier record is intact and the failed one left no partial row.
         assert storage.is_mastered("Negation") is True
         assert storage.is_mastered("Adverbs") is False
+
+
+# ---------------------------------------------------------------------------
+# Accounts
+# ---------------------------------------------------------------------------
+
+class TestUsers:
+
+    def test_create_and_fetch(self):
+        storage.create_user("p1", "asha", "hash", is_admin=True)
+        user = storage.get_user("p1")
+        assert user["username"] == "asha"
+        assert user["is_admin"] is True and user["disabled"] is False
+        assert storage.get_user_by_username("asha")["profile_id"] == "p1"
+
+    def test_unknown_user_is_none(self):
+        assert storage.get_user("nope") is None
+        assert storage.get_user_by_username("nope") is None
+
+    def test_duplicate_username_rejected(self):
+        storage.create_user("p1", "asha", "h")
+        with pytest.raises(ValueError):
+            storage.create_user("p2", "asha", "h")
+
+    def test_duplicate_profile_rejected(self):
+        storage.create_user("p1", "asha", "h")
+        with pytest.raises(ValueError):
+            storage.create_user("p1", "ravi", "h")
+
+    def test_user_can_adopt_existing_local_progress(self):
+        storage.set_mastered("Negation", score="10/10")
+        storage.create_user(storage.DEFAULT_PROFILE, "asha", "h")
+        profile = storage.get_user_by_username("asha")["profile_id"]
+        assert storage.is_mastered("Negation", profile_id=profile)
+
+    def test_updates(self):
+        storage.create_user("p1", "asha", "old")
+        storage.set_password_hash("p1", "new")
+        storage.set_user_disabled("p1", True)
+        storage.touch_last_login("p1", at=NOW)
+        user = storage.get_user("p1")
+        assert user["password_hash"] == "new"
+        assert user["disabled"] is True
+        assert user["last_login_at"] == storage.to_iso(NOW)
+
+    def test_list_users_sorted(self):
+        storage.create_user("p2", "ravi", "h")
+        storage.create_user("p1", "asha", "h")
+        assert [u["username"] for u in storage.list_users()] == ["asha", "ravi"]
+
+
+class TestSessions:
+
+    def test_live_session_found(self):
+        storage.create_session("t1", "p1", NOW + timedelta(days=1), at=NOW)
+        assert storage.get_session("t1", now=NOW)["profile_id"] == "p1"
+
+    def test_expired_session_not_found(self):
+        storage.create_session("t1", "p1", NOW + timedelta(seconds=5), at=NOW)
+        assert storage.get_session("t1", now=NOW + timedelta(seconds=5)) is None
+
+    def test_delete_session(self):
+        storage.create_session("t1", "p1", NOW + timedelta(days=1))
+        storage.delete_session("t1")
+        assert storage.get_session("t1") is None
+
+    def test_delete_sessions_for_profile_keeps_one(self):
+        later = NOW + timedelta(days=1)
+        for tok, prof in (("a", "p1"), ("b", "p1"), ("c", "p2")):
+            storage.create_session(tok, prof, later)
+        storage.delete_sessions_for("p1", keep="b")
+        assert storage.get_session("a") is None
+        assert storage.get_session("b") is not None
+        assert storage.get_session("c") is not None
+
+    def test_purge_expired(self):
+        storage.create_session("old", "p1", NOW - timedelta(seconds=1))
+        storage.create_session("new", "p1", NOW + timedelta(days=1))
+        assert storage.purge_expired_sessions(now=NOW) == 1
+        assert storage.get_session("new", now=NOW) is not None
+
+
+class TestLoginFailures:
+
+    def test_counts_only_recent_failures_for_that_user(self):
+        storage.record_login_failure("asha", at=NOW - timedelta(hours=1))
+        storage.record_login_failure("asha", at=NOW)
+        storage.record_login_failure("ravi", at=NOW)
+        since = NOW - timedelta(minutes=15)
+        assert storage.count_recent_login_failures("asha", since) == 1
+
+    def test_clear(self):
+        storage.record_login_failure("asha", at=NOW)
+        storage.clear_login_failures("asha")
+        assert storage.count_recent_login_failures(
+            "asha", NOW - timedelta(minutes=15)) == 0

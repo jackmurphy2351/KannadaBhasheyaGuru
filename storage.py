@@ -12,9 +12,9 @@ happens mid-quiz: a torn write during a read-modify-write of one big JSON
 document silently loses *all* progress, and SQLite gives transactional writes
 and a real ``WHERE due <= ?`` query for free.
 
-Everything is keyed by ``profile_id`` (default ``"local"``). There is one
-profile today; the column exists so that multi-user support is a UI change
-rather than a schema migration.
+Everything is keyed by ``profile_id`` (default ``"local"``). A logged-in user's
+``profile_id`` comes from the ``users`` table; ``"local"`` is the pre-login
+profile, which an account can adopt by being created with that id.
 
 All timestamps are stored as fixed-width UTC ISO-8601 strings, so lexicographic
 ordering in SQL is chronological ordering.
@@ -36,7 +36,7 @@ DB_FILE = os.path.join(DATA_DIR, "vani.db")
 PROGRESS_FILE = os.path.join(DATA_DIR, "progress.json")
 
 DEFAULT_PROFILE = "local"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 # ---------------------------------------------------------------------------
@@ -74,7 +74,7 @@ def from_iso(text):
 # ---------------------------------------------------------------------------
 # Connection / schema
 # ---------------------------------------------------------------------------
-_SCHEMA = """
+_SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS cards (
     profile_id  TEXT NOT NULL,
     item_id     TEXT NOT NULL,
@@ -120,6 +120,39 @@ CREATE TABLE IF NOT EXISTS mastery (
 );
 """
 
+# v2: accounts. ``profile_id`` is the key every progress table already uses, so
+# a user's progress is just the rows under their profile_id — nothing else in
+# the schema had to change. Usernames are stored normalized (see auth.py) and
+# are separate from profile_id so a rename never re-keys progress.
+_SCHEMA_V2 = """
+CREATE TABLE IF NOT EXISTS users (
+    profile_id    TEXT PRIMARY KEY,
+    username      TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    is_admin      INTEGER NOT NULL DEFAULT 0,
+    disabled      INTEGER NOT NULL DEFAULT 0,
+    created_at    TEXT NOT NULL,
+    last_login_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash   TEXT PRIMARY KEY,
+    profile_id   TEXT NOT NULL,
+    created_at   TEXT NOT NULL,
+    expires_at   TEXT NOT NULL,
+    last_seen_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_profile ON sessions (profile_id);
+
+CREATE TABLE IF NOT EXISTS login_failures (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    username  TEXT NOT NULL,
+    failed_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_login_failures
+    ON login_failures (username, failed_at);
+"""
+
 
 @contextmanager
 def _connect():
@@ -142,14 +175,41 @@ def _connect():
 
 
 def _migrate(conn):
-    """Create or upgrade the schema. Idempotent; safe to call on every open."""
-    version = conn.execute("PRAGMA user_version").fetchone()[0]
+    """Create or upgrade the schema. Idempotent; safe to call on every open.
+
+    The version lives in a ``schema_meta`` table rather than SQLite's
+    ``PRAGMA user_version`` so the same bookkeeping works on Postgres. Databases
+    created before v2 only carry the pragma, so it is read as a fallback.
+    """
+    conn.execute("CREATE TABLE IF NOT EXISTS schema_meta "
+                 "(key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+    version = _read_schema_version(conn)
     if version >= SCHEMA_VERSION:
         return
-    conn.executescript(_SCHEMA)
-    if version == 0:
+    if version < 1:
+        conn.executescript(_SCHEMA_V1)
         _import_progress_json(conn)
-    conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+    if version < 2:
+        conn.executescript(_SCHEMA_V2)
+    conn.execute(
+        "INSERT INTO schema_meta (key, value) VALUES ('version', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (str(SCHEMA_VERSION),),
+    )
+
+
+def _read_schema_version(conn):
+    row = conn.execute(
+        "SELECT value FROM schema_meta WHERE key = 'version'").fetchone()
+    if row is not None:
+        return int(row[0])
+    return conn.execute("PRAGMA user_version").fetchone()[0]
+
+
+def get_schema_version():
+    """The schema version of the configured database (migrating it first)."""
+    with _connect() as conn:
+        return _read_schema_version(conn)
 
 
 def _import_progress_json(conn):
@@ -381,3 +441,161 @@ def get_srs_summary(now=None, profile_id=DEFAULT_PROFILE):
             (profile_id, stamp),
         ).fetchone()[0]
     return {"tracked": tracked, "due": due, "next_due": nxt}
+
+
+# ---------------------------------------------------------------------------
+# Users
+# ---------------------------------------------------------------------------
+# Pure CRUD: hashing, normalization and policy live in auth.py, so this layer
+# never sees a plaintext password or a raw session token.
+_USER_COLUMNS = ("profile_id, username, password_hash, is_admin, disabled, "
+                 "created_at, last_login_at")
+
+
+def _user_row(row):
+    if row is None:
+        return None
+    user = dict(row)
+    user["is_admin"] = bool(user["is_admin"])
+    user["disabled"] = bool(user["disabled"])
+    return user
+
+
+def create_user(profile_id, username, password_hash, is_admin=False, at=None):
+    """Insert a user. Raises ``ValueError`` if the username or profile is taken."""
+    try:
+        with _connect() as conn:
+            conn.execute(
+                f"INSERT INTO users ({_USER_COLUMNS}) "
+                "VALUES (?, ?, ?, ?, 0, ?, NULL)",
+                (profile_id, username, password_hash, int(bool(is_admin)),
+                 to_iso(at or utcnow())),
+            )
+    except sqlite3.IntegrityError as e:
+        raise ValueError(
+            f"username {username!r} or profile {profile_id!r} already exists"
+        ) from e
+
+
+def get_user(profile_id):
+    """Return the user dict for ``profile_id``, or None."""
+    with _connect() as conn:
+        row = conn.execute(
+            f"SELECT {_USER_COLUMNS} FROM users WHERE profile_id = ?",
+            (profile_id,),
+        ).fetchone()
+    return _user_row(row)
+
+
+def get_user_by_username(username):
+    """Return the user dict for an already-normalized ``username``, or None."""
+    with _connect() as conn:
+        row = conn.execute(
+            f"SELECT {_USER_COLUMNS} FROM users WHERE username = ?",
+            (username,),
+        ).fetchone()
+    return _user_row(row)
+
+
+def list_users():
+    """All users, ordered by username."""
+    with _connect() as conn:
+        rows = conn.execute(
+            f"SELECT {_USER_COLUMNS} FROM users ORDER BY username").fetchall()
+    return [_user_row(r) for r in rows]
+
+
+def set_password_hash(profile_id, password_hash):
+    with _connect() as conn:
+        conn.execute("UPDATE users SET password_hash = ? WHERE profile_id = ?",
+                     (password_hash, profile_id))
+
+
+def set_user_disabled(profile_id, disabled):
+    with _connect() as conn:
+        conn.execute("UPDATE users SET disabled = ? WHERE profile_id = ?",
+                     (int(bool(disabled)), profile_id))
+
+
+def touch_last_login(profile_id, at=None):
+    with _connect() as conn:
+        conn.execute("UPDATE users SET last_login_at = ? WHERE profile_id = ?",
+                     (to_iso(at or utcnow()), profile_id))
+
+
+# ---------------------------------------------------------------------------
+# Sessions ("remember me")
+# ---------------------------------------------------------------------------
+def create_session(token_hash, profile_id, expires_at, at=None):
+    stamp = to_iso(at or utcnow())
+    with _connect() as conn:
+        conn.execute(
+            "INSERT INTO sessions (token_hash, profile_id, created_at, "
+            "expires_at, last_seen_at) VALUES (?, ?, ?, ?, ?)",
+            (token_hash, profile_id, stamp, to_iso(expires_at), stamp),
+        )
+
+
+def get_session(token_hash, now=None):
+    """Return the unexpired session row for ``token_hash``, or None."""
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM sessions WHERE token_hash = ? AND expires_at > ?",
+            (token_hash, to_iso(now or utcnow())),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def touch_session(token_hash, at=None):
+    with _connect() as conn:
+        conn.execute("UPDATE sessions SET last_seen_at = ? WHERE token_hash = ?",
+                     (to_iso(at or utcnow()), token_hash))
+
+
+def delete_session(token_hash):
+    with _connect() as conn:
+        conn.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+
+
+def delete_sessions_for(profile_id, keep=None):
+    """Revoke every session of ``profile_id`` except ``keep`` (a token hash)."""
+    with _connect() as conn:
+        conn.execute(
+            "DELETE FROM sessions WHERE profile_id = ? AND token_hash != ?",
+            (profile_id, keep or ""),
+        )
+
+
+def purge_expired_sessions(now=None):
+    """Delete expired sessions; returns how many were removed."""
+    with _connect() as conn:
+        cur = conn.execute("DELETE FROM sessions WHERE expires_at <= ?",
+                           (to_iso(now or utcnow()),))
+        return cur.rowcount
+
+
+# ---------------------------------------------------------------------------
+# Login throttling
+# ---------------------------------------------------------------------------
+def record_login_failure(username, at=None):
+    with _connect() as conn:
+        conn.execute(
+            "INSERT INTO login_failures (username, failed_at) VALUES (?, ?)",
+            (username, to_iso(at or utcnow())),
+        )
+
+
+def count_recent_login_failures(username, since):
+    """Failures for ``username`` at or after ``since``."""
+    with _connect() as conn:
+        return conn.execute(
+            "SELECT COUNT(*) FROM login_failures "
+            "WHERE username = ? AND failed_at >= ?",
+            (username, to_iso(since)),
+        ).fetchone()[0]
+
+
+def clear_login_failures(username):
+    with _connect() as conn:
+        conn.execute("DELETE FROM login_failures WHERE username = ?",
+                     (username,))

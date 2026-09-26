@@ -20,7 +20,7 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # storage functions that are not per-profile: time helpers and account/session
 # tables, which are keyed by username/token rather than by profile.
 _PROFILE_FREE = {
-    "utcnow", "to_iso", "from_iso", "get_schema_version",
+    "utcnow", "to_iso", "from_iso", "get_schema_version", "configure", "backend", "close",
     "create_user", "get_user", "get_user_by_username", "list_users",
     "set_password_hash", "set_user_disabled", "touch_last_login",
     "create_session", "get_session", "touch_session", "delete_session",

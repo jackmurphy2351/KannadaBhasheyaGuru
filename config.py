@@ -25,6 +25,8 @@ def get_secret(key):
 
 # --- API KEYS & CREDENTIALS ---
 SHEET_NAME = get_secret("GOOGLE_SHEET_NAME")
+# Postgres URL for the hosted build. Unset → local SQLite at data/vani.db.
+DATABASE_URL = get_secret("DATABASE_URL")
 CREDENTIALS_FILE = "service_account.json"
 SENDER_EMAIL = get_secret("GMAIL_USER")
 SENDER_PASSWORD = get_secret("GMAIL_PASSWORD")

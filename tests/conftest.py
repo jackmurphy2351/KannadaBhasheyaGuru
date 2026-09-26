@@ -26,6 +26,11 @@ def isolated_db(tmp_path, monkeypatch):
     """
     monkeypatch.setattr(storage, "DB_FILE", str(tmp_path / "vani.db"))
     monkeypatch.setattr(storage, "PROGRESS_FILE", str(tmp_path / "progress.json"))
+    # Force SQLite. Without this, anything that had called storage.configure()
+    # with a DATABASE_URL (the app, a script, a stray import) would point the
+    # mocked suite at a real — possibly production — Postgres.
+    monkeypatch.setattr(storage, "_DATABASE_URL", None)
+    monkeypatch.setattr(storage, "_pool", None)
     yield tmp_path
 
 

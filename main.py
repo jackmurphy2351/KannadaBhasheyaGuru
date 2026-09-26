@@ -1450,6 +1450,8 @@ def render_account_sidebar(user, lang_mode):
 def main():
     st.set_page_config(page_title="Vāṇi", page_icon="🪔", layout="wide")
     local_css()
+    # Before anything touches storage. A no-op on reruns (same URL).
+    storage.configure(config.DATABASE_URL)
 
     lang_mode = "English"
     user = require_login(lang_mode)

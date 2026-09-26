@@ -12,6 +12,11 @@ Account administration for Vāṇi (invite-only: there is no sign-up page).
 Passwords are read with getpass, never from argv, so they don't land in shell
 history or the process list.
 
+Targets local SQLite (data/vani.db) unless ``VANI_DATABASE_URL`` is set, in
+which case it administers that Postgres — e.g. the hosted database:
+
+    VANI_DATABASE_URL=postgresql://... python scripts/manage_users.py list
+
 ``--profile-id local`` makes the new account adopt the progress stored under
 the pre-login ``"local"`` profile — use it once, for your own account.
 """
@@ -126,6 +131,9 @@ def build_parser():
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
+    # A dedicated variable, not DATABASE_URL, so having the app's .env loaded
+    # in your shell never silently points admin commands at production.
+    storage.configure(os.environ.get("VANI_DATABASE_URL"))
     args.func(args)
 
 

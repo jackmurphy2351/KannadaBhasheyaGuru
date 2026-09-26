@@ -10,3 +10,7 @@ requests
 # parameter tuple grew from 19 to 21), and srs.py serializes Card state into
 # the database, so an unnoticed major bump could silently change scheduling.
 fsrs>=6.3,<7
+# Hosted storage backend (storage.py selects Postgres when DATABASE_URL is
+# set). Pinned to the major for the same reason as fsrs.
+psycopg[binary]>=3.2,<4
+psycopg-pool>=3.2,<4

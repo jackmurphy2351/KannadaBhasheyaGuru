@@ -417,7 +417,7 @@ def load_quiz_bank():
     return st.session_state["quiz_bank"]
 
 
-def get_quiz_topics():
+def get_quiz_topics(*, profile_id):
     """Return quiz topics sourced from the bank itself (never Sheets), each
     annotated with its lesson doc(s), display level, and local mastery status.
     The dropdown and the question pool share one source so they cannot drift;
@@ -429,8 +429,8 @@ def get_quiz_topics():
         raise ValueError(
             f"config.QUIZ_TOPIC_DOCS out of sync with quiz bank "
             f"(unmapped: {missing}, stale: {extra})")
-    mastered = storage.get_progress()["mastered"]
-    due_counts = storage.get_due_counts_by_topic()
+    mastered = storage.get_progress(profile_id=profile_id)["mastered"]
+    due_counts = storage.get_due_counts_by_topic(profile_id=profile_id)
     topics = [{"name": t,
                "file": config.QUIZ_TOPIC_DOCS[t]["files"],
                "level": config.QUIZ_TOPIC_DOCS[t]["level"],
@@ -524,16 +524,20 @@ def get_bank_item(item_id):
     return None
 
 
-def record_quiz_answer(item, tier, now=None):
+def record_quiz_answer(item, tier, now=None, *, profile_id):
     """Persist one graded answer and reschedule the item.
 
     Called for every submitted answer, right or wrong: FSRS needs the successes
     to lengthen intervals as much as it needs the misses to shorten them.
     Failures are swallowed with a printed warning — a storage problem must not
     take down a quiz the learner is in the middle of.
+
+    ``profile_id`` is required here and in the other SRS entry points: with a
+    default, a forgotten call site would silently schedule one learner's
+    answers into another's deck.
     """
     try:
-        stored = storage.get_card(item["id"])
+        stored = storage.get_card(item["id"], profile_id=profile_id)
         result = srs.review(stored["fsrs_json"] if stored else None, tier,
                             now=now)
         storage.upsert_card(
@@ -545,23 +549,25 @@ def record_quiz_answer(item, tier, now=None):
             stability=result["stability"],
             difficulty=result["difficulty"],
             last_review=storage.to_iso(result["last_review"]),
+            profile_id=profile_id,
         )
         storage.log_review(item["id"], tier, result["rating"],
-                           topic=item["topic"], at=now)
+                           topic=item["topic"], at=now,
+                           profile_id=profile_id)
         return result
     except Exception as e:  # pragma: no cover - defensive
         print(f"[srs] failed to record review for {item.get('id')}: {e}")
         return None
 
 
-def build_review_quiz(n=10, topic=None, now=None):
+def build_review_quiz(n=10, topic=None, now=None, *, profile_id):
     """Return due bank items, soonest-due first, for a review session.
 
     Ids that no longer resolve against the bank are skipped rather than raised
     on: an item can be renamed or dropped from the bank while a learner still
     has a card for it, and that should cost them one review, not the session.
     """
-    rows = storage.get_due_cards(topic=topic, now=now)
+    rows = storage.get_due_cards(topic=topic, now=now, profile_id=profile_id)
     items = []
     for row in rows:
         item = get_bank_item(row["item_id"])
@@ -572,9 +578,9 @@ def build_review_quiz(n=10, topic=None, now=None):
     return items
 
 
-def get_review_summary(now=None):
+def get_review_summary(now=None, *, profile_id):
     """Counts for the Review dashboard: tracked, due, and next due time."""
-    return storage.get_srs_summary(now=now)
+    return storage.get_srs_summary(now=now, profile_id=profile_id)
 
 
 def judge_equivalence(user_answer, item, context):

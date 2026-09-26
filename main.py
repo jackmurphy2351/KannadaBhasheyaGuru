@@ -1,10 +1,12 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import os
 import glob
 import random
 import json
 
 # Import our custom modules
+import auth
 import config
 import logic
 import storage
@@ -1265,7 +1267,7 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False):
             # Persist and reschedule. Runs here, once per question, because
             # this branch ends in a rerun; putting it in the render path would
             # re-grade the same answer on every rerun.
-            logic.record_quiz_answer(item, tier)
+            logic.record_quiz_answer(item, tier, profile_id=current_profile())
             st.rerun()
     else:
         render_quiz_result(history[-1], lang_mode)
@@ -1279,8 +1281,8 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False):
 
 def render_progress_panel(lang_mode):
     """Durable per-topic history: attempts, best score, and what is due."""
-    stats = storage.get_topic_stats()
-    due = storage.get_due_counts_by_topic()
+    stats = storage.get_topic_stats(profile_id=current_profile())
+    due = storage.get_due_counts_by_topic(profile_id=current_profile())
     if not stats and not due:
         return
     with st.expander(f"📊 {logic.get_ui_text('LBL_YOUR_PROGRESS', lang_mode)}",
@@ -1298,9 +1300,159 @@ def render_progress_panel(lang_mode):
             st.markdown(f"- **{topic}** — {' · '.join(bits)}")
 
 
+# ---------------------------------------------------------------------------
+# Accounts
+#
+# Streamlit drops st.session_state on every browser refresh, so "remember me"
+# is a random token in a cookie (only its hash is in the database; see
+# auth.py). The cookie is read server-side from st.context.cookies, which is
+# captured when the session starts; it is written from the browser by a
+# zero-height component, because Streamlit has no server-side Set-Cookie.
+#
+# Revocation in the database is what actually logs a token out. Clearing the
+# cookie is tidiness: a revoked token that is still in the browser (or still in
+# this session's st.context.cookies snapshot) simply fails to resume.
+# ---------------------------------------------------------------------------
+
+SESSION_COOKIE = "vani_session"
+
+
+def current_profile():
+    """The signed-in learner's profile_id. Only valid after require_login()."""
+    return st.session_state.user["profile_id"]
+
+
+def _queue_cookie(token):
+    """Write (token) or expire (None) the session cookie on the next render.
+
+    Deferred to the next run because every caller then calls st.rerun(),
+    which would discard a component emitted in this run before it executes.
+    """
+    st.session_state["_pending_cookie"] = token or ""
+
+
+def _flush_cookie():
+    if "_pending_cookie" not in st.session_state:
+        return
+    token = st.session_state.pop("_pending_cookie")
+    max_age = auth.SESSION_DAYS * 86400 if token else 0
+    # Secure only over https: some browsers refuse Secure cookies on
+    # http://localhost, which would silently break remember-me in local dev.
+    components.html(
+        "<script>"
+        "const d = window.parent.document;"
+        "const secure = window.parent.location.protocol === 'https:' ? '; Secure' : '';"
+        f"d.cookie = '{SESSION_COOKIE}={token}; Path=/; Max-Age={max_age}; "
+        "SameSite=Strict' + secure;"
+        "</script>",
+        height=0,
+    )
+
+
+def _sign_in(user, remember):
+    st.session_state.user = user
+    if remember:
+        token = auth.issue_session(user["profile_id"])
+        st.session_state["_session_token"] = token
+        _queue_cookie(token)
+        storage.purge_expired_sessions()
+
+
+def sign_out():
+    """Revoke this device's session and drop every per-user bit of state, so
+    the next person on this browser never inherits a half-finished quiz."""
+    auth.revoke_session(st.session_state.get("_session_token")
+                        or st.context.cookies.get(SESSION_COOKIE))
+    for key in list(st.session_state.keys()):
+        if key != "context":            # the knowledge base is not per-user
+            del st.session_state[key]
+    _queue_cookie(None)
+
+
+def require_login(lang_mode):
+    """Return the signed-in user, or render the sign-in form and stop."""
+    _flush_cookie()
+    if "user" in st.session_state:
+        return st.session_state.user
+
+    token = st.context.cookies.get(SESSION_COOKIE)
+    user = auth.resume_session(token)
+    if user is not None:
+        st.session_state.user = user
+        st.session_state["_session_token"] = token
+        return user
+
+    _, col, _ = st.columns([1, 2, 1])
+    with col:
+        st.title(logic.get_ui_text("APP_TITLE", lang_mode))
+        st.subheader(logic.get_ui_text("TITLE_LOGIN", lang_mode))
+        with st.form("login"):
+            username = st.text_input(logic.get_ui_text("LBL_USERNAME", lang_mode))
+            password = st.text_input(logic.get_ui_text("LBL_PASSWORD", lang_mode),
+                                     type="password")
+            remember = st.checkbox(logic.get_ui_text("LBL_REMEMBER_ME", lang_mode),
+                                   value=True)
+            submitted = st.form_submit_button(
+                logic.get_ui_text("BTN_LOGIN", lang_mode))
+        if submitted:
+            try:
+                user = auth.authenticate(username, password)
+            except auth.LockedOut:
+                st.error(logic.get_ui_text("ERR_LOCKED", lang_mode))
+            else:
+                if user is None:
+                    # One message for every failure, so the form can't be
+                    # used to discover which usernames exist.
+                    st.error(logic.get_ui_text("ERR_LOGIN", lang_mode))
+                else:
+                    _sign_in(user, remember)
+                    st.rerun()
+    st.stop()
+
+
+def render_account_sidebar(user, lang_mode):
+    st.sidebar.markdown(
+        f"{logic.get_ui_text('LBL_SIGNED_IN_AS', lang_mode)} "
+        f"**{user['username']}**")
+    with st.sidebar.expander(logic.get_ui_text("HDR_ACCOUNT", lang_mode)):
+        with st.form("change_password", clear_on_submit=True):
+            current = st.text_input(
+                logic.get_ui_text("LBL_CURRENT_PASSWORD", lang_mode),
+                type="password")
+            new = st.text_input(logic.get_ui_text("LBL_NEW_PASSWORD", lang_mode),
+                                type="password")
+            confirm = st.text_input(
+                logic.get_ui_text("LBL_CONFIRM_PASSWORD", lang_mode),
+                type="password")
+            if st.form_submit_button(
+                    logic.get_ui_text("BTN_CHANGE_PASSWORD", lang_mode)):
+                if new != confirm:
+                    st.error(logic.get_ui_text("ERR_PASSWORD_MISMATCH", lang_mode))
+                else:
+                    try:
+                        ok = auth.change_password(
+                            user["profile_id"], current, new,
+                            keep_token=st.session_state.get("_session_token"))
+                    except ValueError as e:
+                        st.error(str(e))
+                    else:
+                        if ok:
+                            st.success(logic.get_ui_text(
+                                "MSG_PASSWORD_CHANGED", lang_mode))
+                        else:
+                            st.error(logic.get_ui_text(
+                                "ERR_WRONG_PASSWORD", lang_mode))
+    if st.sidebar.button(logic.get_ui_text("BTN_LOGOUT", lang_mode)):
+        sign_out()
+        st.rerun()
+
+
 def main():
     st.set_page_config(page_title="Vāṇi", page_icon="🪔", layout="wide")
     local_css()
+
+    lang_mode = "English"
+    user = require_login(lang_mode)
 
     # 1. Load Context
     if "context" not in st.session_state:
@@ -1309,7 +1461,7 @@ def main():
 
     # --- SIDEBAR SETTINGS ---
     st.sidebar.header("SETTINGS")
-    lang_mode = "English"
+    render_account_sidebar(user, lang_mode)
 
     st.sidebar.markdown("---")
 
@@ -1325,6 +1477,10 @@ def main():
         "Writing Critique": "NAV_WRITE",
         "Reading Comprehension": "NAV_READ"
     }
+    # The email lesson goes to the owner's inbox and advances the shared
+    # Google Sheet, so an invited learner must not be able to trigger it.
+    if not user["is_admin"]:
+        del nav_options["Send Email Lesson"]
 
     # UPDATED: Translate "Go to:" Label
     mode = st.sidebar.radio(
@@ -1637,7 +1793,7 @@ def main():
             render_voice_chat(lang_mode)
 
     # --- MODE: SEND LESSON ---
-    elif mode == "Send Email Lesson":
+    elif mode == "Send Email Lesson" and user["is_admin"]:
         st.subheader(logic.get_ui_text("TITLE_EMAIL", lang_mode))
         st.write(logic.get_ui_text("DESC_EMAIL", lang_mode))
 
@@ -1656,7 +1812,7 @@ def main():
 
         # State 1: Setup (read-then-quiz — every topic is always available)
         if not st.session_state.quiz_questions:
-            topics = logic.get_quiz_topics()
+            topics = logic.get_quiz_topics(profile_id=current_profile())
 
             # Beginners first; ✓ for mastered, a count for anything due.
             def _label(t):
@@ -1698,12 +1854,15 @@ def main():
             # write here would log the same attempt repeatedly and keep
             # rewriting mastered_at.
             if not st.session_state.quiz_recorded:
-                storage.record_attempt(topic, score, total)
+                storage.record_attempt(topic, score, total,
+                                       profile_id=current_profile())
                 if score >= (total * 0.9):
-                    storage.set_mastered(topic, score=f"{score}/{total}")
+                    storage.set_mastered(topic, score=f"{score}/{total}",
+                                         profile_id=current_profile())
                 st.session_state.quiz_recorded = True
 
-            attempts = storage.get_attempts(topic=topic)
+            attempts = storage.get_attempts(topic=topic,
+                                            profile_id=current_profile())
             if len(attempts) > 1:
                 best = max(a["score"] for a in attempts)
                 st.caption(f"Attempts: {len(attempts)} · best: {best}/{total}")
@@ -1728,7 +1887,7 @@ def main():
         init_quiz_state("review")
 
         if not st.session_state.review_questions:
-            summary = logic.get_review_summary()
+            summary = logic.get_review_summary(profile_id=current_profile())
             col_a, col_b = st.columns(2)
             col_a.metric(logic.get_ui_text("LBL_DUE_NOW", lang_mode),
                          summary["due"])
@@ -1736,7 +1895,8 @@ def main():
                          summary["tracked"])
 
             if summary["due"]:
-                due_by_topic = storage.get_due_counts_by_topic()
+                due_by_topic = storage.get_due_counts_by_topic(
+                    profile_id=current_profile())
                 st.markdown("  \n".join(
                     f"- **{t}** — {n} due"
                     for t, n in sorted(due_by_topic.items())))
@@ -1744,7 +1904,8 @@ def main():
                     # Mixed topics, soonest-due first. Context is the whole
                     # knowledge base since a session can span topics.
                     start_quiz("review",
-                               logic.build_review_quiz(n=10),
+                               logic.build_review_quiz(
+                                   n=10, profile_id=current_profile()),
                                None,
                                st.session_state.context)
                     st.rerun()
@@ -1768,7 +1929,8 @@ def main():
             total = len(st.session_state.review_questions)
             st.markdown(f"## {logic.get_ui_text('LBL_REVIEW_DONE', lang_mode)} "
                         f"{score}/{total}")
-            remaining = logic.get_review_summary()["due"]
+            remaining = logic.get_review_summary(
+                profile_id=current_profile())["due"]
             if remaining:
                 st.info(f"{remaining} still due.")
             else:

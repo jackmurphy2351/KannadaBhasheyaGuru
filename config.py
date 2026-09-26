@@ -206,6 +206,27 @@ UI_TEXT = {
     "LBL_YOUR_PROGRESS": {"EN": "Your progress", "KN": "ನಿಮ್ಮ ಪ್ರಗತಿ"},
     "LBL_REVIEW_DONE": {"EN": "Review complete.", "KN": "ಪುನರಾವರ್ತನೆ ಮುಗಿಯಿತು."},
 
+    # Accounts
+    "TITLE_LOGIN": {"EN": "Sign in", "KN": "ಲಾಗಿನ್ ಮಾಡಿ"},
+    "LBL_USERNAME": {"EN": "Username", "KN": "ಬಳಕೆದಾರ ಹೆಸರು"},
+    "LBL_PASSWORD": {"EN": "Password", "KN": "ಗುಪ್ತಪದ"},
+    "LBL_REMEMBER_ME": {"EN": "Keep me signed in on this device", "KN": "ಈ ಸಾಧನದಲ್ಲಿ ನನ್ನನ್ನು ಲಾಗಿನ್ ಆಗಿರಿಸಿ"},
+    "BTN_LOGIN": {"EN": "Sign in", "KN": "ಲಾಗಿನ್"},
+    "BTN_LOGOUT": {"EN": "Sign out", "KN": "ಲಾಗ್ ಔಟ್"},
+    "LBL_SIGNED_IN_AS": {"EN": "Signed in as", "KN": "ಲಾಗಿನ್ ಆದವರು"},
+    "ERR_LOGIN": {"EN": "Invalid username or password.", "KN": "ಬಳಕೆದಾರ ಹೆಸರು ಅಥವಾ ಗುಪ್ತಪದ ತಪ್ಪಾಗಿದೆ."},
+    "ERR_LOCKED": {
+        "EN": "Too many failed attempts. Please wait 15 minutes and try again.",
+        "KN": "ಹಲವು ವಿಫಲ ಪ್ರಯತ್ನಗಳು. 15 ನಿಮಿಷ ಕಾದು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."},
+    "HDR_ACCOUNT": {"EN": "Account", "KN": "ಖಾತೆ"},
+    "LBL_CURRENT_PASSWORD": {"EN": "Current password", "KN": "ಈಗಿನ ಗುಪ್ತಪದ"},
+    "LBL_NEW_PASSWORD": {"EN": "New password", "KN": "ಹೊಸ ಗುಪ್ತಪದ"},
+    "LBL_CONFIRM_PASSWORD": {"EN": "Confirm new password", "KN": "ಹೊಸ ಗುಪ್ತಪದವನ್ನು ದೃಢೀಕರಿಸಿ"},
+    "BTN_CHANGE_PASSWORD": {"EN": "Change password", "KN": "ಗುಪ್ತಪದ ಬದಲಿಸಿ"},
+    "MSG_PASSWORD_CHANGED": {"EN": "Password changed. Other devices have been signed out.", "KN": "ಗುಪ್ತಪದ ಬದಲಾಗಿದೆ. ಇತರ ಸಾಧನಗಳಿಂದ ಲಾಗ್ ಔಟ್ ಮಾಡಲಾಗಿದೆ."},
+    "ERR_PASSWORD_MISMATCH": {"EN": "The new passwords do not match.", "KN": "ಹೊಸ ಗುಪ್ತಪದಗಳು ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ."},
+    "ERR_WRONG_PASSWORD": {"EN": "Current password is incorrect.", "KN": "ಈಗಿನ ಗುಪ್ತಪದ ತಪ್ಪಾಗಿದೆ."},
+
     # Descriptions & Long Text
     "WELCOME_MSG": {
         "EN": """

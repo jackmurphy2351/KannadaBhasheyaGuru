@@ -91,12 +91,21 @@ Kannada_Guru/
 ├── main.py                  # Streamlit UI — pages, tabs, and state management
 ├── logic.py                 # Backend: Sarvam chat completions, STT/TTS, quiz grading, email
 ├── config.py                # API keys, model settings, prompts, UI translations
-├── storage.py               # Persistence: mastery, attempts, SRS cards → data/vani.db
+├── storage.py               # Persistence: accounts, mastery, attempts, SRS cards (SQLite or Postgres)
+├── auth.py                  # Passwords (scrypt), throttled sign-in, "remember me" session tokens
 ├── srs.py                   # FSRS scheduling (pure; no UI, config or storage deps)
+├── scripts/
+│   ├── manage_users.py               # Admin CLI: create/list/disable accounts, reset passwords
+│   └── migrate_sqlite_to_postgres.py # One-off copy of local progress into hosted Postgres
 ├── requirements.txt         # Python dependencies
-├── pytest.ini               # Test runner config (live-API tests deselected by default)
-├── tests/                   # Automated test suite (1,494 mocked tests + 12 live canaries)
-│   ├── conftest.py                   # Shared fixtures + autouse DB isolation
+├── pytest.ini               # Test runner config (live-API and Postgres tests deselected by default)
+├── tests/                   # Automated test suite (~1,570 mocked tests + opt-in live/Postgres layers)
+│   ├── conftest.py                   # Shared fixtures + autouse DB isolation (forces SQLite)
+│   ├── test_auth.py                  # Hashing, lockout, session tokens, password changes
+│   ├── test_profile_threading.py     # Every storage call is scoped to the signed-in learner
+│   ├── test_manage_users.py          # Admin CLI
+│   ├── test_migrate_to_postgres.py   # SQLite → Postgres copy: idempotent, dry-run, read-only source
+│   ├── test_postgres_backend.py      # Opt-in: storage + auth contract against real Postgres
 │   ├── test_utilities.py             # Pure unit tests (clean_json, transliteration, UI text)
 │   ├── test_sarvam_chat.py           # Chat API: parsing, retries, verbatim-input contract
 │   ├── test_mastery_quiz.py          # Quiz bank integrity, grading, SRS orchestration
@@ -132,7 +141,9 @@ You will need credentials from three separate services:
 | **Google Cloud** | Service Account JSON with Sheets + Drive API access | Email-lesson schedule tracking |
 | **Gmail** | App Password — not your regular login password ([Google's guide](https://support.google.com/accounts/answer/185833)) | Email lesson delivery |
 
-You will also need a **Google Sheet** with columns: `Topic`, `Status`, `Date Sent` — populated with the grammar topics you want emailed to you. The service account must have edit access to this sheet. (The Mastery Quiz does not use Sheets; its progress is stored locally.)
+You will also need a **Google Sheet** with columns: `Topic`, `Status`, `Date Sent` — populated with the grammar topics you want emailed to you. The service account must have edit access to this sheet. (The Mastery Quiz does not use Sheets; its progress is stored in Vāṇi's own database.)
+
+For a **hosted** deployment you also need a **Postgres database** (e.g. the [Neon](https://neon.tech) free tier). Streamlit Community Cloud wipes its disk on every reboot, so the local SQLite file cannot hold progress there. Locally, no database setup is needed.
 
 ### 2. Installation
 
@@ -154,6 +165,9 @@ oauth2client
 python-dotenv
 indic-transliteration
 requests
+fsrs>=6.3,<7
+psycopg[binary]>=3.2,<4
+psycopg-pool>=3.2,<4
 ```
 
 `streamlit>=1.33` is required for the native `st.audio_input` widget used in voice chat.
@@ -171,7 +185,28 @@ GMAIL_PASSWORD=your_gmail_app_password
 
 Place your Google Cloud `service_account.json` in the project root.
 
-For **Streamlit Cloud** deployment, add these same values to `.streamlit/secrets.toml` or the Streamlit Cloud Secrets UI. The service account JSON goes under a `[gcp_service_account]` section — see `config.py` for the loading logic.
+For **Streamlit Cloud** deployment, add these same values to `.streamlit/secrets.toml` or the Streamlit Cloud Secrets UI. The service account JSON goes under a `[gcp_service_account]` section — see `config.py` for the loading logic. Add `DATABASE_URL` (your Postgres connection string) there too; when it is unset the app uses local SQLite at `data/vani.db`.
+
+### 3a. Accounts
+
+Vāṇi is invite-only: there is no sign-up page. Create accounts from the command line (passwords are prompted for, never passed as arguments):
+
+```bash
+python scripts/manage_users.py create yourname --admin --profile-id local  # adopts pre-login progress
+python scripts/manage_users.py create friend                               # a learner
+python scripts/manage_users.py list | reset-password NAME | disable NAME | enable NAME | revoke-sessions NAME
+```
+
+Only admins see **Send Email Lesson** (it emails `GMAIL_USER` and advances the shared sheet). The CLI targets local SQLite unless `VANI_DATABASE_URL` is set, in which case it administers that Postgres database.
+
+### 3b. Moving to hosted Postgres
+
+```bash
+export VANI_DATABASE_URL=postgresql://...        # the same URL as DATABASE_URL in Secrets
+python scripts/migrate_sqlite_to_postgres.py --dry-run
+python scripts/migrate_sqlite_to_postgres.py     # idempotent; data/vani.db is left untouched
+python scripts/manage_users.py create yourname --admin --profile-id local
+```
 
 ### 4. Running the App
 
@@ -192,7 +227,7 @@ pip install pytest
 python -m pytest -q
 ```
 
-**1,494 tests across 9 modules, completing in ~5 seconds:**
+**~1,570 tests, completing in ~7 seconds** (highlights below; account tests are listed in the project tree above):
 
 | Module | What It Tests |
 |--------|--------------|
@@ -215,6 +250,14 @@ python -m pytest -m live -q
 ```
 
 Note: the Sarvam starter tier intermittently returns truncated/empty completions (`finish_reason=length`); the app retries these automatically, but live runs can still occasionally fail on consecutive API spikes.
+
+### Postgres backend (opt-in)
+
+Reruns the storage and auth contract tests against a real Postgres. **Every test drops all Vāṇi tables**, so point it at a throwaway database, never production:
+
+```bash
+VANI_TEST_DATABASE_URL=postgresql://... python -m pytest -m postgres -q
+```
 
 ---
 

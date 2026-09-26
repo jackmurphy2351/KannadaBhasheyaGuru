@@ -12,12 +12,14 @@ App runs at `http://localhost:8501`.
 
 ## Architecture
 
-Four-file Python/Streamlit app:
+Python/Streamlit app:
 
 - **`main.py`** — Streamlit UI (sidebar navigation, session state, custom CSS). Seven modes: Home, Conversation Practice (Text + Voice Chat tabs), Send Email Lesson, Mastery Quiz, Daily Review, Writing Critique, Reading Comprehension.
 - **`logic.py`** — All backend logic: Sarvam chat completions API calls, Sarvam STT/TTS REST calls, Google Sheets read/write, Gmail SMTP, quiz grading, text critique, transliteration.
 - **`config.py`** — Centralized config: API key loading (Streamlit Secrets or `.env`), Sarvam model settings (incl. `SARVAM_MAX_TOKENS`), Sarvam voice options, UI translation strings (4 language modes), character personas, grammar topics, quiz topic→doc mapping.
-- **`storage.py`** — Portable persistence layer (no Streamlit/Google/`logic` deps). SQLite at `data/vani.db`: mastery, quiz attempts, SRS cards, review history. Everything is keyed by `profile_id` (default `"local"`) so multi-user is a UI change, not a migration.
+- **`storage.py`** — Portable persistence layer (no Streamlit/Google/`logic`/`config` deps). Accounts, sessions, login throttling, mastery, quiz attempts, SRS cards, review history. SQLite at `data/vani.db` by default; Postgres when `storage.configure(url)` is given one. Progress is keyed by `profile_id`; `"local"` is the pre-login profile.
+- **`auth.py`** — Accounts and sessions (no Streamlit/`config`/`logic` deps): scrypt password hashing, throttled `authenticate()`, "remember me" session tokens.
+- **`scripts/`** — `manage_users.py` (invite-only admin CLI) and `migrate_sqlite_to_postgres.py` (one-off copy of local progress into hosted Postgres).
 - **`srs.py`** — FSRS scheduling (no Streamlit/`config`/`storage`/`logic` deps — `config` imports Streamlit, so importing it here would drag the UI into the scheduler).
 
 ### Key Design Decisions
@@ -42,6 +44,12 @@ Four-file Python/Streamlit app:
 
 **4 Language Display Modes:** UI text and chat output can render as English, Kannada Script, Kannada Roman (Natural/colloquial), or Kannada Roman (Strict/IAST). The `toggle_script()` function and `indic-transliteration` library handle conversions.
 
+**Accounts & Sessions:** Invite-only — accounts come from `scripts/manage_users.py`; there is no sign-up page. `require_login()` in `main.py` gates everything (before any mode renders) and ends in `st.stop()` when nobody is signed in. Only the scrypt hash of a password (`scrypt$n$r$p$salt$key`, so cost can be raised later) and the SHA-256 of a session token are stored, so a leaked DB can't sign anyone in. Streamlit loses `st.session_state` on refresh, so "remember me" is a token in the `vani_session` cookie: read server-side from `st.context.cookies`, written by a zero-height `components.html` script *on the run after* sign-in (a component emitted in the same run as `st.rerun()` never executes — hence `_queue_cookie`/`_flush_cookie`). Revocation in the DB is what logs a token out; clearing the cookie is tidiness. `authenticate()` locks a username after 5 failures in 15 min and verifies against a dummy hash for unknown usernames (no timing-based username probing); the form shows one generic error. Sign-out clears every `st.session_state` key except `context`. **Send Email Lesson is admin-only** — it emails `GMAIL_USER` and advances the shared sheet.
+
+**`profile_id` Must Be Threaded Explicitly:** `logic.get_quiz_topics`, `record_quiz_answer`, `build_review_quiz` and `get_review_summary` take a *required* keyword `profile_id`; `main.py` passes `current_profile()`. `storage.py` keeps `"local"` defaults so its own tests stay terse, which means a forgotten `profile_id` would silently read/write the wrong learner's deck — `tests/test_profile_threading.py` AST-walks `main.py` and `logic.py` and fails on any per-profile `storage.*` call without `profile_id`. New storage functions that are not per-profile must be added to its `_PROFILE_FREE` set.
+
+**Storage Backends:** Streamlit Community Cloud wipes its disk on every reboot, so the hosted build must use Postgres (`DATABASE_URL` secret → `config.DATABASE_URL` → `storage.configure()` at the top of `main()`; unset → SQLite). SQL is written once with `?` placeholders; `_PgConn` translates to `%s` and `AUTOINCREMENT` DDL to identity columns. Postgres uses a module-level `psycopg_pool` (a TLS handshake per call would add up), closed at exit. Its `_pg_row_factory` must tolerate `cursor.description is None`: the pool's health check runs a result-less query, and if the factory raises there the pool silently never hands out a connection (a hang, not an error). The schema version lives in the `schema_meta` table (Postgres has no `PRAGMA user_version`; SQLite v1 databases are recognized via the pragma). Timestamps stay fixed-width ISO `TEXT` on both backends so `due <= ?` ordering is identical. The admin scripts read `VANI_DATABASE_URL`, deliberately not `DATABASE_URL`, so an app `.env` loaded in your shell never points admin commands at production.
+
 ### External Dependencies
 
 | Service | Purpose | Notes |
@@ -51,6 +59,7 @@ Four-file Python/Streamlit app:
 | Sarvam AI TTS | Kannada text → audio | Max 2500 chars/request, base64 WAV output |
 | Google Sheets + Drive | Email-lesson schedule tracking | Requires `service_account.json` |
 | Gmail SMTP | Email lesson delivery | Requires Gmail App Password |
+| Postgres (e.g. Neon) | Hosted storage for accounts and progress | `DATABASE_URL`; optional locally (SQLite fallback) |
 
 ### Credentials
 
@@ -58,22 +67,27 @@ Required in `.env` (local) or Streamlit Secrets (deployed):
 - `SARVAM_API_KEY` (covers both chat completions and STT/TTS)
 - `GOOGLE_SHEET_NAME`
 - `GMAIL_USER` / `GMAIL_PASSWORD`
+- `DATABASE_URL` (hosted only; Postgres connection string)
 - `service_account.json` in project root (Google Cloud service account)
 
 ### Google Sheets Schema
 
-The tracker sheet needs columns: `Topic`, `Status`, `Date Sent`. It is used only by the email-lesson flow: `send_email_lesson()` picks the first row with an empty `Status` and marks it `"Sent"`. Quiz mastery is NOT tracked in Sheets — it lives in `data/vani.db` via `storage.py`. The legacy `data/progress.json` is imported once on first open and then left alone as a backup.
+The tracker sheet needs columns: `Topic`, `Status`, `Date Sent`. It is used only by the email-lesson flow: `send_email_lesson()` picks the first row with an empty `Status` and marks it `"Sent"`. Quiz mastery is NOT tracked in Sheets — it lives in the storage database (`data/vani.db` locally, Postgres when hosted) via `storage.py`. The legacy `data/progress.json` is imported once on first open and then left alone as a backup.
 
 ## Testing
 
 ```bash
-python -m pytest -q          # full mocked suite (~1,500 tests, ~5s, no network)
+python -m pytest -q          # full mocked suite (~1,570 tests, ~7s, no network)
 python -m pytest -m live -q  # opt-in canaries against the real Sarvam API (costs credits)
+VANI_TEST_DATABASE_URL=postgresql://... python -m pytest -m postgres -q
+                             # storage + auth contract on real Postgres (DROPS ALL TABLES — throwaway DB only)
 ```
 
 An autouse `isolated_db` fixture in `tests/conftest.py` repoints `storage.DB_FILE`
 and `storage.PROGRESS_FILE` at `tmp_path` for **every** test. Never remove it:
 those paths resolve relative to the repo, so without it any test touching a
-storage function reads and writes the developer's own progress.
+storage function reads and writes the developer's own progress. It also forces
+the SQLite backend (`storage._DATABASE_URL = None`) so nothing that called
+`storage.configure()` can point the mocked suite at a real Postgres.
 
 Live tests (`tests/test_live_llm.py`) are deselected by default via `addopts = -m "not live"` in `pytest.ini`. They verify the real model never hallucinates corrections; do NOT assert on model *sensitivity* (whether it flags a given mistake) — that is nondeterministic.

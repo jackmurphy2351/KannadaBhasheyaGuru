@@ -231,3 +231,56 @@ class TestSendEmailErrorHandling:
             # Should return a string, not propagate the exception
             result = send_email_lesson(FAKE_CONTEXT)
         assert isinstance(result, str)
+
+
+# ===========================================================================
+# send_email — generic sender for arbitrary recipients (account emails)
+# ===========================================================================
+
+class TestSendEmail:
+
+    def test_sends_to_the_given_recipient(self):
+        with patch("logic.smtplib.SMTP") as mock_smtp_cls:
+            server = mock_smtp_cls.return_value
+            logic.send_email("newuser@example.com", "Subject line",
+                             "<p>Body</p>")
+        server.starttls.assert_called_once()
+        server.login.assert_called_once_with(config.SENDER_EMAIL,
+                                             config.SENDER_PASSWORD)
+        assert server.sendmail.call_count == 1
+        from_addr, to_addr, raw = server.sendmail.call_args[0]
+        assert from_addr == config.SENDER_EMAIL
+        assert to_addr == "newuser@example.com"
+        msg = Parser().parsestr(raw)
+        assert msg["To"] == "newuser@example.com"
+        assert msg["Subject"] == "Subject line"
+        assert "<p>Body</p>" in msg.get_payload()[0].get_payload(decode=True).decode()
+        server.quit.assert_called_once()
+
+    def test_does_not_mail_the_owner(self):
+        # Unlike send_email_lesson, which always mails config.RECEIVER_EMAIL.
+        with patch("logic.smtplib.SMTP") as mock_smtp_cls:
+            logic.send_email("newuser@example.com", "Subject", "<p>Body</p>")
+        _, to_addr, _ = mock_smtp_cls.return_value.sendmail.call_args[0]
+        assert to_addr != config.RECEIVER_EMAIL
+
+
+class TestSignupEmails:
+
+    def test_confirmation_email_contains_the_link(self):
+        with patch("logic.smtplib.SMTP") as mock_smtp_cls:
+            logic.send_signup_confirmation_email("newuser@example.com", "tok123")
+        raw = mock_smtp_cls.return_value.sendmail.call_args[0][2]
+        msg = Parser().parsestr(raw)
+        body = msg.get_payload()[0].get_payload(decode=True).decode()
+        assert "tok123" in body
+        assert config.APP_URL in body
+
+    def test_duplicate_notice_carries_no_token_or_link(self):
+        with patch("logic.smtplib.SMTP") as mock_smtp_cls:
+            logic.send_duplicate_signup_notice_email("existing@example.com")
+        raw = mock_smtp_cls.return_value.sendmail.call_args[0][2]
+        msg = Parser().parsestr(raw)
+        _, to_addr, _ = mock_smtp_cls.return_value.sendmail.call_args[0]
+        assert to_addr == "existing@example.com"
+        assert "http" not in msg.get_payload()[0].get_payload(decode=True).decode()

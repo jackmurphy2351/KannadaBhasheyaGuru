@@ -23,10 +23,14 @@ _PROFILE_FREE = {
     "utcnow", "to_iso", "from_iso", "get_schema_version", "configure", "backend", "close",
     "create_user", "get_user", "get_user_by_username", "list_users",
     "set_password_hash", "set_user_disabled", "touch_last_login",
+    "set_user_confirmed",
     "create_session", "get_session", "touch_session", "delete_session",
     "delete_sessions_for", "purge_expired_sessions",
     "record_login_failure", "count_recent_login_failures",
     "clear_login_failures",
+    "create_email_confirmation", "get_email_confirmation",
+    "delete_email_confirmation", "delete_email_confirmations_for",
+    "purge_expired_email_confirmations",
 }
 
 
@@ -121,3 +125,12 @@ class TestLoginWiring:
         src = self._src()
         assert 'del nav_options["Send Email Lesson"]' in src
         assert 'elif mode == "Send Email Lesson" and user["is_admin"]:' in src
+
+    def test_signup_flow_can_never_set_is_admin(self):
+        # The whole login/signup surface — sign_out through require_login —
+        # must never mention is_admin: the only way to grant it stays
+        # scripts/manage_users.py, run locally.
+        src = self._src()
+        body = src[src.index("def sign_out("):
+                   src.index("def render_account_sidebar(")]
+        assert "is_admin" not in body

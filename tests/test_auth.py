@@ -2,6 +2,7 @@
 Accounts and sessions (auth.py). SQLite via the autouse isolated_db fixture;
 no network, no Streamlit.
 """
+import inspect
 import sqlite3
 from datetime import timedelta
 
@@ -169,3 +170,159 @@ class TestPasswordChanges:
         auth.set_password(asha["profile_id"], self.NEW)
         assert auth.resume_session(token) is None
         assert auth.authenticate("asha", self.NEW) == asha
+
+
+# ---------------------------------------------------------------------------
+# Self-service signup
+# ---------------------------------------------------------------------------
+
+GOOD_SIGNUP_PW = "Correct-Horse9"  # upper, lower, digit, special, 12+ chars
+
+
+class TestValidateSignupPassword:
+
+    def test_accepts_a_password_with_every_character_class(self):
+        auth.validate_signup_password(GOOD_SIGNUP_PW)  # no raise
+
+    @pytest.mark.parametrize("password", [
+        "correct horse battery",   # no upper, no digit, no special
+        "CORRECT HORSE9!",         # no lower
+        "correct horse9!",         # no upper
+        "Correct Horse!!!!",       # no digit
+        "CorrectHorseBattery9",    # no special
+        "Sh0rt!",                  # too short
+    ])
+    def test_rejects_missing_a_character_class_or_length(self, password):
+        with pytest.raises(ValueError):
+            auth.validate_signup_password(password)
+
+    def test_validate_password_stays_lenient_for_admin_paths(self):
+        # The plain passphrase-style password used everywhere else in this
+        # file must keep passing the *unmodified* admin/CLI check, even
+        # though it fails the stricter signup one — proves the two are
+        # layered, not merged.
+        auth.validate_password(PW)  # no raise
+        with pytest.raises(ValueError):
+            auth.validate_signup_password(PW)
+
+
+class TestStartSignup:
+
+    def test_creates_a_disabled_unconfirmed_account(self):
+        kind, token, profile_id = auth.start_signup(
+            " Asha@Example.com ", GOOD_SIGNUP_PW, now=NOW)
+        assert kind == "new"
+        assert token is not None
+        user = storage.get_user(profile_id)
+        assert user["username"] == "asha@example.com"
+        assert user["disabled"] is True
+        assert user["email_confirmed_at"] is None
+        assert user["is_admin"] is False
+
+    def test_signature_has_no_is_admin_or_profile_id_parameter(self):
+        # A future "helpful" addition of either parameter must fail loudly.
+        params = inspect.signature(auth.start_signup).parameters
+        assert "is_admin" not in params
+        assert "profile_id" not in params
+
+    def test_rejects_bad_email_shape(self):
+        with pytest.raises(ValueError):
+            auth.start_signup("not-an-email", GOOD_SIGNUP_PW)
+        assert storage.list_users() == []
+
+    def test_rejects_weak_password_and_creates_no_row(self):
+        with pytest.raises(ValueError):
+            auth.start_signup("asha@example.com", "weak")
+        assert storage.get_user_by_username("asha@example.com") is None
+
+    def test_duplicate_email_does_not_touch_the_existing_account(self):
+        existing = auth.create_user("asha@example.com", PW, is_admin=True)
+        before = storage.get_user(existing["profile_id"])
+
+        kind, token, profile_id = auth.start_signup(
+            "ASHA@example.com", GOOD_SIGNUP_PW, now=NOW)
+
+        assert kind == "duplicate"
+        assert token is None
+        assert profile_id == existing["profile_id"]
+        assert storage.get_user(existing["profile_id"]) == before
+
+    def test_concurrent_signup_race_degrades_to_duplicate(self, monkeypatch):
+        auth.create_user("asha@example.com", PW)
+
+        def boom(*a, **k):
+            raise ValueError("username taken")
+
+        monkeypatch.setattr(storage, "create_user", boom)
+        kind, token, profile_id = auth.start_signup(
+            "asha@example.com", GOOD_SIGNUP_PW)
+        assert kind == "duplicate"
+        assert token is None
+
+
+class TestConfirmSignup:
+
+    def _signed_up(self):
+        _, token, profile_id = auth.start_signup(
+            "asha@example.com", GOOD_SIGNUP_PW, now=NOW)
+        return token, profile_id
+
+    def test_confirms_and_enables_the_account(self):
+        token, profile_id = self._signed_up()
+        user = auth.confirm_signup(token, now=NOW)
+        assert user["username"] == "asha@example.com"
+        assert storage.get_user(profile_id)["disabled"] is False
+        assert storage.get_user(profile_id)["email_confirmed_at"] is not None
+
+    def test_token_is_single_use(self):
+        token, _ = self._signed_up()
+        assert auth.confirm_signup(token) is not None
+        assert auth.confirm_signup(token) is None
+
+    def test_expired_token_rejected(self):
+        token, _ = self._signed_up()
+        later = NOW + timedelta(hours=auth.SIGNUP_TOKEN_HOURS, seconds=1)
+        assert auth.confirm_signup(token, now=later) is None
+
+    @pytest.mark.parametrize("token", [None, "", "garbage"])
+    def test_bad_tokens(self, token):
+        assert auth.confirm_signup(token) is None
+
+    def test_confirmed_user_can_then_sign_in_normally(self):
+        token, _ = self._signed_up()
+        auth.confirm_signup(token, now=NOW)
+        assert auth.authenticate(
+            "asha@example.com", GOOD_SIGNUP_PW, now=NOW) is not None
+
+
+class TestAuthenticateUnconfirmed:
+
+    def _signed_up(self):
+        _, token, profile_id = auth.start_signup(
+            "asha@example.com", GOOD_SIGNUP_PW, now=NOW)
+        return token, profile_id
+
+    def test_correct_password_raises_pending_confirmation(self):
+        self._signed_up()
+        with pytest.raises(auth.PendingConfirmation):
+            auth.authenticate("asha@example.com", GOOD_SIGNUP_PW, now=NOW)
+
+    def test_wrong_password_returns_none_not_pending(self):
+        # The key anti-enumeration property: a bad guess against a pending
+        # account looks exactly like a bad guess against anything else.
+        self._signed_up()
+        assert auth.authenticate("asha@example.com", "nope at all!", now=NOW) \
+            is None
+
+    def test_lockout_still_applies_to_a_pending_account(self):
+        self._signed_up()
+        for _ in range(auth.MAX_FAILURES):
+            auth.authenticate("asha@example.com", "nope", now=NOW)
+        with pytest.raises(auth.LockedOut):
+            auth.authenticate("asha@example.com", GOOD_SIGNUP_PW, now=NOW)
+
+    def test_admin_disabled_confirmed_account_still_returns_none(self, asha):
+        # Distinguishes "disabled by an admin" (existing behavior) from
+        # "disabled pending confirmation" (new behavior) — must not collapse.
+        storage.set_user_disabled(asha["profile_id"], True)
+        assert auth.authenticate("asha", PW, now=NOW) is None

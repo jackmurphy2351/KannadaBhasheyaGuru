@@ -1369,9 +1369,65 @@ def sign_out():
     _queue_cookie(None)
 
 
+def _handle_email_confirmation():
+    """Redeem a ``?confirm=<token>`` link and sign the person straight in.
+
+    Runs unconditionally, before the session-state/cookie checks in
+    require_login(): a confirmation click is a fresh, cookie-less visit, not
+    a resumed session. Clearing the query param immediately means a page
+    refresh right after confirming can never replay the (already single-use,
+    now-deleted) token.
+    """
+    token = st.query_params.get("confirm")
+    if not token:
+        return
+    st.query_params.clear()
+    user = auth.confirm_signup(token)
+    if user is None:
+        st.session_state["_confirm_error"] = True
+        return
+    _sign_in(user, remember=True)
+    st.session_state["_just_confirmed"] = True
+    st.rerun()
+
+
+def _render_signup_tab(lang_mode):
+    email = st.text_input(logic.get_ui_text("LBL_EMAIL", lang_mode))
+    pw1 = st.text_input(logic.get_ui_text("LBL_PASSWORD", lang_mode),
+                        type="password", key="signup_pw1")
+    pw2 = st.text_input(logic.get_ui_text("LBL_CONFIRM_PASSWORD", lang_mode),
+                        type="password", key="signup_pw2")
+    submitted = st.form_submit_button(
+        logic.get_ui_text("BTN_CREATE_ACCOUNT", lang_mode))
+    if not submitted:
+        return
+    if pw1 != pw2:
+        st.error(logic.get_ui_text("ERR_PASSWORD_MISMATCH", lang_mode))
+        return
+    try:
+        kind, token, profile_id = auth.start_signup(email, pw1)
+    except ValueError as e:
+        st.error(str(e))
+        return
+    # Both branches below are wrapped in one broad try/except and always end
+    # in the same success message — an SMTP hiccup, and whether the email was
+    # already registered, must never change what the submitter sees.
+    try:
+        if kind == "new":
+            logic.send_signup_confirmation_email(email, token)
+        else:
+            existing = storage.get_user(profile_id)
+            logic.send_duplicate_signup_notice_email(existing["username"])
+    except Exception as e:  # pragma: no cover - defensive
+        print(f"[signup] failed to send email for {kind}: {e}")
+    storage.purge_expired_email_confirmations()
+    st.success(logic.get_ui_text("MSG_SIGNUP_CHECK_EMAIL", lang_mode))
+
+
 def require_login(lang_mode):
-    """Return the signed-in user, or render the sign-in form and stop."""
+    """Return the signed-in user, or render the sign-in/signup UI and stop."""
     _flush_cookie()
+    _handle_email_confirmation()
     if "user" in st.session_state:
         return st.session_state.user
 
@@ -1385,28 +1441,43 @@ def require_login(lang_mode):
     _, col, _ = st.columns([1, 2, 1])
     with col:
         st.title(logic.get_ui_text("APP_TITLE", lang_mode))
-        st.subheader(logic.get_ui_text("TITLE_LOGIN", lang_mode))
-        with st.form("login"):
-            username = st.text_input(logic.get_ui_text("LBL_USERNAME", lang_mode))
-            password = st.text_input(logic.get_ui_text("LBL_PASSWORD", lang_mode),
-                                     type="password")
-            remember = st.checkbox(logic.get_ui_text("LBL_REMEMBER_ME", lang_mode),
-                                   value=True)
-            submitted = st.form_submit_button(
-                logic.get_ui_text("BTN_LOGIN", lang_mode))
-        if submitted:
-            try:
-                user = auth.authenticate(username, password)
-            except auth.LockedOut:
-                st.error(logic.get_ui_text("ERR_LOCKED", lang_mode))
-            else:
-                if user is None:
-                    # One message for every failure, so the form can't be
-                    # used to discover which usernames exist.
-                    st.error(logic.get_ui_text("ERR_LOGIN", lang_mode))
+        if st.session_state.pop("_confirm_error", False):
+            st.error(logic.get_ui_text("ERR_CONFIRM_LINK_INVALID", lang_mode))
+        tab_signin, tab_signup = st.tabs([
+            logic.get_ui_text("TAB_SIGNIN", lang_mode),
+            logic.get_ui_text("TAB_SIGNUP", lang_mode)])
+
+        with tab_signin:
+            with st.form("login"):
+                username = st.text_input(
+                    logic.get_ui_text("LBL_USERNAME", lang_mode))
+                password = st.text_input(
+                    logic.get_ui_text("LBL_PASSWORD", lang_mode),
+                    type="password")
+                remember = st.checkbox(
+                    logic.get_ui_text("LBL_REMEMBER_ME", lang_mode), value=True)
+                submitted = st.form_submit_button(
+                    logic.get_ui_text("BTN_LOGIN", lang_mode))
+            if submitted:
+                try:
+                    user = auth.authenticate(username, password)
+                except auth.LockedOut:
+                    st.error(logic.get_ui_text("ERR_LOCKED", lang_mode))
+                except auth.PendingConfirmation:
+                    st.error(logic.get_ui_text("ERR_PENDING_CONFIRMATION",
+                                               lang_mode))
                 else:
-                    _sign_in(user, remember)
-                    st.rerun()
+                    if user is None:
+                        # One message for every failure, so the form can't be
+                        # used to discover which usernames exist.
+                        st.error(logic.get_ui_text("ERR_LOGIN", lang_mode))
+                    else:
+                        _sign_in(user, remember)
+                        st.rerun()
+
+        with tab_signup:
+            with st.form("signup"):
+                _render_signup_tab(lang_mode)
     st.stop()
 
 
@@ -1455,6 +1526,8 @@ def main():
 
     lang_mode = "English"
     user = require_login(lang_mode)
+    if st.session_state.pop("_just_confirmed", False):
+        st.success(logic.get_ui_text("MSG_ACCOUNT_CONFIRMED", lang_mode))
 
     # 1. Load Context
     if "context" not in st.session_state:

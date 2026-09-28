@@ -53,7 +53,8 @@ class TestSchema:
             names = {r[0] for r in conn.execute(
                 "SELECT name FROM sqlite_master WHERE type='table'")}
         assert {"cards", "reviews", "attempts", "mastery", "users",
-                "sessions", "login_failures", "schema_meta"} <= names
+                "sessions", "login_failures", "schema_meta",
+                "email_confirmations"} <= names
 
     def test_v1_database_upgrades_with_progress_intact(self, isolated_db):
         # A database written by the v1 code: tables present, version held only
@@ -72,6 +73,54 @@ class TestSchema:
         assert storage.is_mastered("Negation")
         assert not storage.is_mastered("Adverbs")
         assert storage.list_users() == []
+
+    def test_v2_database_upgrades_and_backfills_confirmed_at(self, isolated_db):
+        # A database written by the v2 code: a real invite-only account, with
+        # no concept of email confirmation at all. It must not be locked out
+        # by the v3 migration.
+        created = _iso(-100)
+        with sqlite3.connect(storage.DB_FILE) as conn:
+            conn.executescript(storage._SCHEMA_V1)
+            conn.executescript(storage._SCHEMA_V2)
+            conn.execute(
+                "INSERT INTO users (profile_id, username, password_hash, "
+                "is_admin, disabled, created_at, last_login_at) "
+                "VALUES ('local', 'jack', 'h', 1, 0, ?, NULL)", (created,))
+            conn.execute("CREATE TABLE schema_meta "
+                         "(key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+            conn.execute("INSERT INTO schema_meta VALUES ('version', '2')")
+
+        assert storage.get_schema_version() == storage.SCHEMA_VERSION
+        user = storage.get_user("local")
+        assert user["email_confirmed_at"] == created  # backfilled, not NULL
+        assert user["is_admin"] is True and user["disabled"] is False
+
+    def test_v3_migration_never_reconfirms_a_pending_signup_on_rerun(self):
+        # Regression: the confirmed_at backfill must fire exactly once. If it
+        # ran again on a later _migrate() call (e.g. the version bookkeeping
+        # row was lost to a rollback while the ALTER TABLE it accompanied had
+        # already committed — see _add_email_confirmed_column), it would
+        # silently confirm every genuinely-pending signup just by opening a
+        # connection.
+        storage.create_user("p1", "asha@example.com", "h", confirmed=False)
+        with sqlite3.connect(storage.DB_FILE) as conn:
+            conn.execute(
+                "UPDATE schema_meta SET value = '2' WHERE key = 'version'")
+        storage.get_progress()  # any call triggers _migrate() again
+        user = storage.get_user("p1")
+        assert user["email_confirmed_at"] is None
+        assert user["disabled"] is True
+
+    def test_v3_migration_column_add_is_idempotent(self):
+        # Simulates the exact failure this guarded against: _migrate() runs
+        # twice against a database where the column already exists but the
+        # version bookkeeping regressed. Must not raise "duplicate column".
+        storage.get_progress()  # first migration, adds the column
+        with sqlite3.connect(storage.DB_FILE) as conn:
+            conn.execute(
+                "UPDATE schema_meta SET value = '2' WHERE key = 'version'")
+        storage.get_progress()  # would raise OperationalError if not guarded
+        assert storage.get_schema_version() == storage.SCHEMA_VERSION
 
 
 class TestProgressJsonImport:
@@ -378,7 +427,22 @@ class TestUsers:
         user = storage.get_user("p1")
         assert user["username"] == "asha"
         assert user["is_admin"] is True and user["disabled"] is False
+        assert user["email_confirmed_at"] is not None  # confirmed=True default
         assert storage.get_user_by_username("asha")["profile_id"] == "p1"
+
+    def test_unconfirmed_signup_is_disabled_with_no_confirmed_at(self):
+        storage.create_user("p1", "asha@example.com", "hash", confirmed=False,
+                            at=NOW)
+        user = storage.get_user("p1")
+        assert user["disabled"] is True
+        assert user["email_confirmed_at"] is None
+
+    def test_set_user_confirmed_enables_and_stamps(self):
+        storage.create_user("p1", "asha@example.com", "hash", confirmed=False)
+        storage.set_user_confirmed("p1", at=NOW)
+        user = storage.get_user("p1")
+        assert user["disabled"] is False
+        assert user["email_confirmed_at"] == storage.to_iso(NOW)
 
     def test_unknown_user_is_none(self):
         assert storage.get_user("nope") is None
@@ -445,6 +509,39 @@ class TestSessions:
         storage.create_session("new", "p1", NOW + timedelta(days=1))
         assert storage.purge_expired_sessions(now=NOW) == 1
         assert storage.get_session("new", now=NOW) is not None
+
+
+class TestEmailConfirmations:
+
+    def test_live_token_found(self):
+        storage.create_email_confirmation("t1", "p1", NOW + timedelta(days=1),
+                                          at=NOW)
+        assert storage.get_email_confirmation("t1", now=NOW)["profile_id"] == "p1"
+
+    def test_expired_token_not_found(self):
+        storage.create_email_confirmation("t1", "p1", NOW + timedelta(seconds=5),
+                                          at=NOW)
+        assert storage.get_email_confirmation(
+            "t1", now=NOW + timedelta(seconds=5)) is None
+
+    def test_delete_token(self):
+        storage.create_email_confirmation("t1", "p1", NOW + timedelta(days=1))
+        storage.delete_email_confirmation("t1")
+        assert storage.get_email_confirmation("t1") is None
+
+    def test_delete_for_profile(self):
+        later = NOW + timedelta(days=1)
+        storage.create_email_confirmation("a", "p1", later)
+        storage.create_email_confirmation("b", "p2", later)
+        storage.delete_email_confirmations_for("p1")
+        assert storage.get_email_confirmation("a") is None
+        assert storage.get_email_confirmation("b") is not None
+
+    def test_purge_expired(self):
+        storage.create_email_confirmation("old", "p1", NOW - timedelta(seconds=1))
+        storage.create_email_confirmation("new", "p1", NOW + timedelta(days=1))
+        assert storage.purge_expired_email_confirmations(now=NOW) == 1
+        assert storage.get_email_confirmation("new", now=NOW) is not None
 
 
 class TestLoginFailures:

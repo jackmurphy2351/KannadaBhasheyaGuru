@@ -14,6 +14,7 @@ leaked database can neither log anyone in nor be replayed as a cookie.
 import base64
 import hashlib
 import hmac
+import re
 import secrets
 import uuid
 from datetime import timedelta
@@ -22,6 +23,9 @@ import storage
 
 MIN_PASSWORD_LENGTH = 12
 SESSION_DAYS = 30
+
+# How long a self-service signup has to click the confirmation link.
+SIGNUP_TOKEN_HOURS = 24
 
 # Throttle: this many failures for one username inside the window locks it
 # until the oldest failure ages out. Keyed by username, not IP — Streamlit does
@@ -40,6 +44,10 @@ _KEY_BYTES = 64
 
 class LockedOut(Exception):
     """Too many recent failed logins for this username."""
+
+
+class PendingConfirmation(Exception):
+    """The password was correct, but this account is awaiting email confirmation."""
 
 
 # ---------------------------------------------------------------------------
@@ -89,6 +97,30 @@ def validate_password(password):
             f"Password must be at least {MIN_PASSWORD_LENGTH} characters.")
 
 
+def validate_signup_password(password):
+    """Stricter policy for public self-service signup.
+
+    Layered on top of ``validate_password`` rather than replacing it: an
+    admin resetting someone's password, or the CLI, still only needs length
+    (existing passphrase-style passwords like "correct horse battery" keep
+    working there) — this extra complexity check applies only where a
+    stranger on the internet is choosing their own password unsupervised.
+    """
+    validate_password(password)
+    password = password or ""
+    missing = []
+    if not re.search(r"[A-Z]", password):
+        missing.append("an uppercase letter")
+    if not re.search(r"[a-z]", password):
+        missing.append("a lowercase letter")
+    if not re.search(r"\d", password):
+        missing.append("a number")
+    if not re.search(r"[^A-Za-z0-9]", password):
+        missing.append("a special character")
+    if missing:
+        raise ValueError("Password must also contain " + ", ".join(missing) + ".")
+
+
 # ---------------------------------------------------------------------------
 # Accounts
 # ---------------------------------------------------------------------------
@@ -130,7 +162,16 @@ def authenticate(username, password, now=None):
     user = storage.get_user_by_username(name)
     ok = verify_password(password or "",
                          user["password_hash"] if user else _DUMMY_HASH)
-    if not ok or user is None or user["disabled"]:
+    if not ok or user is None:
+        storage.record_login_failure(name, at=now)
+        return None
+    if user["disabled"]:
+        # A disabled account only reveals *why* once the password has
+        # already matched — a wrong guess is indistinguishable from a wrong
+        # guess against any other account, so this can't be used to find out
+        # which emails are registered-but-unconfirmed.
+        if user["email_confirmed_at"] is None:
+            raise PendingConfirmation(name)
         storage.record_login_failure(name, at=now)
         return None
     storage.clear_login_failures(name)
@@ -161,6 +202,78 @@ def change_password(profile_id, current_password, new_password,
     storage.delete_sessions_for(
         profile_id, keep=_token_hash(keep_token) if keep_token else None)
     return True
+
+
+# ---------------------------------------------------------------------------
+# Self-service signup
+#
+# start_signup()'s signature deliberately has no ``is_admin`` and no
+# ``profile_id`` parameter — not defaulted away, absent — so it structurally
+# cannot create an admin or land in an existing account's row. The only
+# remaining way to grant admin stays scripts/manage_users.py, run locally.
+# ---------------------------------------------------------------------------
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def start_signup(email, password, now=None):
+    """Begin a public signup. Returns ``(kind, raw_token, profile_id)``.
+
+    ``kind`` is ``"new"`` (a disabled, unconfirmed account was created; send
+    the confirmation email to ``raw_token``'s link) or ``"duplicate"`` (the
+    email is already registered; ``raw_token`` is None — send a notice to the
+    existing address instead, and show the caller the exact same "check your
+    email" outcome either way, so signup can never be used to discover which
+    emails have accounts).
+
+    Both the email shape and the password policy are checked before the
+    lookup, regardless of whether the email turns out to be registered, so
+    neither is an enumeration channel either.
+    """
+    now = now or storage.utcnow()
+    name = normalize_username(email)
+    if not _EMAIL_RE.match(name):
+        raise ValueError("Enter a valid email address.")
+    validate_signup_password(password)
+
+    existing = storage.get_user_by_username(name)
+    if existing is not None:
+        return "duplicate", None, existing["profile_id"]
+
+    profile_id = uuid.uuid4().hex
+    try:
+        storage.create_user(profile_id, name, hash_password(password),
+                            confirmed=False, at=now)
+    except ValueError:
+        # Lost a race with a concurrent signup for the same email: the
+        # database's UNIQUE(username) constraint is the real backstop, not
+        # this function's own check-then-act read above.
+        existing = storage.get_user_by_username(name)
+        return "duplicate", None, existing["profile_id"]
+
+    token = secrets.token_urlsafe(32)
+    storage.create_email_confirmation(
+        _token_hash(token), profile_id,
+        now + timedelta(hours=SIGNUP_TOKEN_HOURS), at=now)
+    return "new", token, profile_id
+
+
+def confirm_signup(token, now=None):
+    """Redeem a signup confirmation link. Returns the signed-in-ready public
+    user, or None if the token is missing, garbage, expired or already used.
+
+    The token is deleted before anything else, so it's single-use even if a
+    later step fails. Only ``set_user_confirmed`` runs — never the password
+    hash or admin flag.
+    """
+    if not token:
+        return None
+    digest = _token_hash(token)
+    confirmation = storage.get_email_confirmation(digest, now=now)
+    if confirmation is None:
+        return None
+    storage.delete_email_confirmation(digest)
+    storage.set_user_confirmed(confirmation["profile_id"], at=now)
+    return public_user(storage.get_user(confirmation["profile_id"]))
 
 
 # ---------------------------------------------------------------------------

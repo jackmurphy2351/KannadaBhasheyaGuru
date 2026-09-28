@@ -25,11 +25,14 @@ if not URL:
     pytest.skip("VANI_TEST_DATABASE_URL not set", allow_module_level=True)
 
 from tests.test_storage import (  # noqa: E402,F401  (rerun under Postgres)
-    TestAttempts, TestCards, TestDueQueries, TestLoginFailures, TestMastery,
-    TestProfileIsolation, TestReviewLog, TestSessions, TestUsers,
+    TestAttempts, TestCards, TestDueQueries, TestEmailConfirmations,
+    TestLoginFailures, TestMastery, TestProfileIsolation, TestReviewLog,
+    TestSessions, TestUsers,
 )
 from tests.test_auth import (  # noqa: E402,F401
-    TestAuthenticate, TestCreateUser, TestPasswordChanges, asha,
+    TestAuthenticate, TestAuthenticateUnconfirmed, TestConfirmSignup,
+    TestCreateUser, TestPasswordChanges, TestStartSignup,
+    TestValidateSignupPassword, asha,
 )
 from tests.test_auth import TestSessions as _AuthSessions  # noqa: E402
 
@@ -40,7 +43,7 @@ class TestAuthSessions(_AuthSessions):
 
 
 _TABLES = ("cards", "reviews", "attempts", "mastery", "users", "sessions",
-           "login_failures", "schema_meta")
+           "login_failures", "schema_meta", "email_confirmations")
 
 
 @pytest.fixture(autouse=True)

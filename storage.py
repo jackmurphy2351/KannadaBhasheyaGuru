@@ -43,7 +43,7 @@ DB_FILE = os.path.join(DATA_DIR, "vani.db")
 PROGRESS_FILE = os.path.join(DATA_DIR, "progress.json")
 
 DEFAULT_PROFILE = "local"
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # Set by configure(). None means SQLite at DB_FILE.
 _DATABASE_URL = None
@@ -164,6 +164,57 @@ CREATE TABLE IF NOT EXISTS login_failures (
 CREATE INDEX IF NOT EXISTS idx_login_failures
     ON login_failures (username, failed_at);
 """
+
+# v3: self-service signup. email_confirmed_at is a timestamp rather than a
+# boolean, matching created_at/last_login_at's style, and doubling as an audit
+# trail. Every pre-v3 account is backfilled to "confirmed since creation" —
+# invite-only accounts (scripts/manage_users.py) never went through a
+# confirmation step and must not be locked out by this migration.
+#
+# The ALTER TABLE and the one-time backfill are deliberately NOT in the
+# executescript below — see _add_email_confirmed_column.
+_SCHEMA_V3 = """
+CREATE TABLE IF NOT EXISTS email_confirmations (
+    token_hash  TEXT PRIMARY KEY,
+    profile_id  TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    expires_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_email_confirmations_profile
+    ON email_confirmations (profile_id);
+"""
+
+
+def _add_email_confirmed_column(conn):
+    """Add users.email_confirmed_at if it isn't already there.
+
+    Returns True the first time it actually adds the column, False on every
+    call after (on this database). This check-first approach — rather than
+    folding the ALTER into _SCHEMA_V3's executescript — matters because
+    Python's sqlite3 module commits DDL inside executescript immediately,
+    ahead of and independent of the caller's own transaction. A caller that
+    later rolls back (e.g. the migration script's --dry-run, or any failed
+    write right after a fresh database's first connection) cannot undo an
+    already-applied ALTER TABLE, so without this check the next _migrate()
+    call — which still sees the old schema version, since *that* bookkeeping
+    row did roll back — would retry the ALTER and hit "duplicate column".
+    The return value additionally gates the one-time confirmed_at backfill in
+    _migrate(): it must run exactly once, since re-running it later would
+    silently mark a genuinely-pending new signup as confirmed.
+    """
+    if conn.dialect == "postgres":
+        exists = conn.execute(
+            "SELECT 1 FROM information_schema.columns WHERE "
+            "table_name = 'users' AND column_name = 'email_confirmed_at'"
+        ).fetchone()
+    else:
+        columns = {row[1] for row in
+                  conn.execute("PRAGMA table_info(users)").fetchall()}
+        exists = "email_confirmed_at" in columns
+    if exists:
+        return False
+    conn.execute("ALTER TABLE users ADD COLUMN email_confirmed_at TEXT")
+    return True
 
 
 def configure(database_url=None):
@@ -333,6 +384,12 @@ def _migrate(conn):
         _import_progress_json(conn)
     if version < 2:
         conn.executescript(_SCHEMA_V2)
+    if version < 3:
+        just_added = _add_email_confirmed_column(conn)
+        conn.executescript(_SCHEMA_V3)
+        if just_added:
+            conn.execute("UPDATE users SET email_confirmed_at = created_at "
+                         "WHERE email_confirmed_at IS NULL")
     conn.execute(
         "INSERT INTO schema_meta (key, value) VALUES ('version', ?) "
         "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
@@ -593,7 +650,7 @@ def get_srs_summary(now=None, profile_id=DEFAULT_PROFILE):
 # Pure CRUD: hashing, normalization and policy live in auth.py, so this layer
 # never sees a plaintext password or a raw session token.
 _USER_COLUMNS = ("profile_id, username, password_hash, is_admin, disabled, "
-                 "created_at, last_login_at")
+                 "created_at, last_login_at, email_confirmed_at")
 
 
 def _user_row(row):
@@ -605,15 +662,22 @@ def _user_row(row):
     return user
 
 
-def create_user(profile_id, username, password_hash, is_admin=False, at=None):
-    """Insert a user. Raises ``ValueError`` if the username or profile is taken."""
+def create_user(profile_id, username, password_hash, is_admin=False,
+                confirmed=True, at=None):
+    """Insert a user. Raises ``ValueError`` if the username or profile is taken.
+
+    ``confirmed=False`` is for self-service signup: the row is created
+    disabled, with no ``email_confirmed_at``, until ``set_user_confirmed``
+    is called by a clicked confirmation link.
+    """
+    stamp = to_iso(at or utcnow())
     try:
         with _connect() as conn:
             conn.execute(
                 f"INSERT INTO users ({_USER_COLUMNS}) "
-                "VALUES (?, ?, ?, ?, 0, ?, NULL)",
+                "VALUES (?, ?, ?, ?, ?, ?, NULL, ?)",
                 (profile_id, username, password_hash, int(bool(is_admin)),
-                 to_iso(at or utcnow())),
+                 0 if confirmed else 1, stamp, stamp if confirmed else None),
             )
     except _integrity_errors() as e:
         raise ValueError(
@@ -665,6 +729,63 @@ def touch_last_login(profile_id, at=None):
     with _connect() as conn:
         conn.execute("UPDATE users SET last_login_at = ? WHERE profile_id = ?",
                      (to_iso(at or utcnow()), profile_id))
+
+
+def set_user_confirmed(profile_id, at=None):
+    """Mark a self-signup account's email confirmed and re-enable it."""
+    with _connect() as conn:
+        conn.execute(
+            "UPDATE users SET email_confirmed_at = ?, disabled = 0 "
+            "WHERE profile_id = ?",
+            (to_iso(at or utcnow()), profile_id),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Email confirmations (self-service signup)
+#
+# Structurally the same single-use, hashed-at-rest token idiom as sessions,
+# minus last_seen_at: a confirmation token is consumed exactly once, never
+# touched again.
+# ---------------------------------------------------------------------------
+def create_email_confirmation(token_hash, profile_id, expires_at, at=None):
+    with _connect() as conn:
+        conn.execute(
+            "INSERT INTO email_confirmations (token_hash, profile_id, "
+            "created_at, expires_at) VALUES (?, ?, ?, ?)",
+            (token_hash, profile_id, to_iso(at or utcnow()), to_iso(expires_at)),
+        )
+
+
+def get_email_confirmation(token_hash, now=None):
+    """Return the unexpired confirmation row for ``token_hash``, or None."""
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM email_confirmations "
+            "WHERE token_hash = ? AND expires_at > ?",
+            (token_hash, to_iso(now or utcnow())),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def delete_email_confirmation(token_hash):
+    with _connect() as conn:
+        conn.execute("DELETE FROM email_confirmations WHERE token_hash = ?",
+                     (token_hash,))
+
+
+def delete_email_confirmations_for(profile_id):
+    with _connect() as conn:
+        conn.execute("DELETE FROM email_confirmations WHERE profile_id = ?",
+                     (profile_id,))
+
+
+def purge_expired_email_confirmations(now=None):
+    """Delete expired confirmation tokens; returns how many were removed."""
+    with _connect() as conn:
+        cur = conn.execute("DELETE FROM email_confirmations WHERE expires_at <= ?",
+                           (to_iso(now or utcnow()),))
+        return cur.rowcount
 
 
 # ---------------------------------------------------------------------------

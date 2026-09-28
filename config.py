@@ -27,6 +27,10 @@ def get_secret(key):
 SHEET_NAME = get_secret("GOOGLE_SHEET_NAME")
 # Postgres URL for the hosted build. Unset → local SQLite at data/vani.db.
 DATABASE_URL = get_secret("DATABASE_URL")
+# Base URL for links in outgoing account emails (signup confirmation). Set
+# this to the real https://....streamlit.app URL in Streamlit Cloud secrets;
+# the localhost fallback needs no configuration for local dev.
+APP_URL = get_secret("APP_URL") or "http://localhost:8501"
 CREDENTIALS_FILE = "service_account.json"
 SENDER_EMAIL = get_secret("GMAIL_USER")
 SENDER_PASSWORD = get_secret("GMAIL_PASSWORD")
@@ -228,6 +232,22 @@ UI_TEXT = {
     "MSG_PASSWORD_CHANGED": {"EN": "Password changed. Other devices have been signed out.", "KN": "ಗುಪ್ತಪದ ಬದಲಾಗಿದೆ. ಇತರ ಸಾಧನಗಳಿಂದ ಲಾಗ್ ಔಟ್ ಮಾಡಲಾಗಿದೆ."},
     "ERR_PASSWORD_MISMATCH": {"EN": "The new passwords do not match.", "KN": "ಹೊಸ ಗುಪ್ತಪದಗಳು ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ."},
     "ERR_WRONG_PASSWORD": {"EN": "Current password is incorrect.", "KN": "ಈಗಿನ ಗುಪ್ತಪದ ತಪ್ಪಾಗಿದೆ."},
+
+    # Self-service signup
+    "TAB_SIGNIN": {"EN": "Sign in", "KN": "ಲಾಗಿನ್"},
+    "TAB_SIGNUP": {"EN": "Create account", "KN": "ಖಾತೆ ರಚಿಸಿ"},
+    "LBL_EMAIL": {"EN": "Email address", "KN": "ಇಮೇಲ್ ವಿಳಾಸ"},
+    "BTN_CREATE_ACCOUNT": {"EN": "Create account", "KN": "ಖಾತೆ ರಚಿಸಿ"},
+    "MSG_SIGNUP_CHECK_EMAIL": {
+        "EN": "If that email can be registered, we've sent a confirmation link — check your inbox (and spam folder).",
+        "KN": "ಆ ಇಮೇಲ್ ನೋಂದಣಿಗೆ ಅರ್ಹವಾಗಿದ್ದರೆ, ದೃಢೀಕರಣ ಲಿಂಕ್ ಕಳುಹಿಸಲಾಗಿದೆ — ನಿಮ್ಮ ಇನ್‌ಬಾಕ್ಸ್ (ಮತ್ತು ಸ್ಪ್ಯಾಮ್ ಫೋಲ್ಡರ್) ಪರಿಶೀಲಿಸಿ."},
+    "MSG_ACCOUNT_CONFIRMED": {"EN": "Email confirmed — welcome!", "KN": "ಇಮೇಲ್ ದೃಢೀಕರಿಸಲಾಗಿದೆ — ಸ್ವಾಗತ!"},
+    "ERR_CONFIRM_LINK_INVALID": {
+        "EN": "This confirmation link is invalid or has expired. Please sign up again.",
+        "KN": "ಈ ದೃಢೀಕರಣ ಲಿಂಕ್ ಅಮಾನ್ಯ ಅಥವಾ ಅವಧಿ ಮೀರಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಖಾತೆ ರಚಿಸಿ."},
+    "ERR_PENDING_CONFIRMATION": {
+        "EN": "Please confirm your email before signing in — check your inbox for the link we sent you.",
+        "KN": "ಲಾಗಿನ್ ಮಾಡುವ ಮೊದಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ದೃಢೀಕರಿಸಿ — ನಾವು ಕಳುಹಿಸಿದ ಲಿಂಕ್‌ಗಾಗಿ ನಿಮ್ಮ ಇನ್‌ಬಾಕ್ಸ್ ಪರಿಶೀಲಿಸಿ."},
 
     # Descriptions & Long Text
     "WELCOME_MSG": {

@@ -21,6 +21,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 # Import settings from our new config file
+import auth
 import config
 import srs
 import storage
@@ -307,6 +308,58 @@ def send_email_lesson(context):
 
     except Exception as e:
         return f"Error: {e}"
+
+
+def send_email(to_address, subject, html_body):
+    """Send one HTML email via Gmail SMTP to an arbitrary recipient.
+
+    Separate from send_email_lesson(), which is hardcoded to always mail the
+    app owner (config.RECEIVER_EMAIL) and drives the Google Sheet tracker —
+    a different job with its own tests. This is the generic sender for
+    account emails (signup confirmation, duplicate-signup notice), whose
+    recipient is whoever just typed that address into the signup form.
+    """
+    msg = MIMEMultipart()
+    msg['From'] = config.SENDER_EMAIL
+    msg['To'] = to_address
+    msg['Subject'] = subject
+    msg.attach(MIMEText(html_body, 'html'))
+
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(config.SENDER_EMAIL, config.SENDER_PASSWORD)
+    server.sendmail(config.SENDER_EMAIL, to_address, msg.as_string())
+    server.quit()
+
+
+def send_signup_confirmation_email(to_address, token):
+    """The "click to confirm" email for a new self-service signup."""
+    link = f"{config.APP_URL.rstrip('/')}/?confirm={token}"
+    html = f"""
+    <p>Welcome to Vāṇi!</p>
+    <p>Click the link below within {auth.SIGNUP_TOKEN_HOURS} hours to confirm
+    your email and finish creating your account:</p>
+    <p><a href="{link}">{link}</a></p>
+    <p>If you didn't request this, you can safely ignore this email —
+    no account will be created.</p>
+    """
+    send_email(to_address, "Confirm your Vāṇi account", html)
+
+
+def send_duplicate_signup_notice_email(to_address):
+    """Sent to the *existing* address instead of a confirmation link, so a
+    signup attempt never reveals to the person submitting the form whether
+    that email is already registered."""
+    html = """
+    <p>Someone just tried to create a Vāṇi account with this email address,
+    but an account already exists for it.</p>
+    <p>If this was you, just sign in normally. If you've forgotten your
+    password, contact the app owner.</p>
+    <p>If this wasn't you, no action is needed — nothing about your account
+    was changed.</p>
+    """
+    send_email(to_address, "Someone tried to create a Vāṇi account with "
+                           "your email", html)
 
 
 # --- DETERMINISTIC MASTERY QUIZ ---

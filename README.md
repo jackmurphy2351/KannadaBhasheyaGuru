@@ -79,7 +79,7 @@ This tool uses Large Language Models (LLMs) to generate content. While instructe
 | **Database** | Google Sheets (`gspread`) for the email-lesson schedule; local JSON (`storage.py`) for quiz mastery progress |
 | **Audio Input** | Streamlit native `st.audio_input` (no third-party components) |
 | **Spaced Repetition** | [`fsrs`](https://pypi.org/project/fsrs/) (FSRS-6) over SQLite |
-| **Test Suite** | pytest — 1,494 mocked tests across 9 modules (~5s) plus opt-in live-API canaries (`pytest -m live`) |
+| **Test Suite** | pytest — ~1,610 mocked tests (~7s) plus opt-in live-API canaries (`pytest -m live`) |
 | **Environment** | Python 3.10+ |
 
 ---
@@ -99,7 +99,7 @@ Kannada_Guru/
 │   └── migrate_sqlite_to_postgres.py # One-off copy of local progress into hosted Postgres
 ├── requirements.txt         # Python dependencies
 ├── pytest.ini               # Test runner config (live-API and Postgres tests deselected by default)
-├── tests/                   # Automated test suite (~1,570 mocked tests + opt-in live/Postgres layers)
+├── tests/                   # Automated test suite (~1,610 mocked tests + opt-in live/Postgres layers)
 │   ├── conftest.py                   # Shared fixtures + autouse DB isolation (forces SQLite)
 │   ├── test_auth.py                  # Hashing, lockout, session tokens, password changes
 │   ├── test_profile_threading.py     # Every storage call is scoped to the signed-in learner
@@ -199,6 +199,8 @@ python scripts/manage_users.py list | reset-password NAME | disable NAME | enabl
 
 Only admins see **Send Email Lesson** (it emails `GMAIL_USER` and advances the shared sheet). The CLI targets local SQLite unless `VANI_DATABASE_URL` is set, in which case it administers that Postgres database.
 
+Anyone else can create their own account from the app's **Create account** tab: email + a password with an uppercase letter, a lowercase letter, a number and a special character (12+ characters). A confirmation link is emailed before the account can sign in, and clicking it signs them straight in. This can never create an admin — the signup form has no such option, and the function behind it has no `is_admin` parameter at all. Set `APP_URL` (e.g. `https://yourapp.streamlit.app`) in Secrets so the confirmation link points at the right place; it defaults to `http://localhost:8501` for local dev.
+
 ### 3b. Moving to hosted Postgres
 
 ```bash
@@ -227,7 +229,7 @@ pip install pytest
 python -m pytest -q
 ```
 
-**~1,570 tests, completing in ~7 seconds** (highlights below; account tests are listed in the project tree above):
+**~1,610 tests, completing in ~7 seconds** (highlights below; account tests are listed in the project tree above):
 
 | Module | What It Tests |
 |--------|--------------|

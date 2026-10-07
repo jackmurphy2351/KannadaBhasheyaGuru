@@ -43,7 +43,7 @@ DB_FILE = os.path.join(DATA_DIR, "vani.db")
 PROGRESS_FILE = os.path.join(DATA_DIR, "progress.json")
 
 DEFAULT_PROFILE = "local"
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # Set by configure(). None means SQLite at DB_FILE.
 _DATABASE_URL = None
@@ -182,6 +182,21 @@ CREATE TABLE IF NOT EXISTS email_confirmations (
 );
 CREATE INDEX IF NOT EXISTS idx_email_confirmations_profile
     ON email_confirmations (profile_id);
+"""
+
+
+# v4: learning tracks — the onboarding answers that tailor content. One row
+# per profile; the valid values are owned by learner.py, not by this layer.
+# CREATE-only (no ALTER), so re-running it after a rolled-back version row is
+# harmless.
+_SCHEMA_V4 = """
+CREATE TABLE IF NOT EXISTS learner_profiles (
+    profile_id   TEXT PRIMARY KEY,
+    level        TEXT NOT NULL,
+    motivation   TEXT NOT NULL,
+    reads_script INTEGER NOT NULL,
+    updated_at   TEXT NOT NULL
+);
 """
 
 
@@ -390,6 +405,8 @@ def _migrate(conn):
         if just_added:
             conn.execute("UPDATE users SET email_confirmed_at = created_at "
                          "WHERE email_confirmed_at IS NULL")
+    if version < 4:
+        conn.executescript(_SCHEMA_V4)
     conn.execute(
         "INSERT INTO schema_meta (key, value) VALUES ('version', ?) "
         "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
@@ -444,6 +461,41 @@ def reset_for_tests():
             os.remove(DB_FILE + suffix)
         except OSError:
             pass
+
+
+# ---------------------------------------------------------------------------
+# Learner profile (learning tracks)
+# ---------------------------------------------------------------------------
+def get_learner_profile(profile_id=DEFAULT_PROFILE):
+    """Return ``{"level", "motivation", "reads_script", "updated_at"}`` or None."""
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT level, motivation, reads_script, updated_at "
+            "FROM learner_profiles WHERE profile_id = ?",
+            (profile_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    profile = dict(row)
+    profile["reads_script"] = bool(profile["reads_script"])
+    return profile
+
+
+def set_learner_profile(level, motivation, reads_script,
+                        profile_id=DEFAULT_PROFILE, at=None):
+    """Create or replace this profile's onboarding answers."""
+    with _connect() as conn:
+        conn.execute(
+            "INSERT INTO learner_profiles "
+            "(profile_id, level, motivation, reads_script, updated_at) "
+            "VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(profile_id) DO UPDATE SET level = excluded.level, "
+            "motivation = excluded.motivation, "
+            "reads_script = excluded.reads_script, "
+            "updated_at = excluded.updated_at",
+            (profile_id, level, motivation, int(bool(reads_script)),
+             to_iso(at or utcnow())),
+        )
 
 
 # ---------------------------------------------------------------------------

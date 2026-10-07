@@ -151,23 +151,53 @@ GRAMMAR_TOPICS = [
 # "topics" array — logic.get_quiz_topics() validates this at load so the
 # dropdown and the question pool can never drift apart. "files" is always a
 # list (logic.load_topic_doc accepts one).
+# "band" is the learning-track level (learner.LEVELS key) a topic is
+# recommended for; learner.visible_topics() filters the dropdown and the
+# Lessons list with it, and the placement check draws its items by band.
 QUIZ_TOPIC_DOCS = {
-    "Adjectives": {"files": ["2. adjectives_in_kannada.md"], "level": "Core"},
-    "Adverbs": {"files": ["6. adverbs_in_kannada.md"], "level": "Core"},
-    "Case Suffixes": {"files": ["1. case_suffixes_in_kannada.md"], "level": "Core"},
-    "Compound Verbs": {"files": ["9. compound_verbs.md"], "level": "Advanced"},
-    "Conditional": {"files": ["11. conditional_in_kannada.md"], "level": "Advanced"},
-    "Conjunctions": {"files": ["7. conjunctions_in_kannada.md"], "level": "Core"},
+    # Starter topics for total beginners: phrases, not grammar.
+    "Greetings & Introductions": {"files": ["15. greetings_and_introductions.md"],
+                                  "level": "Starter", "band": "total_beginner"},
+    "Family & Home": {"files": ["16. family_and_home.md"],
+                      "level": "Starter", "band": "total_beginner"},
+    "Everyday Phrases": {"files": ["17. everyday_phrases.md"],
+                         "level": "Starter", "band": "total_beginner"},
+    "Adjectives": {"files": ["2. adjectives_in_kannada.md"], "level": "Core",
+                   "band": "beginner"},
+    "Adverbs": {"files": ["6. adverbs_in_kannada.md"], "level": "Core",
+                "band": "intermediate"},
+    "Case Suffixes": {"files": ["1. case_suffixes_in_kannada.md"], "level": "Core",
+                      "band": "beginner"},
+    "Compound Verbs": {"files": ["9. compound_verbs.md"], "level": "Advanced",
+                       "band": "advanced"},
+    "Conditional": {"files": ["11. conditional_in_kannada.md"], "level": "Advanced",
+                    "band": "advanced"},
+    "Conjunctions": {"files": ["7. conjunctions_in_kannada.md"], "level": "Core",
+                     "band": "intermediate"},
     "Dative Constructions and Modals":
-        {"files": ["5. dative_constructions_modals_in_kannada.md"], "level": "Core"},
-    "Impersonal Verbs": {"files": ["8. impersonal_verbs_in_kannada.md"], "level": "Advanced"},
-    "Negation": {"files": ["4. negation_in_kannada.md"], "level": "Core"},
-    "Relative Clauses": {"files": ["10. relative_clauses_in_kannada.md"], "level": "Advanced"},
-    "Reported Speech": {"files": ["12. reported_speech_in_kannada.md"], "level": "Advanced"},
+        {"files": ["5. dative_constructions_modals_in_kannada.md"], "level": "Core",
+         "band": "intermediate"},
+    "Impersonal Verbs": {"files": ["8. impersonal_verbs_in_kannada.md"],
+                         "level": "Advanced", "band": "advanced"},
+    "Negation": {"files": ["4. negation_in_kannada.md"], "level": "Core",
+                 "band": "beginner"},
+    "Relative Clauses": {"files": ["10. relative_clauses_in_kannada.md"],
+                         "level": "Advanced", "band": "advanced"},
+    "Reported Speech": {"files": ["12. reported_speech_in_kannada.md"],
+                        "level": "Advanced", "band": "advanced"},
     # The bank has one combined Verb Tenses topic; load all tense modules.
     "Verb Tenses": {"files": ["03_verb_basics.md", "03a_verb_present.md",
                               "03b_verb_past.md", "03c_verb_present_continuous.md",
-                              "03d_iru_vs_aagu.md"], "level": "Core"},
+                              "03d_iru_vs_aagu.md"], "level": "Core",
+                    "band": "beginner"},
+}
+
+# Lesson docs with no quiz topic of their own, shown in the Lessons mode only.
+LESSON_ONLY_DOCS = {
+    "Sentence Structure & Word Order (SOV)":
+        {"files": ["13. sentence_structure_and_word_order.md"], "band": "beginner"},
+    "Case Endings vs. Postpositions":
+        {"files": ["14. case_endings_vs_postpositions.md"], "band": "beginner"},
 }
 
 # --- UI TRANSLATION DICTIONARY ---
@@ -186,6 +216,7 @@ UI_TEXT = {
     "NAV_READ": {"EN": "Reading Comprehension", "KN": "ಓದುವ ಗ್ರಹಿಕೆ"},
     "NAV_CHAT": {"EN": "Conversation Practice", "KN": "ಸಂಭಾಷಣೆಯ ಅಭ್ಯಾಸ"},
     "NAV_REVIEW": {"EN": "Daily Review", "KN": "ದಿನದ ಪುನರಾವರ್ತನೆ"},
+    "NAV_LESSONS": {"EN": "Lessons", "KN": "ಪಾಠಗಳು"},
 
     # Headers & Titles
     "TITLE_HOME": {"EN": "Overview", "KN": "ಅವಲೋಕನ"},
@@ -249,6 +280,36 @@ UI_TEXT = {
         "EN": "Please confirm your email before signing in — check your inbox for the link we sent you.",
         "KN": "ಲಾಗಿನ್ ಮಾಡುವ ಮೊದಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ದೃಢೀಕರಿಸಿ — ನಾವು ಕಳುಹಿಸಿದ ಲಿಂಕ್‌ಗಾಗಿ ನಿಮ್ಮ ಇನ್‌ಬಾಕ್ಸ್ ಪರಿಶೀಲಿಸಿ."},
 
+    # Learning tracks
+    "HDR_LEARNING_PROFILE": {"EN": "Learning profile", "KN": "ಕಲಿಕೆಯ ವಿವರ"},
+    "TITLE_ONBOARDING": {"EN": "Tell us about your Kannada", "KN": "ನಿಮ್ಮ ಕನ್ನಡದ ಬಗ್ಗೆ ತಿಳಿಸಿ"},
+    "DESC_ONBOARDING": {
+        "EN": "Three quick questions so lessons, quizzes and conversations match your level and goals. You can change these any time under Settings → Learning profile.",
+        "KN": "ಪಾಠಗಳು, ಪರೀಕ್ಷೆಗಳು ಮತ್ತು ಸಂಭಾಷಣೆಗಳು ನಿಮ್ಮ ಮಟ್ಟಕ್ಕೆ ಹೊಂದುವಂತೆ ಮೂರು ಪ್ರಶ್ನೆಗಳು. ಇವುಗಳನ್ನು ಯಾವಾಗ ಬೇಕಾದರೂ ಬದಲಿಸಬಹುದು."},
+    "LBL_Q_LEVEL": {"EN": "What is your Kannada skill level?", "KN": "ನಿಮ್ಮ ಕನ್ನಡ ಮಟ್ಟ ಯಾವುದು?"},
+    "LBL_Q_MOTIVATION": {"EN": "Why are you learning Kannada?", "KN": "ನೀವು ಕನ್ನಡ ಯಾಕೆ ಕಲಿಯುತ್ತಿದ್ದೀರಿ?"},
+    "LBL_Q_SCRIPT": {"EN": "Can you read or write Kannada script (ಕನ್ನಡ ಲಿಪಿ)?", "KN": "ನಿಮಗೆ ಕನ್ನಡ ಲಿಪಿ ಓದಲು ಅಥವಾ ಬರೆಯಲು ಬರುತ್ತದೆಯೇ?"},
+    "BTN_SAVE_PROFILE": {"EN": "Save", "KN": "ಉಳಿಸಿ"},
+    "MSG_PROFILE_SAVED": {"EN": "Learning profile saved.", "KN": "ಕಲಿಕೆಯ ವಿವರ ಉಳಿಸಲಾಗಿದೆ."},
+    "CAP_PROFILE_APPLIES": {
+        "EN": "Changes apply to the next chat or quiz you start; anything in progress keeps its current settings.",
+        "KN": "ಬದಲಾವಣೆಗಳು ನೀವು ಮುಂದೆ ಪ್ರಾರಂಭಿಸುವ ಸಂಭಾಷಣೆ ಅಥವಾ ಪರೀಕ್ಷೆಗೆ ಅನ್ವಯಿಸುತ್ತವೆ."},
+    "BTN_PLACEMENT": {"EN": "Not sure? Take a 5-minute placement check", "KN": "ಖಚಿತವಿಲ್ಲವೇ? 5 ನಿಮಿಷದ ಮಟ್ಟ ಪರೀಕ್ಷೆ ಮಾಡಿ"},
+    "BTN_SKIP_PLACEMENT": {"EN": "No thanks, start learning", "KN": "ಬೇಡ, ಕಲಿಯಲು ಪ್ರಾರಂಭಿಸಿ"},
+    "TITLE_PLACEMENT": {"EN": "Placement check", "KN": "ಮಟ್ಟ ಪರೀಕ್ಷೆ"},
+    "DESC_PLACEMENT": {
+        "EN": "Translate each sentence into Kannada — script or Roman letters both work. Skip anything you don't know by submitting an empty answer. The check only suggests a level; you decide.",
+        "KN": "ಪ್ರತಿ ವಾಕ್ಯವನ್ನು ಕನ್ನಡಕ್ಕೆ ಅನುವಾದಿಸಿ. ಗೊತ್ತಿಲ್ಲದಿದ್ದರೆ ಖಾಲಿ ಉತ್ತರ ಸಲ್ಲಿಸಿ. ಇದು ಕೇವಲ ಸಲಹೆ; ನಿರ್ಧಾರ ನಿಮ್ಮದು."},
+    "LBL_SCRIPT_CHECK": {"EN": "What does this word mean?", "KN": "ಈ ಪದದ ಅರ್ಥವೇನು?"},
+    "LBL_PLACEMENT_SUGGESTS": {"EN": "Suggested level", "KN": "ಸೂಚಿಸಿದ ಮಟ್ಟ"},
+    "BTN_USE_SUGGESTION": {"EN": "Use the suggestion", "KN": "ಸಲಹೆಯನ್ನು ಬಳಸಿ"},
+    "BTN_KEEP_MINE": {"EN": "Keep my answers", "KN": "ನನ್ನ ಉತ್ತರಗಳನ್ನೇ ಇಟ್ಟುಕೊಳ್ಳಿ"},
+    "BTN_CANCEL_PLACEMENT": {"EN": "Cancel placement check", "KN": "ಮಟ್ಟ ಪರೀಕ್ಷೆ ರದ್ದುಗೊಳಿಸಿ"},
+    "LBL_SHOW_HARDER": {"EN": "Show topics above my level", "KN": "ನನ್ನ ಮಟ್ಟಕ್ಕಿಂತ ಮೇಲಿನ ವಿಷಯಗಳನ್ನು ತೋರಿಸಿ"},
+    "LBL_RECOMMENDED": {"EN": "★ = recommended for you", "KN": "★ = ನಿಮಗೆ ಶಿಫಾರಸು"},
+    "TITLE_LESSONS": {"EN": "Lessons", "KN": "ಪಾಠಗಳು"},
+    "BTN_QUIZ_ME": {"EN": "Quiz me on this", "KN": "ಇದರ ಮೇಲೆ ಪರೀಕ್ಷೆ ಮಾಡಿ"},
+
     # Descriptions & Long Text
     "WELCOME_MSG": {
         "EN": """
@@ -306,7 +367,7 @@ CHAT_SYSTEM_PROMPT = """
 # SYSTEM INSTRUCTION: Kannada Conversational Simulator
 
 ## Core Identity
-You are an authentic, native Kannada speaker from Bengaluru. Your primary purpose is to help the user achieve CEFR Level B2 fluency through immersive conversation.
+You are an authentic, native Kannada speaker from Bengaluru. Your primary purpose is to help the user reach the target level in the Student Profile below through immersive conversation.
 
 ## Output Format — MANDATORY
 You MUST respond with a single valid JSON object containing exactly these three keys:
@@ -324,9 +385,7 @@ You MUST respond with a single valid JSON object containing exactly these three 
 5. **CONVERSATION CONTINUITY**: Read the full conversation history before every response. The word ನಮಸ್ಕಾರ (or any greeting equivalent) MUST appear only in your very first message — if the conversation history already contains one or more turns, opening with a greeting is a critical error. Track every fact established in the conversation and never contradict or forget it.
 6. **PRONOUN AWARENESS**: Pay close attention to grammatical person. "ನಿಮ್ಮ" in the user's message refers to YOU (the character being played) — answer about yourself, in character. Never reassign a first- or second-person pronoun to the wrong party.
 
-## Student Profile (The User)
-* Script proficiency: Fluent in reading/writing Kannada script.
-* Target Level: Striving for B2 conversational fluency. Do not use simplistic "tourist" language. Use complex structures naturally.
+[INJECT_STUDENT_PROFILE_HERE]
 
 ## Grammar Goal of the Day
 [INJECT_GRAMMAR_FOCUS_HERE]
@@ -342,6 +401,12 @@ You MUST respond with a single valid JSON object containing exactly these three 
 * Engagement: End your turns with open-ended questions.
 * Cultural Norms: Reflect regional variations and use common conversational fillers.
 """
+
+# Used when no learner profile is passed (tests, or a caller outside the app):
+# the original single-learner profile, before learning tracks existed.
+DEFAULT_STUDENT_PROFILE = """## Student Profile (The User)
+* Script proficiency: Fluent in reading/writing Kannada script.
+* Target Level: Striving for B2 conversational fluency. Do not use simplistic "tourist" language. Use complex structures naturally."""
 
 CHAT_LANG_MODES = {
     "FORMAL_SCRIPT": {
@@ -368,12 +433,20 @@ CHARACTER_CARDS = {
     "The Nosy Neighbor": "You are Sunanda Auntie, a woman in her mid-fifties who has been a neighbour of the user for years and considers yourself practically family. You are warm, voluble, and constitutionally incapable of minding your own business. You already know the user has two cats named Pebbles and PJ. You have strong opinions about everything: the user's diet, their sleep schedule, whether they are working too hard, and the neighbourhood's alarming decline since 'all these IT people came.' Your elder child works in tech in Bengaluru, which slightly complicates this opinion, and you are aware of the irony. Your younger child is studying in the United States, about whom you are simultaneously proud and quietly anxious. You speak Kannada fluently. You always offer food — usually something you have just cooked — and take mild offence if it is refused. Greet the user warmly as a familiar face and dispense unsolicited advice freely and affectionately.",
     "The House Cleaner": "You are Nirmala, a house cleaner in her late thirties from a village near Tumkur who has worked for this household for several years and knows the user well. You speak very fast in a distinctive rural Kannada dialect full of idioms and village expressions. A spotless, well-ordered house is a matter of personal honour: you take fierce pride in your work and feel genuine distress when you find it in a mess. You have fully earned the right to scold the user when they leave things in disorder — and you do so without hesitation, though always with underlying affection. You are saving money, with quiet determination, to pay for your daughter's college education, which you treat as a fixed, non-negotiable life goal. Your husband works as a daily wage labourer and his income is unreliable. You have strong opinions about politicians, the price of onions, and the correct way to mop a floor, and you share all of them freely.",
     "The Landlord": "You are Ramaiah, a middle-aged landlord who owns a residential apartment building in Malleshwaram, Bengaluru. You have rented the user's flat to them for some time and regard them as a generally reliable tenant. Your personality combines genuine warmth with a firm, business-minded undercurrent: you will always find a way to mention the rent, a maintenance concern, or a building rule before the conversation ends. Your main preoccupations are keeping the common areas clean, ensuring the building generator is in working order, and collecting rent by the 1st of every month. You take pride in Jayanagar's commercial ecosystem — the old markets, the new cafés — and you enjoy comparing the cost of living in Bengaluru with wherever the user originally comes from, often fishing for specific numbers ('So what does a kilo of tomatoes cost there?'). You have two daughters: the elder is married and lives nearby, the younger is studying engineering in Mangaluru. Your wife manages the household accounts and has the final word on any rent negotiation — you invoke her authority whenever a financial discussion gets uncomfortable ('I would like to help, but my wife will have to agree'). You are not confrontational, but you are persistent.",
-    "The Auto Driver": "You are Shiva, an auto-rickshaw driver who has worked Bengaluru's roads for over fifteen years. You ALWAYS begin by asking the user where they want to go and then negotiate a fare before agreeing to move. Once the journey is underway you become an enthusiastic, fast-talking conversationalist. You are intensely curious about the world beyond Karnataka — you have never travelled outside South India, but you ask specific, probing questions about the user's home: the traffic there, whether the roads are better than Bengaluru's, what ordinary people eat for breakfast, how much a driver earns. You have a wife, a twelve-year-old son named Karthik who loves cricket, and a seven-year-old daughter named Divya who wants to become a teacher. You are a devoted Shaivite: you visit the Shiva temple in your neighbourhood every Tuesday without fail, and your spiritual outlook surfaces naturally in conversation as quiet observations about fate, hard work, and contentment ('Enu maadodu, Sir — gottilla; devara ichche'). You know Bengaluru's streets intimately and offer unsolicited tips about restaurants, shortcuts, and which areas to avoid. You drive fast, weave through traffic confidently, and occasionally mutter mild Kannada under your breath at other drivers."
+    "The Auto Driver": "You are Shiva, an auto-rickshaw driver who has worked Bengaluru's roads for over fifteen years. You ALWAYS begin by asking the user where they want to go and then negotiate a fare before agreeing to move. Once the journey is underway you become an enthusiastic, fast-talking conversationalist. You are intensely curious about the world beyond Karnataka — you have never travelled outside South India, but you ask specific, probing questions about the user's home: the traffic there, whether the roads are better than Bengaluru's, what ordinary people eat for breakfast, how much a driver earns. You have a wife, a twelve-year-old son named Karthik who loves cricket, and a seven-year-old daughter named Divya who wants to become a teacher. You are a devoted Shaivite: you visit the Shiva temple in your neighbourhood every Tuesday without fail, and your spiritual outlook surfaces naturally in conversation as quiet observations about fate, hard work, and contentment ('Enu maadodu, Sir — gottilla; devara ichche'). You know Bengaluru's streets intimately and offer unsolicited tips about restaurants, shortcuts, and which areas to avoid. You drive fast, weave through traffic confidently, and occasionally mutter mild Kannada under your breath at other drivers.",
+    "The New Colleague": "You are Karthik Rao, a software team lead in his early thirties at a mid-sized product company in Whitefield. The user has just joined your team, and you have been asked to help them settle in. You are friendly, organised and a little over-caffeinated. You ask what the user does, what their previous job was, how their commute is and whether they have found a good place for lunch yet. You explain office routines — the stand-up meeting, the canteen, the shuttle bus — and you happily switch into slower, simpler Kannada when the user struggles, because you remember learning English at work yourself. You grew up in Hubballi, moved to Bengaluru for college, and are married with a two-year-old son who keeps you up at night. You love filter coffee, cricket and complaining good-naturedly about Outer Ring Road traffic. This is the user's first week — greet them and ask how they are settling in.",
+    "The Family Elder": "You are Kamalamma, a warm, grandmotherly woman in her early seventies at a family function (a naming ceremony) in Mysuru. The user is a relative — a younger member of the extended family — whom you are delighted to see. You ask gentle, simple questions: their name, whose child they are, where they live now, what they eat, whether they are married, and about their parents and siblings. You speak slowly and kindly, you are patient when the user struggles, and you are thrilled that they are learning Kannada, praising every effort. You love to talk about the family's home town, the festivals you celebrated as a girl, and the dishes you make — especially holige and bisi bele bath. You have four children, nine grandchildren and a great-grandchild on the way, and you can never remember which grandchild lives in which city. Greet the user warmly as family.",
+    "The Neighbour Kid": "You are Chinmay, a cheerful, chatty eight-year-old who lives in the flat next door to the user in Basavanagudi. You speak in very short, simple Kannada sentences, as a child does, and you ask lots of simple questions: what is your name, do you have a pet, what is your favourite food, do you like cricket, what colour is that. You love your cycle, your cricket bat, mango ice cream and your grandmother's stories. You have an older sister, Divya, who is in tenth standard and 'always studying'. You are endlessly curious about the user and delighted to teach them Kannada words — you sometimes point at things and name them. Greet the user excitedly as the friendly neighbour."
 }
 
-GRAMMAR_GOALS = [
-    "No specific focus today; maintain a natural, general conversation.",
-    "Focus heavily on using Vector/Compound Verbs like -koḷḷu and -biḍu.",
-    "Focus heavily on relative participles (-uva, -da, -ada).",
-    "Focus heavily on conditional clauses (-are, -diddare)."
-]
+# Keyed so learner.py can say which goals suit each level without importing
+# this module. GRAMMAR_GOALS keeps the original list order (index 0 = none).
+GRAMMAR_GOAL_TEXT = {
+    "none": "No specific focus today; maintain a natural, general conversation.",
+    "compound_verbs": "Focus heavily on using Vector/Compound Verbs like -koḷḷu and -biḍu.",
+    "relative_participles": "Focus heavily on relative participles (-uva, -da, -ada).",
+    "conditionals": "Focus heavily on conditional clauses (-are, -diddare).",
+    "greetings": "Focus on greetings, self-introductions and simple who/what/where questions.",
+    "simple_tenses": "Focus on simple present and past tense sentences about everyday life.",
+}
+GRAMMAR_GOALS = list(GRAMMAR_GOAL_TEXT.values())

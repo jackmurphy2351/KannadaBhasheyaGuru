@@ -126,12 +126,16 @@ def _unreachable(exc):
 
 
 def generate_content(user_prompt, context_override=None, use_reading_model=False,
-                     temperature=None):
+                     temperature=None, learner_block=None):
     """Helper to call Sarvam chat completions API.
 
     ``temperature`` is passed through when given; graders that must be
     reproducible (judge_equivalence) pass 0. Leaving it None uses the server
     default, which varies with whether reasoning is active.
+
+    ``learner_block`` (from ``learner.prompt_block``) is appended to the system
+    message so the output is pitched at the learner's track. Graders that
+    decide correctness must never pass one.
 
     Retries up to 3 attempts: Sarvam transiently returns empty/null
     completions (finish_reason="length" with 0 visible chars — hidden tokens
@@ -139,6 +143,10 @@ def generate_content(user_prompt, context_override=None, use_reading_model=False
     final empty string or "API Error: ..." only after all attempts fail."""
     model = config.SARVAM_READING_MODEL if use_reading_model else config.SARVAM_CHAT_MODEL
     client = _sarvam_chat_client()
+
+    system = config.SYSTEM_INSTRUCTION
+    if learner_block:
+        system = f"{system}\n{learner_block}\n"
 
     full_prompt = f"""
     [KNOWLEDGE BASE]
@@ -158,7 +166,7 @@ def generate_content(user_prompt, context_override=None, use_reading_model=False
             response = client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": "system", "content": config.SYSTEM_INSTRUCTION},
+                    {"role": "system", "content": system},
                     {"role": "user", "content": full_prompt},
                 ],
                 max_tokens=config.SARVAM_MAX_TOKENS,
@@ -187,6 +195,9 @@ def generate_content(user_prompt, context_override=None, use_reading_model=False
 
 # --- TEXT & TRANSLATION HANDLERS ---
 
+_ANUSVARA_LABIAL_RE = re.compile("ṃ(?=[pbm])")
+
+
 def humanize_transliteration(iast_text):
     """
     Converts strict academic IAST (e.g., 'grāṃthika')
@@ -195,6 +206,11 @@ def humanize_transliteration(iast_text):
     if not iast_text:
         return ""
 
+    # 0. Anusvara first: NFKD below would split ṃ into 'm' + a dot, so a later
+    # replace never fired and ತಿಂಡಿ came out as 'timdi'. It is pronounced m
+    # before a labial (tumba) and n everywhere else (tindi, Bengaluru).
+    iast_text = _ANUSVARA_LABIAL_RE.sub("m", iast_text).replace("ṃ", "n")
+
     # 1. Normalize unicode characters (decomposes 'ā' into 'a' + macron)
     normalized = unicodedata.normalize('NFKD', iast_text)
 
@@ -202,7 +218,6 @@ def humanize_transliteration(iast_text):
     clean_text = "".join([c for c in normalized if not unicodedata.category(c).startswith('Mn')])
 
     # 3. Manual Fixes for specific IAST quirks
-    clean_text = clean_text.replace("ṃ", "n")  # Anusvara -> n
     clean_text = clean_text.replace("ṛ", "ru")
     clean_text = clean_text.replace("r̥", "ru")
 
@@ -487,11 +502,53 @@ def get_quiz_topics(*, profile_id):
     topics = [{"name": t,
                "file": config.QUIZ_TOPIC_DOCS[t]["files"],
                "level": config.QUIZ_TOPIC_DOCS[t]["level"],
+               "band": config.QUIZ_TOPIC_DOCS[t]["band"],
                "mastered": t in mastered,
                "due": due_counts.get(t, 0)}
               for t in bank["topics"]]
     topics.sort(key=lambda t: (t["level"] != "Core", t["name"]))  # Core first
     return topics
+
+
+def get_lessons():
+    """Every lesson doc for the Lessons mode: each quiz topic's doc(s), plus
+    docs that have no quiz of their own. ``quiz`` is the topic to hand off to
+    Mastery Quiz, or None."""
+    lessons = [{"name": name, "file": d["files"], "band": d["band"],
+                "quiz": name}
+               for name, d in config.QUIZ_TOPIC_DOCS.items()]
+    lessons += [{"name": name, "file": d["files"], "band": d["band"],
+                 "quiz": None}
+                for name, d in config.LESSON_ONLY_DOCS.items()]
+    return lessons
+
+
+# Items per placement band: the band's topics, at the difficulties that
+# separate one level from the next.
+_PLACEMENT_DIFFICULTY = {
+    "total_beginner": ("easy",),
+    "beginner": ("easy",),
+    "intermediate": ("medium",),
+    "advanced": ("hard",),
+}
+
+
+def build_placement_band(band, n=3, seed=None):
+    """Sample ``n`` bank items for one placement band (see learner.py).
+
+    Placement answers are graded deterministically and never recorded, so this
+    only has to pick representative items.
+    """
+    bank = load_quiz_bank()
+    topics = {t for t, d in config.QUIZ_TOPIC_DOCS.items() if d["band"] == band}
+    pool = [it for it in bank["items"] if it["topic"] in topics
+            and it["difficulty"] in _PLACEMENT_DIFFICULTY[band]]
+    if len(pool) < n:     # a thin band: widen to any difficulty
+        pool = [it for it in bank["items"] if it["topic"] in topics]
+    if not pool:
+        raise ValueError(f"No placement items for band {band!r}")
+    rng = random.Random(seed)
+    return rng.sample(pool, min(n, len(pool)))
 
 
 def build_quiz(topic, n=10, seed=None):
@@ -520,6 +577,69 @@ def normalize_answer(s):
     return " ".join(tokens)
 
 
+_KANNADA_RE = re.compile("[\u0c80-\u0cff]")
+# Spellings Roman typists use interchangeably, folded before comparison:
+# aspirates to plain stops (users rarely mark aspiration), sh/ch to the IAST
+# letters that humanization leaves (s, c), f/w to the ಫ/ವ they stand for,
+# and English-style long vowels (ee = ī, oo = ū — so "hoode" for ಹೋದೆ misses
+# and falls through to the judge; "ooru" for ಊರು is the commoner spelling).
+_ROMAN_FOLDS = (("sh", "s"), ("ch", "c"), ("th", "t"), ("dh", "d"),
+                ("ph", "p"), ("bh", "b"), ("kh", "k"), ("gh", "g"),
+                ("jh", "j"), ("f", "p"), ("w", "v"), ("ee", "i"), ("oo", "u"))
+_ROMAN_TOKEN_EQUIV = None
+
+
+def _roman_key(s):
+    """A lossy Roman comparison key, so a learner who cannot read Kannada
+    script can still match the bank: ನಾನು, naanu and nānu all map to 'nanu'.
+
+    Doubled letters collapse too (akka/aka), because Roman typists drop
+    gemination as often as they mark it. Lossy by design — which is why a match
+    on this key is only ever a 'variant', never 'exact'.
+    """
+    letters = _roman_letters(normalize_answer(s))
+    return " ".join(_roman_token_equiv().get(t, t) for t in letters.split())
+
+
+def _roman_letters(s):
+    """The transliterate-and-fold half of _roman_key, with no token folding."""
+    if _KANNADA_RE.search(s):
+        # The same romanization the learner sees on screen, so what they copy
+        # from the display is what matches.
+        s = toggle_script(s, "Kannada (Roman - Natural)")
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.category(c).startswith("Mn"))
+    s = re.sub(r"[^a-z0-9 ]", "", s.casefold())
+    for a, b in _ROMAN_FOLDS:
+        s = s.replace(a, b)
+    return " ".join(re.sub(r"(.)\1+", r"\1", s).split())
+
+
+def _roman_token_equiv():
+    """_TOKEN_EQUIV mirrored into Roman letters (endu -> anta), so a Roman
+    answer gets the same quotative and synonym folding as a script one."""
+    global _ROMAN_TOKEN_EQUIV
+    if _ROMAN_TOKEN_EQUIV is None:
+        _ROMAN_TOKEN_EQUIV = {_roman_letters(k): _roman_letters(v)
+                              for k, v in _TOKEN_EQUIV.items()}
+    return _ROMAN_TOKEN_EQUIV
+
+
+def _is_roman_answer(user_answer):
+    """True for an answer typed without any Kannada script. Only these get
+    the Roman fallback: a script answer is held to the exact script forms."""
+    return bool(normalize_answer(user_answer)) and \
+        not _KANNADA_RE.search(user_answer)
+
+
+def roman_match(user_answer, forms):
+    """True if a Roman-typed answer matches any of ``forms`` by Roman key."""
+    if not _is_roman_answer(user_answer):
+        return False
+    key = _roman_key(user_answer)
+    return any(key == _roman_key(f) for f in forms)
+
+
 def check_answer(user_answer, item):
     """True iff the normalized answer matches any acceptable form.
     This is the SOLE decider of correctness — the LLM never grades."""
@@ -529,10 +649,14 @@ def check_answer(user_answer, item):
 
 def classify_answer(user_answer, item):
     """Three-tier result: 'exact' (matches canonical), 'variant' (matches
-    another acceptable form), or 'incorrect'."""
+    another acceptable form, or any acceptable form once romanized), or
+    'incorrect'."""
     if normalize_answer(user_answer) == normalize_answer(item["canonical"]):
         return "exact"
-    return "variant" if check_answer(user_answer, item) else "incorrect"
+    if check_answer(user_answer, item) or \
+            roman_match(user_answer, item["acceptable"]):
+        return "variant"
+    return "incorrect"
 
 
 def match_common_error(user_answer, item):
@@ -547,6 +671,9 @@ def match_common_error(user_answer, item):
         return None
     for entry in item.get("common_errors") or []:
         if normalize_answer(entry["form"]) == norm:
+            return entry
+    for entry in item.get("common_errors") or []:
+        if roman_match(user_answer, [entry["form"]]):
             return entry
     return None
 
@@ -655,6 +782,8 @@ def judge_equivalence(user_answer, item, context):
     Reference answer (authoritative): "{item['canonical']}"
     Grammar point being tested: "{item['grammar_note']}"
     Student's answer: "{user_answer}"
+    (The student may have typed Kannada in Roman letters; if so, judge the
+    Kannada it represents, and never count the Roman spelling as an error.)
 
     TASK: Decide ONLY whether the student's answer is a grammatically correct
     Kannada sentence that conveys the same meaning as the English sentence
@@ -719,7 +848,7 @@ def _log_quiz_error(item_id, user_answer, raw_output, exc):
         pass
 
 
-def explain_mistake(user_answer, item, context):
+def explain_mistake(user_answer, item, context, learner_block=None):
     """Ask the LLM to explain why an already-judged-wrong answer is wrong.
     The canonical answer and grammar note are passed as authoritative ground
     truth — the model never re-grades and never proposes its own 'correct'
@@ -748,7 +877,8 @@ def explain_mistake(user_answer, item, context):
     raw, last_exc = "", None
     for _attempt in range(2):  # initial try + one retry
         try:
-            raw = generate_content(prompt, context)
+            raw = generate_content(prompt, context,
+                                   learner_block=learner_block)
             # generate_content returns "API Error: ..." instead of raising.
             if raw and not raw.startswith("API Error"):
                 data = clean_json(raw)
@@ -788,7 +918,7 @@ def load_topic_doc(filename):
     return combined
 
 
-def generate_error_quiz(errors: list, context: str) -> list:
+def generate_error_quiz(errors: list, context: str, learner_block=None) -> list:
     """Generate 5 English sentences targeting the grammar patterns from the user's error log."""
     error_summary = "\n".join(
         f"- Used: '{e.get('original', '')}' → Correct: '{e.get('correction', '')}' "
@@ -804,14 +934,14 @@ def generate_error_quiz(errors: list, context: str) -> list:
     to produce the correct grammatical structure they previously got wrong.
     OUTPUT: JSON list of 5 strings. Example: ["I go home.", "She is eating rice."]
     """
-    res = generate_content(prompt, context)
+    res = generate_content(prompt, context, learner_block=learner_block)
     data = clean_json(res)
     if data and isinstance(data, list):
         return data[:5]
     return ["Error generating questions."]
 
 
-def grade_answer_ai(question, answer, context):
+def grade_answer_ai(question, answer, context, learner_block=None):
     prompt = f"""
     English Source: "{question}"
     User Kannada: "{answer}"
@@ -842,13 +972,13 @@ def grade_answer_ai(question, answer, context):
 
     Output JSON: {{ "is_correct": boolean, "feedback": "string", "correct_translation": "string" }}
     """
-    res = generate_content(prompt, context)
+    res = generate_content(prompt, context, learner_block=learner_block)
     data = clean_json(res)
     if data:
         return data
     return {"is_correct": False, "feedback": "AI Error", "correct_translation": "Unknown"}
 
-def critique_text_ai(text, style, context):
+def critique_text_ai(text, style, context, learner_block=None):
     style_rule = "Strict Literary (Granthike)" if style == "Formal" else "Colloquial (Aadumaatu)"
     prompt = f"""
     Style: {style_rule}
@@ -856,22 +986,31 @@ def critique_text_ai(text, style, context):
     Task: Analyze SENTENCE BY SENTENCE.
     Output JSON: {{ "analysis": [ {{ "original": "str", "corrected": "str", "status": "CORRECT/IMPROVE", "feedback": "str" }} ], "overall_summary": "str" }}
     """
-    res = generate_content(prompt, context)
+    res = generate_content(prompt, context, learner_block=learner_block)
     data = clean_json(res)
     if data:
         return data
     return {}
 
 
-def generate_kannada_article_ai(topic, style, context):
+def generate_kannada_article_ai(topic, style, context, learner_block=None):
     p_style = "Literary" if style == "Formal" else "Colloquial"
-    prompt = (f"Write a short Kannada paragraph about {topic} in {p_style} style suitable for a learner. "
-              f"Do **not** return any text *besides* the paragraph itself. The paragraph should be "
-              f"engaging and thought-provoking with a light-hearted tone.")
-    return generate_content(prompt, context)
+    if learner_block:
+        # Length and form (paragraph vs. short dialogue) come from the
+        # learner's level, so the prompt must not insist on a paragraph.
+        prompt = (f"Write a short Kannada text about {topic} in {p_style} style, "
+                  f"pitched exactly at the level in the Student Profile and "
+                  f"following its length and form guidance. Do **not** return "
+                  f"any text *besides* the Kannada text itself. Keep a "
+                  f"light-hearted, engaging tone.")
+    else:
+        prompt = (f"Write a short Kannada paragraph about {topic} in {p_style} style suitable for a learner. "
+                  f"Do **not** return any text *besides* the paragraph itself. The paragraph should be "
+                  f"engaging and thought-provoking with a light-hearted tone.")
+    return generate_content(prompt, context, learner_block=learner_block)
 
 
-def generate_comprehension_questions(text, context):
+def generate_comprehension_questions(text, context, learner_block=None):
     """Generates structured JSON Q&A so the UI can create input boxes."""
     prompt = f"""
     Analyze the following Kannada text:
@@ -885,14 +1024,15 @@ def generate_comprehension_questions(text, context):
     Return a strictly valid JSON list of objects. 
     Example: [{{"question": "Question text here", "answer": "Answer text here"}}]
     """
-    res = generate_content(prompt, context, use_reading_model=True)
+    res = generate_content(prompt, context, use_reading_model=True,
+                           learner_block=learner_block)
     data = clean_json(res)
     if data:
         return data
     return []
 
 
-def grade_reading_ai(question, text, answer, context):
+def grade_reading_ai(question, text, answer, context, learner_block=None):
     """Grades a single reading comprehension answer."""
     prompt = f"""
     Text: "{text}"
@@ -901,7 +1041,8 @@ def grade_reading_ai(question, text, answer, context):
     Task: Grade the user's answer for factual and grammatical accuracy based on the text. Require that the user respond in *full sentences*. If the user answers by copying and pasting verbatim text from the passage, grade their response as wrong and politely chide them for their laziness! 
     Output JSON: {{ "is_correct": boolean, "feedback": "string", "detailed_explanation": "string" }}
     """
-    res = generate_content(prompt, context, use_reading_model=True)
+    res = generate_content(prompt, context, use_reading_model=True,
+                           learner_block=learner_block)
     data = clean_json(res)
     if data:
         return data
@@ -955,10 +1096,14 @@ def _filter_hallucinated_errors(errors, user_message):
     return kept, dropped
 
 
-def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, lang_mode, scenario: str = ""):
+def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, lang_mode, scenario: str = "",
+                          learner_block=None):
     """
     Handles a single turn of the conversational chatbot using Sarvam chat completions.
     Uses json_object response_format for deterministic structured output parsed via clean_json().
+
+    ``learner_block`` (``learner.prompt_block``) replaces the Student Profile
+    section; None keeps the original single-learner profile.
     """
     # 1. Determine which strict instruction track to use based on UI toggle
     if "Roman" in lang_mode:
@@ -991,6 +1136,9 @@ def generate_chat_turn_ai(user_message, chat_history, grammar_focus, role_key, l
         "[INJECT_SCENARIO_HERE]", scenario_text
     ).replace(
         "[INJECT_SELECTED_ROLE_HERE]", role_text
+    ).replace(
+        "[INJECT_STUDENT_PROFILE_HERE]",
+        learner_block or config.DEFAULT_STUDENT_PROFILE
     )
 
     # 3. Build the messages array (system prompt + full history + new user turn)

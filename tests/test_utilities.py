@@ -105,13 +105,19 @@ class TestHumanizeTransliteration:
         # nāma: n + ā + m + a → n + a + m + a
         assert humanize_transliteration("nāma") == "nama"
 
-    def test_anusvara_base_char_preserved(self):
-        # ṃ (U+1E43) → NFKD: m + combining dot below → dot filtered → "m"
-        assert humanize_transliteration("ṃ") == "m"
+    def test_anusvara_becomes_n(self):
+        # ṃ must be handled before NFKD, which would otherwise split it into
+        # m + dot and render ತಿಂಡಿ as 'timdi' instead of 'tindi'.
+        assert humanize_transliteration("ṃ") == "n"
+        assert humanize_transliteration("tiṃḍi") == "tindi"
+
+    def test_anusvara_before_labial_becomes_m(self):
+        assert humanize_transliteration("tuṃbā") == "tumba"
+        assert humanize_transliteration("kaṃpyūṭar") == "kampyutar"
 
     def test_complex_iast_word(self):
-        # grāṃthika: g+r + ā(→a) + ṃ(→m) + t+h+i+k+a = "gramthika"
-        assert humanize_transliteration("grāṃthika") == "gramthika"
+        # The docstring's own example: grāṃthika -> granthika.
+        assert humanize_transliteration("grāṃthika") == "granthika"
 
     def test_mixed_case_preserved(self):
         # Uppercase letters should pass through unchanged

@@ -122,6 +122,46 @@ class TestSchema:
         storage.get_progress()  # would raise OperationalError if not guarded
         assert storage.get_schema_version() == storage.SCHEMA_VERSION
 
+    def test_v4_migration_is_idempotent(self):
+        # _SCHEMA_V4 is CREATE-only; re-running it after the version row
+        # regressed (e.g. a rolled-back first write) must not raise.
+        storage.get_progress()
+        with sqlite3.connect(storage.DB_FILE) as conn:
+            conn.execute(
+                "UPDATE schema_meta SET value = '3' WHERE key = 'version'")
+        storage.set_learner_profile("beginner", "work", True)
+        assert storage.get_schema_version() == storage.SCHEMA_VERSION
+        assert storage.get_learner_profile()["level"] == "beginner"
+
+
+class TestLearnerProfile:
+
+    def test_none_before_onboarding(self):
+        assert storage.get_learner_profile() is None
+
+    def test_round_trip(self):
+        storage.set_learner_profile("intermediate", "work", False, at=NOW)
+        assert storage.get_learner_profile() == {
+            "level": "intermediate", "motivation": "work",
+            "reads_script": False, "updated_at": storage.to_iso(NOW)}
+
+    def test_reads_script_is_a_bool(self):
+        storage.set_learner_profile("advanced", "fun", True)
+        assert storage.get_learner_profile()["reads_script"] is True
+
+    def test_update_replaces_the_row(self):
+        storage.set_learner_profile("total_beginner", "heritage", False)
+        storage.set_learner_profile("advanced", "fun", True)
+        assert storage.get_learner_profile()["level"] == "advanced"
+        assert storage.get_learner_profile()["motivation"] == "fun"
+
+    def test_profiles_are_isolated(self):
+        storage.set_learner_profile("beginner", "work", True, profile_id="a")
+        storage.set_learner_profile("advanced", "fun", False, profile_id="b")
+        assert storage.get_learner_profile(profile_id="a")["level"] == "beginner"
+        assert storage.get_learner_profile(profile_id="b")["level"] == "advanced"
+        assert storage.get_learner_profile() is None
+
 
 class TestProgressJsonImport:
 

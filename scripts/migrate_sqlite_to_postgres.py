@@ -4,8 +4,8 @@ Copy local SQLite progress into the hosted Postgres database.
     VANI_DATABASE_URL=postgresql://... \\
         python scripts/migrate_sqlite_to_postgres.py --sqlite data/vani.db [--dry-run]
 
-Copies mastery, attempts, cards, reviews and users (sessions are not copied —
-sign in again on the hosted app). The whole copy is one transaction, and it is
+Copies mastery, attempts, cards, reviews, users and learner profiles
+(sessions are not copied — sign in again on the hosted app). The whole copy is one transaction, and it is
 idempotent: rows already present are skipped, so re-running after a partial
 failure or by accident never duplicates anything.
 
@@ -29,6 +29,8 @@ _KEYED = {
     "mastery": ("profile_id", "topic", "score", "mastered_at"),
     "cards": ("profile_id", "item_id", "topic", "due", "state", "stability",
               "difficulty", "last_review", "fsrs_json"),
+    "learner_profiles": ("profile_id", "level", "motivation", "reads_script",
+                         "updated_at"),
 }
 
 # Append-only logs with surrogate ids, which are not copied (the target assigns
@@ -41,7 +43,8 @@ _LOGS = {
                 ("profile_id", "item_id", "reviewed_at")),
 }
 
-TABLES = ("users", "mastery", "cards", "attempts", "reviews")
+TABLES = ("users", "mastery", "cards", "attempts", "reviews",
+          "learner_profiles")
 
 
 def _read(src, table, columns):

@@ -36,6 +36,7 @@ def source(tmp_path, monkeypatch):
     storage.record_attempt("Negation", 7, 10, at=NOW - timedelta(days=1))
     storage.upsert_card("neg_001", "Negation", "{}", storage.to_iso(NOW))
     storage.log_review("neg_001", "incorrect", 1, topic="Negation", at=NOW)
+    storage.set_learner_profile("beginner", "work", False, at=NOW)
     auth.issue_session("local")
     monkeypatch.setattr(storage, "DB_FILE", target)
     return src
@@ -44,10 +45,12 @@ def source(tmp_path, monkeypatch):
 def test_copies_everything_but_sessions(source):
     report = migrate.copy_database(source)
     assert {t: r[2] for t, r in report.items()} == {
-        "users": 1, "mastery": 1, "cards": 1, "attempts": 2, "reviews": 1}
+        "users": 1, "mastery": 1, "cards": 1, "attempts": 2, "reviews": 1,
+        "learner_profiles": 1}
     assert storage.is_mastered("Negation")
     assert [a["score"] for a in storage.get_attempts()] == [10, 7]
     assert storage.get_review_counts("neg_001") == {"reps": 1, "lapses": 1}
+    assert storage.get_learner_profile()["level"] == "beginner"
     # The copied account still signs in and sees its progress.
     user = auth.authenticate("asha", "correct horse battery")
     assert storage.is_mastered("Negation", profile_id=user["profile_id"])

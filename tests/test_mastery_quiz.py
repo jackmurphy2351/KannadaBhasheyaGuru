@@ -102,11 +102,11 @@ def quiz_log(tmp_path, monkeypatch):
 
 class TestBankIntegrity:
 
-    def test_bank_has_200_items(self):
-        assert len(BANK["items"]) == 200
+    def test_bank_has_247_items(self):
+        assert len(BANK["items"]) == 247
 
-    def test_bank_has_12_topics(self):
-        assert len(BANK["topics"]) == 12
+    def test_bank_has_15_topics(self):
+        assert len(BANK["topics"]) == 15
 
     def test_every_topic_has_at_least_10_items(self):
         for topic in BANK["topics"]:
@@ -399,8 +399,8 @@ class TestLoadQuizBank:
 class TestGetQuizTopics:
 
     REAL_DOCS_SUBSET = {
-        "Topic A": {"files": ["a.md"], "level": "Core"},
-        "Topic B": {"files": ["b.md"], "level": "Advanced"},
+        "Topic A": {"files": ["a.md"], "level": "Core", "band": "beginner"},
+        "Topic B": {"files": ["b.md"], "level": "Advanced", "band": "advanced"},
     }
 
     def test_topics_come_from_bank(self, seeded_session, monkeypatch):
@@ -413,7 +413,7 @@ class TestGetQuizTopics:
         storage.set_mastered("Topic A", score="10/10")
         t = get_quiz_topics(profile_id=P)[0]
         assert t == {"name": "Topic A", "file": ["a.md"], "level": "Core",
-                     "mastered": True, "due": 0}
+                     "band": "beginner", "mastered": True, "due": 0}
 
     def test_topic_reports_due_count(self, seeded_session, monkeypatch):
         monkeypatch.setattr(config, "QUIZ_TOPIC_DOCS", self.REAL_DOCS_SUBSET)
@@ -425,12 +425,13 @@ class TestGetQuizTopics:
 
     def test_out_of_sync_mapping_raises(self, seeded_session, monkeypatch):
         monkeypatch.setattr(config, "QUIZ_TOPIC_DOCS",
-                            {"Topic A": {"files": ["a.md"], "level": "Core"}})
+                            {"Topic A": {"files": ["a.md"], "level": "Core",
+                                         "band": "beginner"}})
         with pytest.raises(ValueError, match="out of sync"):
             get_quiz_topics(profile_id=P)
 
     def test_real_mapping_matches_real_bank(self):
-        # The shipped config must map exactly the bank's 12 topics.
+        # The shipped config must map exactly the bank's topics.
         assert set(config.QUIZ_TOPIC_DOCS) == set(BANK["topics"])
 
 
@@ -855,7 +856,8 @@ class TestQuizPersistenceWiring:
         branch = src.index("if known:", known)
         judge = src.index("logic.judge_equivalence(user_ans, item", known)
         assert known < branch < judge
-        assert "elif tier == \"incorrect\":" in src
+        # The placement check runs with judge=False: bank matches only.
+        assert "elif tier == \"incorrect\" and judge:" in src
 
     def test_error_quiz_also_shows_the_learners_answer(self):
         # The post-chat quiz had the same gap: a verdict with nothing to

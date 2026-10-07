@@ -8,6 +8,7 @@ import json
 # Import our custom modules
 import auth
 import config
+import learner
 import logic
 import storage
 
@@ -823,10 +824,13 @@ def local_css():
 # VOICE CHAT SUB-PAGE (Sarvam STT + Sarvam Chat + Sarvam TTS)
 # ============================================================================
 
-def render_voice_chat(lang_mode):
+def render_voice_chat(lang_mode, profile):
     """
     Voice Chat mode: user records audio → Sarvam STT → Sarvam chatbot → Sarvam TTS.
     Runs as a parallel feature alongside the existing text chat.
+
+    ``lang_mode`` is the learner's content script: the model and TTS always
+    work in Kannada script, and only what is *displayed* is transliterated.
     """
     st.markdown("### 🎙️ Voice Conversation Practice")
     st.caption(
@@ -855,7 +859,8 @@ def render_voice_chat(lang_mode):
     # --- STATE A: Setup (only when NOT active AND NOT in review) ---
     if not st.session_state.vc_active and not st.session_state.vc_show_review:
         st.write("#### Configure your voice partner")
-        st.caption("Voice Chat always responds in Kannada script (required for text-to-speech).")
+        st.caption("Your partner always speaks Kannada; the transcript is shown "
+                   "in your script (set under Settings → Learning profile).")
 
         vc_mode = st.radio(
             "Session mode",
@@ -870,10 +875,13 @@ def render_voice_chat(lang_mode):
         with vc_col1:
             if not vc_is_custom:
                 vc_role = st.selectbox(
-                    "Persona", list(config.CHARACTER_CARDS.keys()), key="vc_role_sel"
+                    "Persona",
+                    learner.order_personas(profile, config.CHARACTER_CARDS),
+                    key="vc_role_sel",
+                    format_func=lambda n: persona_label(profile, n),
                 )
             vc_focus = st.selectbox(
-                "Grammar Focus", config.GRAMMAR_GOALS, key="vc_focus_sel"
+                "Grammar Focus", grammar_goals_for(profile), key="vc_focus_sel"
             )
         with vc_col2:
             vc_speaker = st.selectbox(
@@ -923,6 +931,8 @@ def render_voice_chat(lang_mode):
             st.session_state.vc_speaker = config.SARVAM_SPEAKERS[vc_speaker]
             st.session_state.vc_pace = vc_pace
             st.session_state.vc_scenario = vc_scenario
+            # Fixed for the whole conversation, like the text chat.
+            st.session_state.vc_learner_block = learner.prompt_block(profile)
 
             # Bot speaks first — generate opening line
             with st.spinner("Your conversation partner is getting ready..."):
@@ -931,6 +941,7 @@ def render_voice_chat(lang_mode):
                 res = logic.generate_chat_turn_ai(
                     init_prompt, [], vc_focus, vc_role, "Kannada (Script)",
                     scenario=st.session_state.vc_scenario,
+                    learner_block=st.session_state.vc_learner_block,
                 )
 
                 if "error" not in res:
@@ -978,7 +989,8 @@ def render_voice_chat(lang_mode):
             with st.chat_message(msg["role"]):
                 if msg["role"] == "user":
                     # Show transcribed text
-                    st.write(msg.get("kannada", msg.get("content", "")))
+                    st.write(logic.toggle_script(
+                        msg.get("kannada", msg.get("content", "")), lang_mode))
                 else:
                     # Bot: show Kannada text
                     display_text = logic.toggle_script(msg["kannada"], lang_mode)
@@ -1035,6 +1047,7 @@ def render_voice_chat(lang_mode):
                             st.session_state.vc_role,
                             "Kannada (Script)",  # Always Script for TTS compatibility
                             scenario=st.session_state.vc_scenario,
+                            learner_block=st.session_state.get("vc_learner_block"),
                         )
 
                     if "error" not in res:
@@ -1153,7 +1166,7 @@ def end_quiz(prefix):
     st.session_state[quiz_key(prefix, "questions")] = []
 
 
-def render_quiz_result(entry, lang_mode, show_answer=True):
+def render_quiz_result(entry, lang_mode, show_answer=True, content_mode=None):
     """Render one graded answer.
 
     The correct answer shown always comes from the bank item, so LLM feedback
@@ -1161,9 +1174,10 @@ def render_quiz_result(entry, lang_mode, show_answer=True):
     it there is nothing to compare the correction against, since the input box
     is gone by the time the verdict appears.
     """
+    content_mode = content_mode or lang_mode
     if show_answer:
         st.write(f"**Your answer:** {entry['user_answer']}")
-    canonical = logic.toggle_script(entry['item']['canonical'], lang_mode)
+    canonical = logic.toggle_script(entry['item']['canonical'], content_mode)
     if entry['tier'] == "exact":
         st.success("Correct! ✅")
         st.info(f"Standard Kannada: {canonical}")
@@ -1176,14 +1190,21 @@ def render_quiz_result(entry, lang_mode, show_answer=True):
     else:
         st.error("Incorrect.")
         st.write(f"**Correct Answer:** {canonical}")
-        st.write(logic.toggle_script(entry['feedback'], lang_mode))
+        st.write(logic.toggle_script(entry['feedback'], content_mode))
 
 
-def render_quiz_runner(prefix, lang_mode, show_topic=False):
+def render_quiz_runner(prefix, lang_mode, show_topic=False, *, content_mode=None,
+                       record=True, judge=True, learner_block=None):
     """Render the current question or its feedback.
 
     Returns True once every question has been answered and advanced past, at
     which point the caller renders its own results screen.
+
+    ``lang_mode`` is for UI chrome; ``content_mode`` is the script Kannada
+    answers are shown in. The placement check passes ``record=False`` (it must
+    not seed the SRS deck with items the learner never studied) and
+    ``judge=False`` (bank matches only: free, reproducible, and biased low,
+    which is the safe direction for a level suggestion).
     """
     questions = st.session_state[quiz_key(prefix, "questions")]
     total = len(questions)
@@ -1197,7 +1218,7 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False):
         st.markdown("### Previous Answers")
         for i, entry in enumerate(prev_entries):
             with st.expander(f"Q{i + 1}: {entry['item']['english']}", expanded=False):
-                render_quiz_result(entry, lang_mode)
+                render_quiz_result(entry, lang_mode, content_mode=content_mode)
         st.markdown("---")
 
     if q_idx >= total:
@@ -1234,7 +1255,7 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False):
                 # every time and explained from stored text, so the verdict
                 # never depends on the model agreeing with itself twice.
                 feedback = logic.explain_common_error(known, item)
-            elif tier == "incorrect":
+            elif tier == "incorrect" and judge:
                 with st.spinner("Checking your phrasing..."):
                     verdict = logic.judge_equivalence(user_ans, item, quiz_ctx)
                 if verdict is None:
@@ -1254,6 +1275,7 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False):
                     with st.spinner("Preparing explanation..."):
                         feedback = logic.explain_mistake(
                             user_ans, item, quiz_ctx,
+                            learner_block=learner_block,
                         )["feedback"]
 
             history.append({
@@ -1267,10 +1289,11 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False):
             # Persist and reschedule. Runs here, once per question, because
             # this branch ends in a rerun; putting it in the render path would
             # re-grade the same answer on every rerun.
-            logic.record_quiz_answer(item, tier, profile_id=current_profile())
+            if record:
+                logic.record_quiz_answer(item, tier, profile_id=current_profile())
             st.rerun()
     else:
-        render_quiz_result(history[-1], lang_mode)
+        render_quiz_result(history[-1], lang_mode, content_mode=content_mode)
         is_last = (q_idx == total - 1)
         label = "See Results 🏁" if is_last else logic.get_ui_text("BTN_NEXT", lang_mode)
         if st.button(label, key=f"{prefix}_next_{q_idx}"):
@@ -1298,6 +1321,208 @@ def render_progress_panel(lang_mode):
             if due.get(topic):
                 bits.append(f"**{due[topic]} due**")
             st.markdown(f"- **{topic}** — {' · '.join(bits)}")
+
+
+# ---------------------------------------------------------------------------
+# Learning tracks
+#
+# The onboarding answers live in storage (keyed by profile_id) and are cached
+# in st.session_state.learner. learner.py turns them into prompt text and
+# display choices; nothing here writes prompt text of its own.
+# ---------------------------------------------------------------------------
+
+def load_learner():
+    """The signed-in learner's LearnerProfile, or None before onboarding."""
+    if st.session_state.get("learner") is None:
+        st.session_state.learner = learner.LearnerProfile.from_row(
+            storage.get_learner_profile(profile_id=current_profile()))
+    return st.session_state.learner
+
+
+def save_learner(level, motivation, reads_script):
+    learner.validate(level, motivation, reads_script)
+    storage.set_learner_profile(level, motivation, reads_script,
+                                profile_id=current_profile())
+    st.session_state.learner = None     # re-read, so the cache matches the DB
+    return load_learner()
+
+
+def persona_label(profile, name):
+    return f"★ {name}" if name in learner.recommended_personas(profile) else name
+
+
+def grammar_goals_for(profile):
+    return [config.GRAMMAR_GOAL_TEXT[k]
+            for k in learner.grammar_goal_keys(profile)]
+
+
+def render_learner_form(lang_mode, form_key, current=None):
+    """The three onboarding questions. Returns True once saved.
+
+    With no ``current`` profile nothing is preselected, so a new learner has to
+    actually choose rather than drift through on the defaults.
+    """
+    levels = list(learner.LEVELS)
+    motivations = list(learner.MOTIVATIONS)
+    with st.form(form_key):
+        level = st.radio(
+            logic.get_ui_text("LBL_Q_LEVEL", lang_mode), levels,
+            index=levels.index(current.level) if current else None,
+            format_func=lambda k: (f"**{learner.LEVELS[k]['label']}** — "
+                                   f"{learner.LEVELS[k]['description']}"),
+            captions=[f"≈ CEFR {learner.LEVELS[k]['cefr']}" for k in levels],
+        )
+        motivation = st.radio(
+            logic.get_ui_text("LBL_Q_MOTIVATION", lang_mode), motivations,
+            index=motivations.index(current.motivation) if current else None,
+            format_func=lambda k: learner.MOTIVATIONS[k]["label"],
+        )
+        reads_script = st.radio(
+            logic.get_ui_text("LBL_Q_SCRIPT", lang_mode), [True, False],
+            index=(0 if current.reads_script else 1) if current else None,
+            format_func=lambda b: "Yes" if b else "No",
+            horizontal=True,
+        )
+        if current:
+            st.caption(logic.get_ui_text("CAP_PROFILE_APPLIES", lang_mode))
+        submitted = st.form_submit_button(
+            logic.get_ui_text("BTN_SAVE_PROFILE", lang_mode))
+    if not submitted:
+        return False
+    if level is None or motivation is None or reads_script is None:
+        st.error("Please answer all three questions.")
+        return False
+    save_learner(level, motivation, reads_script)
+    return True
+
+
+def render_onboarding(lang_mode):
+    _, col, _ = st.columns([1, 2, 1])
+    with col:
+        st.title(logic.get_ui_text("TITLE_ONBOARDING", lang_mode))
+        st.write(logic.get_ui_text("DESC_ONBOARDING", lang_mode))
+        if render_learner_form(lang_mode, "onboarding"):
+            st.session_state.placement_stage = "offer"
+            st.rerun()
+
+
+def render_learning_profile_sidebar(profile, lang_mode):
+    with st.sidebar.expander(
+            logic.get_ui_text("HDR_LEARNING_PROFILE", lang_mode)):
+        if render_learner_form(lang_mode, "settings_profile", current=profile):
+            st.session_state["_profile_saved"] = True
+            st.rerun()
+        if st.session_state.pop("_profile_saved", False):
+            st.success(logic.get_ui_text("MSG_PROFILE_SAVED", lang_mode))
+        if st.button(logic.get_ui_text("BTN_PLACEMENT", lang_mode),
+                     key="settings_placement"):
+            _start_placement()
+            st.rerun()
+
+
+# --- Placement check ---
+# Session keys: placement_stage ("offer" | "quiz" | "script" | "result"),
+# placement_band (index into learner.LEVEL_ORDER), placement_passed (bands
+# passed so far), placement_script_ok. The quiz itself runs through the shared
+# render_quiz_runner under the "placement" prefix.
+
+def _start_placement_band(band_idx):
+    # Each band restarts at question 0, so its input keys repeat; never let a
+    # previous band's typed answer prefill the next band's box.
+    for key in [k for k in st.session_state.keys()
+                if k.startswith("placement_input_")]:
+        del st.session_state[key]
+    init_quiz_state("placement")
+    start_quiz("placement",
+               logic.build_placement_band(learner.LEVEL_ORDER[band_idx],
+                                          n=learner.PLACEMENT_PER_BAND),
+               None, "")
+    st.session_state.placement_band = band_idx
+
+
+def _start_placement():
+    st.session_state.placement_stage = "quiz"
+    st.session_state.placement_passed = 0
+    _start_placement_band(0)
+
+
+def _end_placement():
+    for key in [k for k in st.session_state.keys()
+                if k.startswith("placement_")]:
+        del st.session_state[key]
+
+
+def render_placement(profile, lang_mode):
+    stage = st.session_state.placement_stage
+    st.title(logic.get_ui_text("TITLE_PLACEMENT", lang_mode))
+
+    if stage == "offer":
+        st.success(logic.get_ui_text("MSG_PROFILE_SAVED", lang_mode))
+        col_a, col_b = st.columns(2)
+        if col_a.button(logic.get_ui_text("BTN_PLACEMENT", lang_mode)):
+            _start_placement()
+            st.rerun()
+        if col_b.button(logic.get_ui_text("BTN_SKIP_PLACEMENT", lang_mode)):
+            _end_placement()
+            st.rerun()
+        return
+
+    if stage != "result" and st.button(
+            logic.get_ui_text("BTN_CANCEL_PLACEMENT", lang_mode)):
+        _end_placement()
+        st.rerun()
+
+    if stage == "quiz":
+        st.write(logic.get_ui_text("DESC_PLACEMENT", lang_mode))
+        band = st.session_state.placement_band
+        st.caption(f"Part {band + 1} of {len(learner.LEVEL_ORDER)}")
+        if render_quiz_runner("placement", lang_mode,
+                              content_mode=learner.content_script(profile),
+                              record=False, judge=False):
+            if learner.band_passed(st.session_state.placement_score):
+                st.session_state.placement_passed += 1
+                if band + 1 < len(learner.LEVEL_ORDER):
+                    _start_placement_band(band + 1)
+                    st.rerun()
+            st.session_state.placement_stage = "script"
+            st.rerun()
+
+    elif stage == "script":
+        with st.form("script_check"):
+            answers = []
+            for i, item in enumerate(learner.SCRIPT_CHECK):
+                st.markdown(f"### {item['word']}")
+                answers.append(st.radio(
+                    logic.get_ui_text("LBL_SCRIPT_CHECK", lang_mode),
+                    item["choices"], index=None, key=f"placement_sc_{i}",
+                    horizontal=True))
+            if st.form_submit_button(logic.get_ui_text("BTN_SUBMIT", lang_mode)):
+                st.session_state.placement_script_ok = \
+                    learner.script_check_passed(answers)
+                st.session_state.placement_stage = "result"
+                st.rerun()
+
+    elif stage == "result":
+        level = learner.placement_level(st.session_state.placement_passed)
+        reads = st.session_state.placement_script_ok
+        info = learner.LEVELS[level]
+        st.subheader(f"{logic.get_ui_text('LBL_PLACEMENT_SUGGESTS', lang_mode)}: "
+                     f"{info['label']} (≈ CEFR {info['cefr']})")
+        st.write(info["description"])
+        st.write("Kannada script: " + ("you can read it." if reads
+                 else "we'll show Kannada in Roman letters."))
+        yours = learner.LEVELS[profile.level]["label"]
+        st.caption(f"Your current answers: {yours}, "
+                   f"{'reads' if profile.reads_script else 'does not read'} "
+                   f"Kannada script.")
+        col_a, col_b = st.columns(2)
+        if col_a.button(logic.get_ui_text("BTN_USE_SUGGESTION", lang_mode)):
+            save_learner(level, profile.motivation, reads)
+            _end_placement()
+            st.rerun()
+        if col_b.button(logic.get_ui_text("BTN_KEEP_MINE", lang_mode)):
+            _end_placement()
+            st.rerun()
 
 
 # ---------------------------------------------------------------------------
@@ -1538,6 +1763,22 @@ def main():
     st.sidebar.header("SETTINGS")
     render_account_sidebar(user, lang_mode)
 
+    # Learning-track gate: nobody reaches a mode without a learner profile,
+    # the same way require_login() gates on a signed-in user. Rendered after
+    # the account sidebar so "Sign out" stays reachable.
+    profile = load_learner()
+    if profile is None:
+        render_onboarding(lang_mode)
+        st.stop()
+    render_learning_profile_sidebar(profile, lang_mode)
+    if st.session_state.get("placement_stage"):
+        render_placement(profile, lang_mode)
+        st.stop()
+    # Kannada content script (never used for UI chrome — that is lang_mode)
+    # and the prompt section every tailored LLM call receives.
+    cscript = learner.content_script(profile)
+    lblock = learner.prompt_block(profile)
+
     st.sidebar.markdown("---")
 
     # UPDATED: Translate "NAVIGATION" Header
@@ -1545,6 +1786,7 @@ def main():
 
     nav_options = {
         "Home": "NAV_HOME",
+        "Lessons": "NAV_LESSONS",
         "Conversation Practice": "NAV_CHAT",
         "Send Email Lesson": "NAV_EMAIL",
         "Mastery Quiz": "NAV_QUIZ",
@@ -1557,11 +1799,18 @@ def main():
     if not user["is_admin"]:
         del nav_options["Send Email Lesson"]
 
+    # A mode can hand off to another (Lessons → "Quiz me on this"). A
+    # widget's key can only be set before the widget is created, hence the
+    # pending value applied here rather than at the button.
+    if "_goto_mode" in st.session_state:
+        st.session_state.nav_mode = st.session_state.pop("_goto_mode")
+
     # UPDATED: Translate "Go to:" Label
     mode = st.sidebar.radio(
         logic.get_ui_text("LBL_GOTO", lang_mode),
         options=list(nav_options.keys()),
-        format_func=lambda x: logic.get_ui_text(nav_options[x], lang_mode)
+        format_func=lambda x: logic.get_ui_text(nav_options[x], lang_mode),
+        key="nav_mode",
     )
 
     # --- MAIN APP TITLE (UPDATED) ---
@@ -1578,6 +1827,34 @@ def main():
             + glob.glob(os.path.join(config.KNOWLEDGE_DIR, '*.md'))
         )
         st.info(f"System Status: {file_count} grammar modules loaded.")
+        level_info = learner.LEVELS[profile.level]
+        st.caption(
+            f"Your track: {level_info['label']} (≈ CEFR {level_info['cefr']}) · "
+            f"{learner.MOTIVATIONS[profile.motivation]['label']} · "
+            f"{'Kannada script' if profile.reads_script else 'Roman letters'}"
+            f" — change it under Settings → Learning profile.")
+
+    # --- MODE: LESSONS ---
+    elif mode == "Lessons":
+        st.subheader(logic.get_ui_text("TITLE_LESSONS", lang_mode))
+        show_harder = profile.level != "total_beginner" and st.checkbox(
+            logic.get_ui_text("LBL_SHOW_HARDER", lang_mode), key="lessons_harder")
+        lessons = learner.visible_topics(profile, logic.get_lessons(), show_harder)
+        names = [l["name"] for l in lessons]
+        chosen = st.selectbox("Lesson", names, label_visibility="collapsed")
+        lesson = lessons[names.index(chosen)]
+        doc_text = logic.load_topic_doc(lesson["file"])
+        if doc_text:
+            # A Roman reader gets the whole doc transliterated; markdown and
+            # English pass through toggle_script untouched.
+            st.markdown(logic.toggle_script(doc_text, cscript))
+        if lesson["quiz"] and st.button(
+                logic.get_ui_text("BTN_QUIZ_ME", lang_mode)):
+            init_quiz_state("quiz")
+            start_quiz("quiz", logic.build_quiz(lesson["quiz"], n=10),
+                       lesson["quiz"], doc_text or st.session_state.context)
+            st.session_state["_goto_mode"] = "Mastery Quiz"
+            st.rerun()
 
     # --- MODE: CONVERSATION PRACTICE (Text + Voice tabs) ---
     elif mode == "Conversation Practice":
@@ -1616,8 +1893,14 @@ def main():
                 is_custom = session_mode == "Custom Scenario 🌐"
 
                 if not is_custom:
-                    selected_role = st.selectbox("Persona", list(config.CHARACTER_CARDS.keys()))
-                    selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
+                    selected_role = st.selectbox(
+                        "Persona",
+                        learner.order_personas(profile, config.CHARACTER_CARDS),
+                        format_func=lambda n: persona_label(profile, n),
+                        help=logic.get_ui_text("LBL_RECOMMENDED", lang_mode),
+                    )
+                    selected_focus = st.selectbox("Grammar Focus",
+                                                  grammar_goals_for(profile))
                     chat_scenario = st.text_area(
                         "Real-world scenario (optional)",
                         placeholder=(
@@ -1629,7 +1912,8 @@ def main():
                     )
                 else:
                     selected_role = "Custom Scenario"
-                    selected_focus = st.selectbox("Grammar Focus", config.GRAMMAR_GOALS)
+                    selected_focus = st.selectbox("Grammar Focus",
+                                                  grammar_goals_for(profile))
                     st.info(
                         "**Write a character card for your conversation partner, starting with "
                         "\"You are...\"** — just like the predefined personas.  \n"
@@ -1654,6 +1938,7 @@ def main():
                 chat_script_mode = st.radio(
                     "Chat Language Mode",
                     ["Kannada (Script)", "Kannada (Roman - Natural)", "Kannada (Roman - Strict)"],
+                    index=0 if profile.reads_script else 1,
                     horizontal=True,
                     help="Script: bot responds in ಕನ್ನಡ ಲಿಪಿ (recommended). Roman modes: romanised Kannada for users who cannot yet read the script.",
                 )
@@ -1664,6 +1949,9 @@ def main():
                     st.session_state.chat_focus = selected_focus
                     st.session_state.chat_scenario = chat_scenario
                     st.session_state.chat_script_mode = chat_script_mode
+                    # Fixed for the whole conversation: a profile change in
+                    # Settings applies from the next chat, not mid-dialogue.
+                    st.session_state.chat_learner_block = lblock
 
                     # Trigger bot to speak first
                     with st.spinner("Connecting to Bengaluru..."):
@@ -1672,6 +1960,7 @@ def main():
                             init_prompt, [], selected_focus, selected_role,
                             st.session_state.chat_script_mode,
                             scenario=st.session_state.chat_scenario,
+                            learner_block=st.session_state.chat_learner_block,
                         )
 
                         if "error" not in res:
@@ -1722,6 +2011,7 @@ def main():
                             st.session_state.chat_role,
                             st.session_state.chat_script_mode,
                             scenario=st.session_state.chat_scenario,
+                            learner_block=st.session_state.get("chat_learner_block"),
                         )
 
                         if "error" not in res:
@@ -1759,7 +2049,8 @@ def main():
                         if st.button("Practice These Errors 🎯"):
                             with st.spinner("Generating targeted practice questions..."):
                                 qs = logic.generate_error_quiz(
-                                    st.session_state.user_errors, st.session_state.context
+                                    st.session_state.user_errors, st.session_state.context,
+                                    learner_block=lblock,
                                 )
                                 st.session_state.error_quiz_questions = qs
                                 st.session_state.error_quiz_index = 0
@@ -1805,7 +2096,8 @@ def main():
                                 if st.button(logic.get_ui_text("BTN_SUBMIT", lang_mode), key="eq_submit"):
                                     with st.spinner("Grading..."):
                                         res = logic.grade_answer_ai(
-                                            q_text, user_ans, st.session_state.context
+                                            q_text, user_ans, st.session_state.context,
+                                            learner_block=lblock,
                                         )
                                         history_item = {
                                             'question': q_text,
@@ -1865,7 +2157,7 @@ def main():
         # TAB 2: VOICE CHAT (Sarvam STT/TTS + Sarvam Chat)
         # ================================================================
         with tab_voice:
-            render_voice_chat(lang_mode)
+            render_voice_chat(cscript, profile)
 
     # --- MODE: SEND LESSON ---
     elif mode == "Send Email Lesson" and user["is_admin"]:
@@ -1887,7 +2179,11 @@ def main():
 
         # State 1: Setup (read-then-quiz — every topic is always available)
         if not st.session_state.quiz_questions:
-            topics = logic.get_quiz_topics(profile_id=current_profile())
+            show_harder = profile.level != "total_beginner" and st.checkbox(
+                logic.get_ui_text("LBL_SHOW_HARDER", lang_mode), key="quiz_harder")
+            topics = learner.visible_topics(
+                profile, logic.get_quiz_topics(profile_id=current_profile()),
+                show_harder)
 
             # Beginners first; ✓ for mastered, a count for anything due.
             def _label(t):
@@ -1906,7 +2202,7 @@ def main():
             doc_text = logic.load_topic_doc(selected["file"])
             if doc_text:
                 with st.expander("📖 Read the lesson", expanded=False):
-                    st.markdown(doc_text)
+                    st.markdown(logic.toggle_script(doc_text, cscript))
 
             if st.button(logic.get_ui_text("BTN_START_QUIZ", lang_mode)):
                 # Deterministic: questions come from the fixed bank, no LLM.
@@ -1918,7 +2214,8 @@ def main():
                 st.rerun()
 
         # State 2: active quiz, then results once every question is done
-        elif render_quiz_runner("quiz", lang_mode):
+        elif render_quiz_runner("quiz", lang_mode, content_mode=cscript,
+                                learner_block=lblock):
             score = st.session_state.quiz_score
             total = len(st.session_state.quiz_questions)
             topic = st.session_state.quiz_topic
@@ -1999,7 +2296,8 @@ def main():
 
             render_progress_panel(lang_mode)
 
-        elif render_quiz_runner("review", lang_mode, show_topic=True):
+        elif render_quiz_runner("review", lang_mode, show_topic=True,
+                                content_mode=cscript, learner_block=lblock):
             score = st.session_state.review_score
             total = len(st.session_state.review_questions)
             st.markdown(f"## {logic.get_ui_text('LBL_REVIEW_DONE', lang_mode)} "
@@ -2038,12 +2336,17 @@ def main():
 
         if method == "Get Prompt":
             st.write(logic.get_ui_text("LBL_TOPIC", lang_mode))
-            topic = st.selectbox("Topic", config.WRITING_TOPICS, label_visibility="collapsed")
+            topic = st.selectbox(
+                "Topic", learner.order_writing_topics(profile, config.WRITING_TOPICS),
+                label_visibility="collapsed")
             if st.button(logic.get_ui_text("BTN_GEN_PROMPT", lang_mode)):
                 with st.spinner("Generating..."):
-                    prompt_res = logic.generate_content(f"Create a 1-sentence writing prompt regarding {topic}",
-                                                        st.session_state.context)
-                    st.info(logic.toggle_script(prompt_res, lang_mode))
+                    prompt_res = logic.generate_content(
+                        f"Create a 1-sentence writing prompt regarding {topic}, "
+                        f"asking for a piece of writing whose length and "
+                        f"complexity suit the learner's level.",
+                        st.session_state.context, learner_block=lblock)
+                    st.info(logic.toggle_script(prompt_res, cscript))
 
         st.write(logic.get_ui_text("LBL_PASTE", lang_mode))
         user_text = st.text_area("User Text", height=150, label_visibility="collapsed")
@@ -2053,15 +2356,16 @@ def main():
                 st.error("Text is too short.")
             else:
                 with st.spinner("Analyzing..."):
-                    res = logic.critique_text_ai(user_text, style, st.session_state.context)
+                    res = logic.critique_text_ai(user_text, style, st.session_state.context,
+                                                 learner_block=lblock)
                     if "overall_summary" in res:
-                        st.info(logic.toggle_script(res.get('overall_summary'), lang_mode))
+                        st.info(logic.toggle_script(res.get('overall_summary'), cscript))
                         for item in res.get('analysis', []):
-                            orig = logic.toggle_script(item.get('original', ''), lang_mode)
+                            orig = logic.toggle_script(item.get('original', ''), cscript)
                             with st.expander(f"{orig[:40]}..."):
                                 if item.get('status') != 'CORRECT':
-                                    corr = logic.toggle_script(item.get('corrected'), lang_mode)
-                                    feed = logic.toggle_script(item.get('feedback'), lang_mode)
+                                    corr = logic.toggle_script(item.get('corrected'), cscript)
+                                    feed = logic.toggle_script(item.get('feedback'), cscript)
                                     st.write(f"**Correction:** {corr}")
                                     st.write(f"**Feedback:** {feed}")
                                 else:
@@ -2094,7 +2398,9 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 st.write(logic.get_ui_text("LBL_TOPIC", lang_mode))
-                topic = st.selectbox("Topic", config.WRITING_TOPICS, key="rc_topic", label_visibility="collapsed")
+                topic = st.selectbox(
+                    "Topic", learner.order_writing_topics(profile, config.WRITING_TOPICS),
+                    key="rc_topic", label_visibility="collapsed")
             with col2:
                 st.write(logic.get_ui_text("LBL_STYLE", lang_mode))
                 style = st.selectbox(
@@ -2107,20 +2413,22 @@ def main():
 
             if st.button(logic.get_ui_text("BTN_GEN_TEXT", lang_mode)):
                 with st.spinner("Generating..."):
-                    generated_text = logic.generate_kannada_article_ai(topic, style, st.session_state.context)
+                    generated_text = logic.generate_kannada_article_ai(
+                        topic, style, st.session_state.context, learner_block=lblock)
                     st.session_state['current_article'] = generated_text
                     st.session_state.pop('qa_content', None)
                     st.success("Generated.")
 
         if 'current_article' in st.session_state and st.session_state['current_article']:
             st.markdown("### Article")
-            st.info(logic.toggle_script(st.session_state['current_article'], lang_mode))
+            st.info(logic.toggle_script(st.session_state['current_article'], cscript))
             st.markdown("---")
 
             if st.button(logic.get_ui_text("BTN_GEN_QS", lang_mode)):
                 with st.spinner("Creating questions..."):
-                    qa_response = logic.generate_comprehension_questions(st.session_state['current_article'],
-                                                                         st.session_state.context)
+                    qa_response = logic.generate_comprehension_questions(
+                        st.session_state['current_article'], st.session_state.context,
+                        learner_block=lblock)
                     st.session_state['qa_content'] = qa_response
 
             if 'qa_content' in st.session_state and isinstance(st.session_state['qa_content'], list):
@@ -2129,7 +2437,7 @@ def main():
                 else:
                     st.markdown("### Questions")
                     for i, item in enumerate(st.session_state['qa_content']):
-                        q_text = logic.toggle_script(item.get('question'), lang_mode)
+                        q_text = logic.toggle_script(item.get('question'), cscript)
                         st.markdown(f"**Q{i + 1}: {q_text}**")
 
                         user_ans = st.text_input(f"Answer {i + 1}", key=f"rc_answer_{i}", label_visibility="collapsed")
@@ -2141,10 +2449,11 @@ def main():
                                 with st.spinner("Grading..."):
                                     res = logic.grade_reading_ai(item.get('question'),
                                                                  st.session_state['current_article'], user_ans,
-                                                                 st.session_state.context)
+                                                                 st.session_state.context,
+                                                                 learner_block=lblock)
 
-                                    feed = logic.toggle_script(res['feedback'], lang_mode)
-                                    expl = logic.toggle_script(res['detailed_explanation'], lang_mode)
+                                    feed = logic.toggle_script(res['feedback'], cscript)
+                                    expl = logic.toggle_script(res['detailed_explanation'], cscript)
 
                                     if res['is_correct']:
                                         st.success(f"Correct. {feed}")

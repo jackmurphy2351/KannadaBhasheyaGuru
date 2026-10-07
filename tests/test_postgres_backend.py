@@ -26,7 +26,7 @@ if not URL:
 
 from tests.test_storage import (  # noqa: E402,F401  (rerun under Postgres)
     TestAttempts, TestCards, TestDueQueries, TestEmailConfirmations,
-    TestLoginFailures, TestMastery, TestProfileIsolation, TestReviewLog,
+    TestLearnerProfile, TestLoginFailures, TestMastery, TestProfileIsolation, TestReviewLog,
     TestSessions, TestUsers,
 )
 from tests.test_auth import (  # noqa: E402,F401
@@ -43,7 +43,8 @@ class TestAuthSessions(_AuthSessions):
 
 
 _TABLES = ("cards", "reviews", "attempts", "mastery", "users", "sessions",
-           "login_failures", "schema_meta", "email_confirmations")
+           "login_failures", "schema_meta", "email_confirmations",
+           "learner_profiles")
 
 
 @pytest.fixture(autouse=True)

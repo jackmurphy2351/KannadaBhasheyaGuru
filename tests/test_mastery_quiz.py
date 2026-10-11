@@ -536,6 +536,12 @@ class TestJudgeEquivalence:
         entry = json.loads(quiz_log.read_text(encoding="utf-8").strip())
         assert entry["item_id"] == "neg_003"
 
+    def test_api_error_is_not_retried_again(self, quiz_log):
+        with patch("logic.generate_content",
+                   return_value="API Error: boom") as mock_gen:
+            judge_equivalence(self.ANSWER, self.ITEM, "ctx")
+        assert mock_gen.call_count == 1
+
     def test_exception_does_not_propagate(self, quiz_log):
         with patch("logic.generate_content", side_effect=Exception("down")):
             assert judge_equivalence(self.ANSWER, self.ITEM, "ctx") is False
@@ -579,12 +585,14 @@ class TestExplainMistake:
         assert mock_gen.call_count == 2
         assert "illa" in res["feedback"]
 
-    def test_api_error_string_treated_as_failure(self, quiz_log):
+    def test_api_error_falls_back_without_a_second_round(self, quiz_log):
+        # generate_content has already retried before returning "API Error",
+        # so another round would only make the learner wait again.
         with patch("logic.generate_content",
                    side_effect=["API Error: boom", self.GOOD]) as mock_gen:
             res = explain_mistake(self.WRONG, self.ITEM, "ctx")
-        assert mock_gen.call_count == 2
-        assert "illa" in res["feedback"]
+        assert mock_gen.call_count == 1
+        assert self.ITEM["grammar_note"] in res["feedback"]
 
     def test_double_failure_returns_friendly_fallback_and_logs(self, quiz_log):
         with patch("logic.generate_content",
@@ -862,7 +870,10 @@ class TestQuizPersistenceWiring:
     def test_error_quiz_also_shows_the_learners_answer(self):
         # The post-chat quiz had the same gap: a verdict with nothing to
         # compare it against.
-        assert "**Your answer:** {last['user_answer']}" in self._main_source()
+        src = self._main_source()
+        body = src[src.index("def _render_error_quiz_result("):
+                   src.index("def render_voice_chat(")]
+        assert "**Your answer:** {entry['user_answer']}" in body
 
     def test_unreachable_judge_does_not_grade_the_answer(self):
         # A network blip must not mark a learner wrong, nor schedule the item
@@ -934,8 +945,15 @@ class TestRecordQuizAnswer:
 
     def test_a_storage_failure_does_not_break_the_quiz(self):
         # A learner mid-quiz must not lose the session to a disk problem.
-        with patch("logic.storage.upsert_card", side_effect=OSError("disk")):
+        with patch("logic.storage.record_review", side_effect=OSError("disk")):
             assert logic.record_quiz_answer(self.ITEM, "exact", profile_id=P) is None
+
+    def test_card_and_review_log_are_written_together(self):
+        # One transaction: if the review-log insert fails, the card must not
+        # have been rescheduled either, or reps/lapses would disagree with it.
+        with patch("storage._log_review", side_effect=OSError("disk")):
+            assert logic.record_quiz_answer(self.ITEM, "exact", profile_id=P) is None
+        assert storage.get_card("neg_001") is None
 
 
 class TestBuildReviewQuiz:

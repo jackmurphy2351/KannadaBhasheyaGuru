@@ -88,6 +88,37 @@ def test_v1_source_without_users_table(tmp_path):
     assert storage.is_mastered("Adverbs")
 
 
+def test_email_confirmation_state_is_copied(source, tmp_path):
+    # A confirmed account stays confirmed, and a pending signup stays pending.
+    with sqlite3.connect(source) as conn:
+        conn.execute("UPDATE users SET email_confirmed_at = ? "
+                     "WHERE username = 'asha'", ("2026-01-02T03:04:05.000000+00:00",))
+    real = storage.DB_FILE
+    storage.DB_FILE = source
+    try:
+        auth.start_signup("new@example.com", "Correct-Horse-9")
+    finally:
+        storage.DB_FILE = real
+    migrate.copy_database(source)
+    assert storage.get_user_by_username("asha")["email_confirmed_at"] == \
+        "2026-01-02T03:04:05.000000+00:00"
+    pending = storage.get_user_by_username("new@example.com")
+    assert pending["email_confirmed_at"] is None and pending["disabled"]
+
+
+def test_pre_v3_accounts_arrive_confirmed(tmp_path):
+    # A v2 source has no email_confirmed_at column. Its invite-only accounts
+    # must arrive confirmed, as the app's own v3 migration would leave them.
+    src = str(tmp_path / "v2.db")
+    created = storage.to_iso(NOW)
+    with sqlite3.connect(src) as conn:
+        conn.executescript(storage._SCHEMA_V1 + storage._SCHEMA_V2)
+        conn.execute("INSERT INTO users (profile_id, username, password_hash, "
+                     "created_at) VALUES ('p1', 'asha', 'x', ?)", (created,))
+    migrate.copy_database(src)
+    assert storage.get_user_by_username("asha")["email_confirmed_at"] == created
+
+
 def test_cli_refuses_without_target(monkeypatch, source):
     monkeypatch.delenv("VANI_DATABASE_URL", raising=False)
     with pytest.raises(SystemExit):

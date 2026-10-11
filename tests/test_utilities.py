@@ -309,3 +309,17 @@ class TestLoadTopicDoc:
     def test_missing_single_file_returns_empty(self, tmp_path, monkeypatch):
         monkeypatch.setattr(config, "KNOWLEDGE_DIR", str(tmp_path))
         assert load_topic_doc("nope.md") == ""
+
+
+class TestTopicContext:
+    """Daily Review grades each item against its own lesson, not the whole KB."""
+
+    def test_returns_only_the_topics_own_doc(self):
+        import logic
+        ctx = logic.topic_context("Negation")
+        assert ctx == load_topic_doc(config.QUIZ_TOPIC_DOCS["Negation"]["files"])
+        assert ctx and len(ctx) < len(load_knowledge_base())
+
+    def test_unknown_topic_is_empty(self):
+        import logic
+        assert logic.topic_context("No Such Topic") == ""

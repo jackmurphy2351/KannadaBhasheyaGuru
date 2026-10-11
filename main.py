@@ -2,8 +2,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 import os
 import glob
-import random
-import json
 
 # Import our custom modules
 import auth
@@ -570,10 +568,6 @@ def local_css():
 
         /* ── 16. ALERT / INFO / SUCCESS / WARNING / ERROR BOXES ──
            Left-border only, no icon, warm tonal backgrounds.       */
-        /* st.info → pale royal indigo */
-        [data-testid="stAlert"][data-baseweb="notification"]:has(svg[data-testid="stAlertContentIcon"]:first-child) {
-            /* Streamlit doesn't expose clean alert selectors; using attribute approach below */
-        }
         div[data-testid="stAlert"] {
             border-radius: 8px !important;
             border: none !important;
@@ -603,15 +597,14 @@ def local_css():
         }
 
         /* ── 17. DIVIDERS — Hampi temple-carving inspired separator ──
-           Triple-line treatment: thin gold / thick red+gradient / thin gold.
-           A central diamond motif is placed via a repeating background trick. */
+           Two-line treatment: a thin gold hairline (::before) over a
+           thick red-to-gold gradient band (::after). */
         hr {
             border: none !important;
             height: auto !important;
             margin: 28px 0 !important;
             position: relative;
             overflow: visible !important;
-            /* Build three-layer ornamental rule */
             background: transparent !important;
         }
         hr::before {
@@ -647,9 +640,6 @@ def local_css():
             margin-bottom: 3px;
             box-shadow: 0 1px 4px rgba(218,165,32,0.3);
         }
-        /* Third line (gold hair-line) via box-shadow on ::after */
-        /* NOTE: CSS cannot add a third pseudo-element; the third line is
-           achieved by using a border on ::after */
 
         /* ── 18. SCROLLBAR — Mysore Palace brass handle ── */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -713,10 +703,6 @@ def local_css():
             box-shadow: 0 2px 8px var(--shadow) !important;
             filter: sepia(0.15) hue-rotate(15deg);
         }
-
-        /* ── 24. SIDEBAR RADIO — language toggle special handling ──
-           The first radio group (language toggle) sits above the nav
-           divider and inherits the same styling, which is correct.    */
 
         /* ── 25. DARK MODE — preserve richness ── */
         @media (prefers-color-scheme: dark) {
@@ -821,6 +807,80 @@ def local_css():
 
 
 # ============================================================================
+# CHAT HELPERS (shared by the text and voice chat tabs)
+# ============================================================================
+
+# Session state for one conversation; reset wholesale on "start new".
+_TEXT_CHAT_DEFAULTS = {
+    "chat_active": False,
+    "show_review": False,
+    "chat_history": [],        # chat API history
+    "chat_display": [],        # UI display messages
+    "user_errors": [],         # logged grammar errors
+    "chat_scenario": "",
+    "chat_script_mode": "Kannada (Script)",
+    "error_quiz_active": False,
+    "error_quiz_questions": [],
+    "error_quiz_index": 0,
+    "error_quiz_score": 0,
+    "error_quiz_history": [],
+}
+_VOICE_CHAT_DEFAULTS = {
+    "vc_active": False,
+    "vc_show_review": False,
+    "vc_history": [],
+    "vc_display": [],
+    "vc_errors": [],
+    "vc_last_audio_id": None,  # dedup recordings across reruns
+    "vc_scenario": "",
+}
+
+CUSTOM_PERSONA_HELP = (
+    "**Write a character card for your conversation partner, starting with "
+    "\"You are...\"** — just like the predefined personas.  \n"
+    "Include their role, personality, background, and any quirks. "
+    "The more detail you provide, the more authentic the conversation. "
+    "*(Max 1500 characters)*"
+)
+
+
+def _reset_state(defaults):
+    """Set every key in ``defaults``, with fresh lists so no two
+    conversations ever share one."""
+    for key, value in defaults.items():
+        st.session_state[key] = list(value) if isinstance(value, list) else value
+
+
+def _record_bot_turn(history, display, user_content, res, **extra):
+    """Append one exchange to the API history and the bot's reply to the
+    display list. ``extra`` adds display-only fields (e.g. TTS audio)."""
+    kannada = res.get("bot_reply_kannada", "")
+    history.append({"role": "user", "content": user_content})
+    history.append({"role": "assistant", "content": kannada})
+    display.append({"role": "assistant", "kannada": kannada,
+                    "english": res.get("bot_reply_english_translation", ""),
+                    **extra})
+
+
+def _render_error_quiz_result(entry, script_mode):
+    """One graded answer from the post-chat error quiz.
+
+    The learner's own answer is shown beside the verdict: the input box is
+    gone by then, so otherwise there is nothing to compare the correction
+    against.
+    """
+    st.write(f"**Your answer:** {entry['user_answer']}")
+    feed = logic.toggle_script(entry['feedback'], script_mode)
+    corr = logic.toggle_script(entry['correct_translation'], script_mode)
+    if entry['correct']:
+        st.success(f"Correct! {feed}")
+        st.info(f"Standard Kannada: {corr}")
+    else:
+        st.error(f"Incorrect. {feed}")
+        st.write(f"**Correct Answer:** {corr}")
+
+
+# ============================================================================
 # VOICE CHAT SUB-PAGE (Sarvam STT + Sarvam Chat + Sarvam TTS)
 # ============================================================================
 
@@ -848,13 +908,7 @@ def render_voice_chat(lang_mode, profile):
 
     # --- Voice Chat Session State ---
     if "vc_active" not in st.session_state:
-        st.session_state.vc_active = False
-        st.session_state.vc_show_review = False
-        st.session_state.vc_history = []       # chat API history
-        st.session_state.vc_display = []       # UI display messages
-        st.session_state.vc_errors = []        # Logged grammar errors
-        st.session_state.vc_last_audio_id = None  # Dedup recordings
-        st.session_state.vc_scenario = ""
+        _reset_state(_VOICE_CHAT_DEFAULTS)
 
     # --- STATE A: Setup (only when NOT active AND NOT in review) ---
     if not st.session_state.vc_active and not st.session_state.vc_show_review:
@@ -896,13 +950,7 @@ def render_voice_chat(lang_mode, profile):
             )
 
         if vc_is_custom:
-            st.info(
-                "**Write a character card for your conversation partner, starting with "
-                "\"You are...\"** — just like the predefined personas.  \n"
-                "Include their role, personality, background, and any quirks. "
-                "The more detail you provide, the more authentic the conversation. "
-                "*(Max 1500 characters)*"
-            )
+            st.info(CUSTOM_PERSONA_HELP)
             vc_scenario = st.text_area(
                 "Describe your conversation partner",
                 placeholder=(
@@ -936,7 +984,7 @@ def render_voice_chat(lang_mode, profile):
 
             # Bot speaks first — generate opening line
             with st.spinner("Your conversation partner is getting ready..."):
-                init_prompt = "Please start the conversation in character. You speak first."
+                init_prompt = config.CHAT_OPENING_PROMPT
                 # Force Script mode so the model returns Kannada script (needed for TTS)
                 res = logic.generate_chat_turn_ai(
                     init_prompt, [], vc_focus, vc_role, "Kannada (Script)",
@@ -945,27 +993,17 @@ def render_voice_chat(lang_mode, profile):
                 )
 
                 if "error" not in res:
-                    # Save to chat history
-                    st.session_state.vc_history.append({"role": "user", "content": init_prompt})
-                    st.session_state.vc_history.append({"role": "assistant", "content": res.get("bot_reply_kannada", "")})
-
-                    kannada_text = res.get("bot_reply_kannada", "")
-                    english_text = res.get("bot_reply_english_translation", "")
-
                     # Generate TTS audio for the opening line
                     tts_result = logic.sarvam_text_to_speech(
-                        kannada_text,
+                        res.get("bot_reply_kannada", ""),
                         speaker=st.session_state.vc_speaker,
                         pace=st.session_state.vc_pace,
                     )
-
-                    st.session_state.vc_display.append({
-                        "role": "assistant",
-                        "kannada": kannada_text,
-                        "english": english_text,
-                        "audio": tts_result.get("audio_bytes"),
-                        "tts_error": tts_result.get("error"),
-                    })
+                    _record_bot_turn(
+                        st.session_state.vc_history,
+                        st.session_state.vc_display, init_prompt, res,
+                        audio=tts_result.get("audio_bytes"),
+                        tts_error=tts_result.get("error"))
                 else:
                     st.error(f"Chat error: {res['error']}")
                     st.session_state.vc_active = False
@@ -1051,33 +1089,22 @@ def render_voice_chat(lang_mode, profile):
                         )
 
                     if "error" not in res:
-                        # Update chat history
-                        st.session_state.vc_history.append({"role": "user", "content": user_text})
-                        st.session_state.vc_history.append({"role": "assistant", "content": res.get("bot_reply_kannada", "")})
-
-                        kannada_reply = res.get("bot_reply_kannada", "")
-                        english_reply = res.get("bot_reply_english_translation", "")
-
                         # Log errors silently
-                        errors = res.get("user_errors", [])
-                        if errors:
-                            st.session_state.vc_errors.extend(errors)
+                        st.session_state.vc_errors.extend(
+                            res.get("user_errors", []))
 
                         # Step 3: TTS — convert bot reply to speech
                         with st.spinner("Generating speech (Sarvam TTS)..."):
                             tts_result = logic.sarvam_text_to_speech(
-                                kannada_reply,
+                                res.get("bot_reply_kannada", ""),
                                 speaker=st.session_state.vc_speaker,
                                 pace=st.session_state.vc_pace,
                             )
-
-                        st.session_state.vc_display.append({
-                            "role": "assistant",
-                            "kannada": kannada_reply,
-                            "english": english_reply,
-                            "audio": tts_result.get("audio_bytes"),
-                            "tts_error": tts_result.get("error"),
-                        })
+                        _record_bot_turn(
+                            st.session_state.vc_history,
+                            st.session_state.vc_display, user_text, res,
+                            audio=tts_result.get("audio_bytes"),
+                            tts_error=tts_result.get("error"))
                     else:
                         st.error(f"Chat error: {res['error']}")
 
@@ -1109,14 +1136,7 @@ def render_voice_chat(lang_mode, profile):
 
         st.markdown("---")
         if st.button("Start New Voice Conversation", key="vc_new_btn"):
-            # Full reset of all voice chat state
-            st.session_state.vc_active = False
-            st.session_state.vc_show_review = False
-            st.session_state.vc_history = []
-            st.session_state.vc_display = []
-            st.session_state.vc_errors = []
-            st.session_state.vc_last_audio_id = None
-            st.session_state.vc_scenario = ""
+            _reset_state(_VOICE_CHAT_DEFAULTS)
             st.rerun()
 
 
@@ -1244,8 +1264,11 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False, *, content_mode=None
             tier = logic.classify_answer(user_ans, item)
             feedback = ""
             if tier == "incorrect":
-                quiz_ctx = st.session_state[quiz_key(prefix, "context")] or \
-                    st.session_state.context
+                # A run without its own context (Daily Review mixes topics)
+                # grades each item against its own lesson, not the whole KB.
+                quiz_ctx = (st.session_state[quiz_key(prefix, "context")]
+                            or logic.topic_context(item["topic"])
+                            or st.session_state.context)
                 known = logic.match_common_error(user_ans, item)
             else:
                 known = None
@@ -1302,10 +1325,13 @@ def render_quiz_runner(prefix, lang_mode, show_topic=False, *, content_mode=None
     return False
 
 
-def render_progress_panel(lang_mode):
-    """Durable per-topic history: attempts, best score, and what is due."""
+def render_progress_panel(lang_mode, due):
+    """Durable per-topic history: attempts, best score, and what is due.
+
+    ``due`` is the caller's ``{topic: count}``: both callers have already
+    queried it this run, and this re-renders on every interaction.
+    """
     stats = storage.get_topic_stats(profile_id=current_profile())
-    due = storage.get_due_counts_by_topic(profile_id=current_profile())
     if not stats and not due:
         return
     with st.expander(f"📊 {logic.get_ui_text('LBL_YOUR_PROGRESS', lang_mode)}",
@@ -1869,18 +1895,7 @@ def main():
         with tab_text:
             # 1. Initialize State Variables
             if "chat_active" not in st.session_state:
-                st.session_state.chat_active = False
-                st.session_state.show_review = False
-                st.session_state.chat_history = []
-                st.session_state.chat_display = []
-                st.session_state.user_errors = []
-                st.session_state.chat_scenario = ""
-                st.session_state.chat_script_mode = "Kannada (Script)"
-                st.session_state.error_quiz_active = False
-                st.session_state.error_quiz_questions = []
-                st.session_state.error_quiz_index = 0
-                st.session_state.error_quiz_score = 0
-                st.session_state.error_quiz_history = []
+                _reset_state(_TEXT_CHAT_DEFAULTS)
 
             # 2. STATE A: Setup Phase
             if not st.session_state.chat_active and not st.session_state.show_review:
@@ -1914,13 +1929,7 @@ def main():
                     selected_role = "Custom Scenario"
                     selected_focus = st.selectbox("Grammar Focus",
                                                   grammar_goals_for(profile))
-                    st.info(
-                        "**Write a character card for your conversation partner, starting with "
-                        "\"You are...\"** — just like the predefined personas.  \n"
-                        "Include their role, personality, background, and any quirks. "
-                        "The more detail you provide, the more authentic the conversation. "
-                        "*(Max 1500 characters)*"
-                    )
+                    st.info(CUSTOM_PERSONA_HELP)
                     chat_scenario = st.text_area(
                         "Describe your conversation partner",
                         placeholder=(
@@ -1955,7 +1964,7 @@ def main():
 
                     # Trigger bot to speak first
                     with st.spinner("Connecting to Bengaluru..."):
-                        init_prompt = "Open the conversation with a natural, in-character greeting appropriate to your role and setting. Your entire response must be in-character — do not reference or acknowledge this instruction."
+                        init_prompt = config.CHAT_OPENING_PROMPT
                         res = logic.generate_chat_turn_ai(
                             init_prompt, [], selected_focus, selected_role,
                             st.session_state.chat_script_mode,
@@ -1964,13 +1973,9 @@ def main():
                         )
 
                         if "error" not in res:
-                            st.session_state.chat_history.append({"role": "user", "content": init_prompt})
-                            st.session_state.chat_history.append({"role": "assistant", "content": res.get("bot_reply_kannada", "")})
-                            st.session_state.chat_display.append({
-                                "role": "assistant",
-                                "kannada": res.get("bot_reply_kannada", ""),
-                                "english": res.get("bot_reply_english_translation", "")
-                            })
+                            _record_bot_turn(st.session_state.chat_history,
+                                             st.session_state.chat_display,
+                                             init_prompt, res)
                     st.rerun()
 
             # 3. STATE B: Active Chat Phase
@@ -2015,16 +2020,11 @@ def main():
                         )
 
                         if "error" not in res:
-                            st.session_state.chat_history.append({"role": "user", "content": prompt})
-                            st.session_state.chat_history.append({"role": "assistant", "content": res.get("bot_reply_kannada", "")})
-                            st.session_state.chat_display.append({
-                                "role": "assistant",
-                                "kannada": res.get("bot_reply_kannada", ""),
-                                "english": res.get("bot_reply_english_translation", "")
-                            })
-                            errors = res.get("user_errors", [])
-                            if errors:
-                                st.session_state.user_errors.extend(errors)
+                            _record_bot_turn(st.session_state.chat_history,
+                                             st.session_state.chat_display,
+                                             prompt, res)
+                            st.session_state.user_errors.extend(
+                                res.get("user_errors", []))
                             st.rerun()
                         else:
                             st.error(f"API Error: {res['error']}")
@@ -2048,8 +2048,10 @@ def main():
                     if not st.session_state.error_quiz_active:
                         if st.button("Practice These Errors 🎯"):
                             with st.spinner("Generating targeted practice questions..."):
+                                # No knowledge base: the error list is the
+                                # whole brief.
                                 qs = logic.generate_error_quiz(
-                                    st.session_state.user_errors, st.session_state.context,
+                                    st.session_state.user_errors, None,
                                     learner_block=lblock,
                                 )
                                 st.session_state.error_quiz_questions = qs
@@ -2070,15 +2072,8 @@ def main():
                             st.markdown("#### Previous Answers")
                             for i, item in enumerate(eq_prev):
                                 with st.expander(f"Q{i + 1}: {item['question']}", expanded=False):
-                                    st.write(f"**Your Answer:** {item['user_answer']}")
-                                    feed = logic.toggle_script(item['feedback'], st.session_state.chat_script_mode)
-                                    corr = logic.toggle_script(item['correct_translation'], st.session_state.chat_script_mode)
-                                    if item['correct']:
-                                        st.success(feed)
-                                        st.info(f"Standard Kannada: {corr}")
-                                    else:
-                                        st.error(feed)
-                                        st.write(f"**Correct:** {corr}")
+                                    _render_error_quiz_result(
+                                        item, st.session_state.chat_script_mode)
                             st.markdown("---")
 
                         q_idx = st.session_state.error_quiz_index
@@ -2096,7 +2091,7 @@ def main():
                                 if st.button(logic.get_ui_text("BTN_SUBMIT", lang_mode), key="eq_submit"):
                                     with st.spinner("Grading..."):
                                         res = logic.grade_answer_ai(
-                                            q_text, user_ans, st.session_state.context,
+                                            q_text, user_ans, None,
                                             learner_block=lblock,
                                         )
                                         history_item = {
@@ -2111,19 +2106,9 @@ def main():
                                             st.session_state.error_quiz_score += 1
                                         st.rerun()
                             else:
-                                last = st.session_state.error_quiz_history[-1]
-                                # Same reason as the mastery quiz: the input
-                                # box is gone, so without this there is nothing
-                                # to compare the correction against.
-                                st.write(f"**Your answer:** {last['user_answer']}")
-                                feed_text = logic.toggle_script(last['feedback'], st.session_state.chat_script_mode)
-                                corr_text = logic.toggle_script(last['correct_translation'], st.session_state.chat_script_mode)
-                                if last['correct']:
-                                    st.success(f"Correct! {feed_text}")
-                                    st.info(f"Standard Kannada: {corr_text}")
-                                else:
-                                    st.error(f"Incorrect. {feed_text}")
-                                    st.write(f"**Correct Answer:** {corr_text}")
+                                _render_error_quiz_result(
+                                    st.session_state.error_quiz_history[-1],
+                                    st.session_state.chat_script_mode)
 
                                 is_last = (q_idx == total - 1)
                                 btn_label = "See Results 🏁" if is_last else logic.get_ui_text("BTN_NEXT", lang_mode)
@@ -2139,18 +2124,7 @@ def main():
 
                 st.markdown("---")
                 if st.button("Start New Conversation"):
-                    st.session_state.chat_active = False
-                    st.session_state.show_review = False
-                    st.session_state.chat_history = []
-                    st.session_state.chat_display = []
-                    st.session_state.user_errors = []
-                    st.session_state.chat_scenario = ""
-                    st.session_state.chat_script_mode = "Kannada (Script)"
-                    st.session_state.error_quiz_active = False
-                    st.session_state.error_quiz_questions = []
-                    st.session_state.error_quiz_index = 0
-                    st.session_state.error_quiz_score = 0
-                    st.session_state.error_quiz_history = []
+                    _reset_state(_TEXT_CHAT_DEFAULTS)
                     st.rerun()
 
         # ================================================================
@@ -2181,9 +2155,8 @@ def main():
         if not st.session_state.quiz_questions:
             show_harder = profile.level != "total_beginner" and st.checkbox(
                 logic.get_ui_text("LBL_SHOW_HARDER", lang_mode), key="quiz_harder")
-            topics = learner.visible_topics(
-                profile, logic.get_quiz_topics(profile_id=current_profile()),
-                show_harder)
+            all_topics = logic.get_quiz_topics(profile_id=current_profile())
+            topics = learner.visible_topics(profile, all_topics, show_harder)
 
             # Beginners first; ✓ for mastered, a count for anything due.
             def _label(t):
@@ -2196,7 +2169,8 @@ def main():
             selected_label = st.selectbox("Topic", labels, label_visibility="collapsed")
             selected = topics[labels.index(selected_label)]
 
-            render_progress_panel(lang_mode)
+            render_progress_panel(
+                lang_mode, {t["name"]: t["due"] for t in all_topics if t["due"]})
 
             # Read-then-quiz: show the lesson doc inline before testing.
             doc_text = logic.load_topic_doc(selected["file"])
@@ -2266,20 +2240,21 @@ def main():
             col_b.metric(logic.get_ui_text("LBL_TRACKED", lang_mode),
                          summary["tracked"])
 
+            # Nothing due overall means nothing due in any topic.
+            due_by_topic = storage.get_due_counts_by_topic(
+                profile_id=current_profile()) if summary["due"] else {}
             if summary["due"]:
-                due_by_topic = storage.get_due_counts_by_topic(
-                    profile_id=current_profile())
                 st.markdown("  \n".join(
                     f"- **{t}** — {n} due"
                     for t, n in sorted(due_by_topic.items())))
                 if st.button(logic.get_ui_text("BTN_START_REVIEW", lang_mode)):
-                    # Mixed topics, soonest-due first. Context is the whole
-                    # knowledge base since a session can span topics.
+                    # Mixed topics, soonest-due first. No run-wide context:
+                    # the runner grades each item against its own topic doc.
                     start_quiz("review",
                                logic.build_review_quiz(
                                    n=10, profile_id=current_profile()),
                                None,
-                               st.session_state.context)
+                               "")
                     st.rerun()
             elif summary["tracked"]:
                 # Items exist but none are ripe yet. FSRS puts a freshly
@@ -2294,7 +2269,7 @@ def main():
             else:
                 st.info(logic.get_ui_text("LBL_NOTHING_TRACKED", lang_mode))
 
-            render_progress_panel(lang_mode)
+            render_progress_panel(lang_mode, due_by_topic)
 
         elif render_quiz_runner("review", lang_mode, show_topic=True,
                                 content_mode=cscript, learner_block=lblock):
@@ -2345,7 +2320,7 @@ def main():
                         f"Create a 1-sentence writing prompt regarding {topic}, "
                         f"asking for a piece of writing whose length and "
                         f"complexity suit the learner's level.",
-                        st.session_state.context, learner_block=lblock)
+                        None, learner_block=lblock)
                     st.info(logic.toggle_script(prompt_res, cscript))
 
         st.write(logic.get_ui_text("LBL_PASTE", lang_mode))
@@ -2414,7 +2389,7 @@ def main():
             if st.button(logic.get_ui_text("BTN_GEN_TEXT", lang_mode)):
                 with st.spinner("Generating..."):
                     generated_text = logic.generate_kannada_article_ai(
-                        topic, style, st.session_state.context, learner_block=lblock)
+                        topic, style, None, learner_block=lblock)
                     st.session_state['current_article'] = generated_text
                     st.session_state.pop('qa_content', None)
                     st.success("Generated.")
@@ -2426,8 +2401,10 @@ def main():
 
             if st.button(logic.get_ui_text("BTN_GEN_QS", lang_mode)):
                 with st.spinner("Creating questions..."):
+                    # The passage is the only context reading needs; the
+                    # grammar knowledge base would just dilute it.
                     qa_response = logic.generate_comprehension_questions(
-                        st.session_state['current_article'], st.session_state.context,
+                        st.session_state['current_article'], None,
                         learner_block=lblock)
                     st.session_state['qa_content'] = qa_response
 
@@ -2449,8 +2426,10 @@ def main():
                                 with st.spinner("Grading..."):
                                     res = logic.grade_reading_ai(item.get('question'),
                                                                  st.session_state['current_article'], user_ans,
-                                                                 st.session_state.context,
-                                                                 learner_block=lblock)
+                                                                 None,
+                                                                 learner_block=lblock,
+                                                                 reference_answer=item.get('answer'),
+                                                                 check_copying=profile.level != "total_beginner")
 
                                     feed = logic.toggle_script(res['feedback'], cscript)
                                     expl = logic.toggle_script(res['detailed_explanation'], cscript)

@@ -284,3 +284,40 @@ class TestSignupEmails:
         _, to_addr, _ = mock_smtp_cls.return_value.sendmail.call_args[0]
         assert to_addr == "existing@example.com"
         assert "http" not in msg.get_payload()[0].get_payload(decode=True).decode()
+
+
+# ===========================================================================
+# send_email_lesson — a failed generation must never be emailed
+# ===========================================================================
+
+class TestSendEmailGenerationFailure:
+
+    @pytest.mark.parametrize("bad", ["API Error: unreachable: boom", "", "   "])
+    def test_failed_generation_sends_nothing_and_keeps_the_row(self, bad):
+        sheet = _make_mock_sheet(_standard_records())
+        with patch("logic.get_sheet_client", return_value=sheet), \
+             patch("logic.generate_content", return_value=bad), \
+             patch("logic.smtplib.SMTP") as mock_smtp_cls:
+            result = send_email_lesson(FAKE_CONTEXT)
+        assert "Error" in result
+        mock_smtp_cls.assert_not_called()
+        # Row left unmarked, so the topic is retried next time.
+        sheet.update_cell.assert_not_called()
+
+    def test_markdown_fence_is_stripped_from_the_html(self):
+        sheet = _make_mock_sheet(_standard_records())
+        fenced = f"```html\n{FAKE_HTML}\n```"
+        with patch("logic.get_sheet_client", return_value=sheet), \
+             patch("logic.generate_content", return_value=fenced), \
+             patch("logic.send_email") as mock_send:
+            send_email_lesson(FAKE_CONTEXT)
+        assert mock_send.call_args.args[2] == FAKE_HTML
+
+    def test_prompt_asks_for_a_body_fragment_without_fences(self):
+        sheet = _make_mock_sheet(_standard_records())
+        with patch("logic.get_sheet_client", return_value=sheet), \
+             patch("logic.generate_content", return_value=FAKE_HTML) as mock_gen, \
+             patch("logic.smtplib.SMTP"):
+            send_email_lesson(FAKE_CONTEXT)
+        prompt = mock_gen.call_args.args[0]
+        assert "no markdown code" in prompt and "<html>" in prompt

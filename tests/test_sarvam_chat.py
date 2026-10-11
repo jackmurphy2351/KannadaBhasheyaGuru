@@ -883,3 +883,183 @@ class TestUnreachableIsNotAVerdict:
         verdict = json.dumps({"equivalent": False, "reason": "wrong"})
         with patch("logic.generate_content", return_value=verdict):
             assert logic.judge_equivalence("x", self.ITEM, "ctx") is False
+
+
+# ===========================================================================
+# Prompt tightening (section C of the code review)
+# ===========================================================================
+
+class TestChatPromptShape:
+
+    @pytest.mark.parametrize("mode", ["Kannada (Script)",
+                                      "Kannada (Roman - Natural)"])
+    def test_both_tracks_show_the_error_object_shape(self, mode):
+        # An empty "errors": [] example primed the script track to report
+        # nothing; both tracks now show what an error looks like.
+        client = _make_client(CHAT_JSON)
+        with patch("logic._sarvam_chat_client", return_value=client):
+            generate_chat_turn_ai("msg", [], config.GRAMMAR_GOALS[0],
+                                  "The Doctor", mode)
+        messages = client.chat.completions.create.call_args.kwargs["messages"]
+        system_text = messages[0]["content"]
+        assert '"errors": [{"original"' in system_text
+        assert '"errors": []}' not in system_text
+        assert "[INJECT_" not in system_text
+
+    def test_engagement_defers_to_the_learners_level(self):
+        assert "open-ended questions" not in config.CHAT_SYSTEM_PROMPT
+        assert "Student Profile" in config.CHAT_SYSTEM_PROMPT.split(
+            "Engagement:")[1]
+
+    def test_personas_do_not_assert_facts_about_the_user(self):
+        # With public signup, no card may tell every learner they own
+        # the app owner's pets.
+        assert not any("Pebbles" in card
+                       for card in config.CHARACTER_CARDS.values())
+
+    def test_text_and_voice_chats_open_the_same_way(self):
+        import os
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(root, "main.py"), encoding="utf-8") as f:
+            src = f.read()
+        assert src.count("init_prompt = config.CHAT_OPENING_PROMPT") == 2
+
+
+class TestCritiqueGuards:
+
+    def test_learner_text_is_delimited(self):
+        response = json.dumps({"analysis": [], "overall_summary": "ok"})
+        with patch("logic.generate_content", return_value=response) as mock_gen:
+            critique_text_ai("ನಾನು ಹೋಗುತ್ತೇನೆ.", "Formal", FAKE_CONTEXT)
+        prompt = mock_gen.call_args.args[0]
+        assert "<learner_text>\n    ನಾನು ಹೋಗುತ್ತೇನೆ.\n    </learner_text>" in prompt
+
+    def test_sentences_the_learner_never_wrote_are_dropped(self):
+        response = json.dumps({
+            "analysis": [
+                {"original": "ನಾನು ಹೋಗುತ್ತೇನೆ.", "corrected": "ನಾನು ಹೋಗುತ್ತೇನೆ.",
+                 "status": "CORRECT", "feedback": "Good."},
+                {"original": "ಅವನು ಬಂದನು.", "corrected": "ಅವನು ಬಂದ.",
+                 "status": "IMPROVE", "feedback": "Invented."},
+            ],
+            "overall_summary": "ok",
+        })
+        with patch("logic.generate_content", return_value=response):
+            result = critique_text_ai("ನಾನು ಹೋಗುತ್ತೇನೆ.", "Formal", FAKE_CONTEXT)
+        assert [a["original"] for a in result["analysis"]] == ["ನಾನು ಹೋಗುತ್ತೇನೆ."]
+
+    def test_non_object_response_is_empty(self):
+        with patch("logic.generate_content", return_value="[1, 2]"):
+            assert critique_text_ai("text", "Formal", FAKE_CONTEXT) == {}
+
+
+class TestReadingGradingPrompt:
+
+    PASS = json.dumps({"is_correct": True, "feedback": "ok",
+                       "detailed_explanation": "ok"})
+
+    def test_reference_answer_anchors_the_grade(self):
+        with patch("logic.generate_content", return_value=self.PASS) as mock_gen:
+            grade_reading_ai("q", "text", "a", FAKE_CONTEXT,
+                             reference_answer="UNIQUE_REFERENCE")
+        assert "Reference answer: UNIQUE_REFERENCE" in mock_gen.call_args.args[0]
+
+    def test_no_reference_line_without_one(self):
+        with patch("logic.generate_content", return_value=self.PASS) as mock_gen:
+            grade_reading_ai("q", "text", "a", FAKE_CONTEXT)
+        assert "Reference answer" not in mock_gen.call_args.args[0]
+
+    def test_no_full_sentence_mandate_or_scolding(self):
+        # Total beginners are told answers take 2-4 words; the grader must
+        # not contradict that, nor chide.
+        with patch("logic.generate_content", return_value=self.PASS) as mock_gen:
+            grade_reading_ai("q", "text", "a", FAKE_CONTEXT)
+        prompt = mock_gen.call_args.args[0]
+        assert "full sentences" not in prompt
+        assert "laziness" not in prompt
+
+    def test_questions_must_be_answerable_from_the_passage(self):
+        with patch("logic.generate_content", return_value="[]") as mock_gen:
+            generate_comprehension_questions("passage", FAKE_CONTEXT)
+        assert "answerable from the passage alone" in mock_gen.call_args.args[0]
+
+
+class TestDeterministicReadingGrade:
+    """Cases decided in code: the model's verdicts on them flip between
+    identical calls (measured live, 2026-10-11)."""
+
+    PASSAGE = ("ರಾಮು ಒಬ್ಬ ಹುಡುಗ. ಅವನಿಗೆ ಹತ್ತು ವರ್ಷ. "
+               "ಅವನು ಮೈಸೂರಿನಲ್ಲಿ ಇರುತ್ತಾನೆ. ಅವನಿಗೆ ದೋಸೆ ಇಷ್ಟ.")
+    Q, REF = "ರಾಮು ಎಲ್ಲಿ ಇರುತ್ತಾನೆ?", "ಮೈಸೂರಿನಲ್ಲಿ"
+    PASS = json.dumps({"is_correct": True, "feedback": "ok",
+                       "detailed_explanation": "ok"})
+
+    @pytest.mark.parametrize("answer", ["ಮೈಸೂರಿನಲ್ಲಿ", "ಮೈಸೂರಿನಲ್ಲಿ.",
+                                        "maisoorinalli"])
+    def test_reference_match_is_correct_without_the_model(self, answer):
+        with patch("logic.generate_content") as mock_gen:
+            res = grade_reading_ai(self.Q, self.PASSAGE, answer, None,
+                                   reference_answer=self.REF)
+        assert res["is_correct"] is True
+        mock_gen.assert_not_called()
+
+    def test_verbatim_sentence_is_incorrect_without_the_model(self):
+        with patch("logic.generate_content") as mock_gen:
+            res = grade_reading_ai(self.Q, self.PASSAGE,
+                                   "ಅವನು ಮೈಸೂರಿನಲ್ಲಿ ಇರುತ್ತಾನೆ.", None,
+                                   reference_answer=self.REF)
+        assert res["is_correct"] is False
+        assert "own words" in res["feedback"]
+        mock_gen.assert_not_called()
+
+    def test_total_beginners_may_use_passage_words(self):
+        with patch("logic.generate_content", return_value=self.PASS) as mock_gen:
+            res = grade_reading_ai(self.Q, self.PASSAGE,
+                                   "ಅವನು ಮೈಸೂರಿನಲ್ಲಿ ಇರುತ್ತಾನೆ.", None,
+                                   reference_answer=self.REF,
+                                   check_copying=False)
+        assert res["is_correct"] is True
+        mock_gen.assert_called_once()
+
+    @pytest.mark.parametrize("answer", ["ಮೈಸೂರು", "ರಾಮು ಮೈಸೂರಿನಲ್ಲಿ ಇರುತ್ತಾನೆ"])
+    def test_other_answers_go_to_the_model_at_temperature_zero(self, answer):
+        # A one-word answer or a rephrasing is neither a reference match nor
+        # a copy, so the model decides — as reproducibly as it can.
+        with patch("logic.generate_content", return_value=self.PASS) as mock_gen:
+            grade_reading_ai(self.Q, self.PASSAGE, answer, None,
+                             reference_answer=self.REF)
+        assert mock_gen.call_args.kwargs["temperature"] == 0
+        assert "Never mark an answer incorrect only because it is\n" \
+               "       not a full sentence" in mock_gen.call_args.args[0]
+
+
+class TestCritiqueJoinedWords:
+
+    @staticmethod
+    def _critique(original, corrected):
+        response = json.dumps({"analysis": [
+            {"original": original, "corrected": corrected,
+             "status": "IMPROVE", "feedback": "model said so"}],
+            "overall_summary": "ok"})
+        with patch("logic.generate_content", return_value=response) as mock_gen:
+            result = critique_text_ai(original, "Formal", FAKE_CONTEXT)
+        assert mock_gen.call_args.kwargs["temperature"] == 0
+        return result["analysis"][0]
+
+    @pytest.mark.parametrize("original,corrected", [
+        ("ನಾನು ಬೆಂಗಳೂರಿನಲ್ಲಿ ಇದ್ದೇನೆ.", "ನಾನು ಬೆಂಗಳೂರಿನಲ್ಲಿದ್ದೇನೆ."),  # elided ಇ
+        ("ನಾನು ಹೋಗಿ ಬರುತ್ತೇನೆ.", "ನಾನು ಹೋಗಿಬರುತ್ತೇನೆ."),            # spacing only
+    ])
+    def test_a_join_only_correction_becomes_correct(self, original, corrected):
+        entry = self._critique(original, corrected)
+        assert entry["status"] == "CORRECT"
+        assert entry["corrected"] == original
+
+    @pytest.mark.parametrize("original,corrected", [
+        ("ಅವಳು ನಿನ್ನೆ ಮನೆಗೆ ಬಂದನು.", "ಅವಳು ನಿನ್ನೆ ಮನೆಗೆ ಬಂದಳು."),    # agreement
+        ("ನಾನು ಹೋಗುತ್ತೆನೆ.", "ನಾನು ಹೋಗುತ್ತೇನೆ."),                  # vowel length
+    ])
+    def test_real_corrections_are_kept(self, original, corrected):
+        entry = self._critique(original, corrected)
+        assert entry["status"] == "IMPROVE"
+        assert entry["corrected"] == corrected

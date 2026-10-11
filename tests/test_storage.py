@@ -119,7 +119,28 @@ class TestSchema:
         with sqlite3.connect(storage.DB_FILE) as conn:
             conn.execute(
                 "UPDATE schema_meta SET value = '2' WHERE key = 'version'")
+        # The schema check is cached per process; an out-of-band edit is only
+        # seen by a fresh process, which is what this simulates.
+        storage._sqlite_migrated_path = None
         storage.get_progress()  # would raise OperationalError if not guarded
+        assert storage.get_schema_version() == storage.SCHEMA_VERSION
+
+    def test_schema_check_runs_once_per_file(self, monkeypatch):
+        storage.get_progress()
+        calls = []
+        monkeypatch.setattr(storage, "_migrate", calls.append)
+        storage.get_progress()
+        storage.set_mastered("Negation")
+        assert calls == []
+
+    def test_a_rolled_back_first_open_is_migrated_again(self, monkeypatch):
+        # The cache is only set after commit: if the caller's write fails,
+        # the version row rolled back with it, so the next call must re-check.
+        storage._sqlite_migrated_path = None
+        with pytest.raises(RuntimeError):
+            with storage._connect():
+                raise RuntimeError("caller failed")
+        assert storage._sqlite_migrated_path is None
         assert storage.get_schema_version() == storage.SCHEMA_VERSION
 
     def test_v4_migration_is_idempotent(self):
@@ -129,6 +150,7 @@ class TestSchema:
         with sqlite3.connect(storage.DB_FILE) as conn:
             conn.execute(
                 "UPDATE schema_meta SET value = '3' WHERE key = 'version'")
+        storage._sqlite_migrated_path = None    # as a fresh process would
         storage.set_learner_profile("beginner", "work", True)
         assert storage.get_schema_version() == storage.SCHEMA_VERSION
         assert storage.get_learner_profile()["level"] == "beginner"
@@ -448,6 +470,8 @@ class TestDurability:
             raise RuntimeError("simulated crash mid-write")
 
         monkeypatch.setattr(storage, "_migrate", boom)
+        # _migrate is the injection point, so make the next call run it.
+        monkeypatch.setattr(storage, "_sqlite_migrated_path", None)
         with pytest.raises(RuntimeError):
             storage.set_mastered("Adverbs", score="10/10")
         monkeypatch.setattr(storage, "_migrate", original)

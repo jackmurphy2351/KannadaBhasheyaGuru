@@ -1871,9 +1871,9 @@ def main():
         lesson = lessons[names.index(chosen)]
         doc_text = logic.load_topic_doc(lesson["file"])
         if doc_text:
-            # A Roman reader gets the whole doc transliterated; markdown and
-            # English pass through toggle_script untouched.
-            st.markdown(logic.toggle_script(doc_text, cscript))
+            # A Roman reader sees each script run's hand-written gloss in
+            # place of the script (logic.lesson_for_display).
+            st.markdown(logic.lesson_for_display(doc_text, cscript))
         if lesson["quiz"] and st.button(
                 logic.get_ui_text("BTN_QUIZ_ME", lang_mode)):
             init_quiz_state("quiz")
@@ -2176,7 +2176,7 @@ def main():
             doc_text = logic.load_topic_doc(selected["file"])
             if doc_text:
                 with st.expander("📖 Read the lesson", expanded=False):
-                    st.markdown(logic.toggle_script(doc_text, cscript))
+                    st.markdown(logic.lesson_for_display(doc_text, cscript))
 
             if st.button(logic.get_ui_text("BTN_START_QUIZ", lang_mode)):
                 # Deterministic: questions come from the fixed bank, no LLM.

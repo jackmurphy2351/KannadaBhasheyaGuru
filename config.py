@@ -112,34 +112,34 @@ WRITING_TOPICS = [
 # Lessons list with it, and the placement check draws its items by band.
 QUIZ_TOPIC_DOCS = {
     # Starter topics for total beginners: phrases, not grammar.
-    "Greetings & Introductions": {"files": ["15. greetings_and_introductions.md"],
+    "Greetings & Introductions": {"files": ["15_greetings_and_introductions.md"],
                                   "level": "Starter", "band": "total_beginner"},
-    "Family & Home": {"files": ["16. family_and_home.md"],
+    "Family & Home": {"files": ["16_family_and_home.md"],
                       "level": "Starter", "band": "total_beginner"},
-    "Everyday Phrases": {"files": ["17. everyday_phrases.md"],
+    "Everyday Phrases": {"files": ["17_everyday_phrases.md"],
                          "level": "Starter", "band": "total_beginner"},
-    "Adjectives": {"files": ["2. adjectives_in_kannada.md"], "level": "Core",
+    "Adjectives": {"files": ["02_adjectives.md"], "level": "Core",
                    "band": "beginner"},
-    "Adverbs": {"files": ["6. adverbs_in_kannada.md"], "level": "Core",
+    "Adverbs": {"files": ["06_adverbs.md"], "level": "Core",
                 "band": "intermediate"},
-    "Case Suffixes": {"files": ["1. case_suffixes_in_kannada.md"], "level": "Core",
+    "Case Suffixes": {"files": ["01_case_suffixes.md"], "level": "Core",
                       "band": "beginner"},
-    "Compound Verbs": {"files": ["9. compound_verbs.md"], "level": "Advanced",
+    "Compound Verbs": {"files": ["09_compound_verbs.md"], "level": "Advanced",
                        "band": "advanced"},
-    "Conditional": {"files": ["11. conditional_in_kannada.md"], "level": "Advanced",
+    "Conditional": {"files": ["11_conditional.md"], "level": "Advanced",
                     "band": "advanced"},
-    "Conjunctions": {"files": ["7. conjunctions_in_kannada.md"], "level": "Core",
+    "Conjunctions": {"files": ["07_conjunctions.md"], "level": "Core",
                      "band": "intermediate"},
     "Dative Constructions and Modals":
-        {"files": ["5. dative_constructions_modals_in_kannada.md"], "level": "Core",
+        {"files": ["05_dative_constructions_modals.md"], "level": "Core",
          "band": "intermediate"},
-    "Impersonal Verbs": {"files": ["8. impersonal_verbs_in_kannada.md"],
+    "Impersonal Verbs": {"files": ["08_impersonal_verbs.md"],
                          "level": "Advanced", "band": "advanced"},
-    "Negation": {"files": ["4. negation_in_kannada.md"], "level": "Core",
+    "Negation": {"files": ["04_negation.md"], "level": "Core",
                  "band": "beginner"},
-    "Relative Clauses": {"files": ["10. relative_clauses_in_kannada.md"],
+    "Relative Clauses": {"files": ["10_relative_clauses.md"],
                          "level": "Advanced", "band": "advanced"},
-    "Reported Speech": {"files": ["12. reported_speech_in_kannada.md"],
+    "Reported Speech": {"files": ["12_reported_speech.md"],
                         "level": "Advanced", "band": "advanced"},
     # The bank has one combined Verb Tenses topic; load all tense modules.
     "Verb Tenses": {"files": ["03_verb_basics.md", "03a_verb_present.md",
@@ -151,9 +151,9 @@ QUIZ_TOPIC_DOCS = {
 # Lesson docs with no quiz topic of their own, shown in the Lessons mode only.
 LESSON_ONLY_DOCS = {
     "Sentence Structure & Word Order (SOV)":
-        {"files": ["13. sentence_structure_and_word_order.md"], "band": "beginner"},
+        {"files": ["13_sentence_structure_and_word_order.md"], "band": "beginner"},
     "Case Endings vs. Postpositions":
-        {"files": ["14. case_endings_vs_postpositions.md"], "band": "beginner"},
+        {"files": ["14_case_endings_vs_postpositions.md"], "band": "beginner"},
 }
 
 # --- UI TRANSLATION DICTIONARY ---

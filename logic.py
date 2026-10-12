@@ -247,6 +247,83 @@ def toggle_script(text, lang_mode):
     return text
 
 
+# --- LESSON DOC ROMANIZATION ---
+# knowledge_base convention: every run of Kannada script is immediately
+# followed by a hand-written strict-IAST gloss, "ಮನೆಗೆ (*manege*)". These two
+# patterns are the single definition of a "run" and its "gloss", shared by
+# tests/test_knowledge_base_format.py (which enforces the convention) and the
+# Lessons view. A run may span spaces, light punctuation, quotes and *bold*
+# markers, but never a newline, "(", "|", "+", "→" or a dash — so
+# "ಮರ + ಅಲ್ಲಿ" is two runs, each needing its own gloss.
+_KN = "ಀ-೿"
+KANNADA_RUN_RE = re.compile(
+    rf"[{_KN}](?:[{_KN}‌‍*'\"“”‘’ ,.!?/:;-]*[{_KN}])?")
+# A single line break may sit between run and gloss, or inside the gloss:
+# Markdown renders it as a space, so docs can wrap long lines freely.
+ROMAN_GLOSS_RE = re.compile(
+    r"[*\"”’.!?,:;…-]*[ \t]*\n?[ \t]*\(\*(.+?)\*\)", re.S)
+
+# sanscript's IAST for Kannada marks the *short* e/o (è, ò) and writes the long
+# ones bare, and renders ಳ as ḻ; the docs use e/ē, o/ō and ḷ.
+_DOC_IAST = str.maketrans({"è": "e", "e": "ē", "ò": "o", "o": "ō", "ḻ": "ḷ"})
+# Anusvara is written as the nasal it is pronounced as (ಬೆಂಗಳೂರು →
+# beṅgaḷūru, ತಿಂಡಿ → tiṇḍi); it stays ṃ only word-finally or before a
+# non-stop (ಹೂಂ → hūṃ, ಸಂಸಾರ → saṃsāra).
+_HOMORGANIC = [("kg", "ṅ"), ("cj", "ñ"), ("ṭḍ", "ṇ"), ("tdn", "n"), ("pbm", "m")]
+
+
+def lesson_iast(text):
+    """The reference strict-IAST spelling of Kannada `text`, in the
+    knowledge_base convention. Lowercase; callers compare case-insensitively."""
+    iast = sanscript.transliterate(text, sanscript.KANNADA, sanscript.IAST)
+    iast = iast.replace("‌", "").replace("‍", "").translate(_DOC_IAST)
+    for stops, nasal in _HOMORGANIC:
+        iast = re.sub(rf"ṃ(?=[{stops}])", nasal, iast)
+    return iast
+
+
+def kannada_runs(text):
+    """Yield (run, gloss) match pairs for each run of Kannada script in a
+    lesson doc. `gloss` is None when the run has no "(*roman*)" after it."""
+    for run in KANNADA_RUN_RE.finditer(text):
+        yield run, ROMAN_GLOSS_RE.match(text, run.end())
+
+
+def lesson_for_display(text, content_script):
+    """A knowledge_base doc as the Lessons view should show it.
+
+    Script readers get the doc as written (script with its Roman glosses).
+    Roman readers get each glossed run replaced by its hand-written gloss in
+    italics, so they neither see script nor read the same word twice, and keep
+    the strict spelling (ಅಣ್ಣ aṇṇa vs ಅನ್ನ anna) that toggle_script's Natural
+    mode flattens. A run without a gloss is transliterated on its own."""
+    if not text or "Roman" not in content_script:
+        return text or ""
+    out, pos = [], 0
+    for run, gloss in kannada_runs(text):
+        if gloss is None:
+            # Not yet glossed (an unconverted doc): transliterate just this
+            # run, so the hand-written IAST elsewhere keeps its diacritics.
+            out.append(text[pos:run.start()])
+            out.append(toggle_script(run.group(), content_script))
+            pos = run.end()
+            continue
+        roman = " ".join(gloss.group(1).split())
+        # Punctuation/markup between run and "(": "**" closing bold, the
+        # sentence's "." or a stem's "-". Keep it, but don't let the gloss
+        # repeat it ("Rāma banda.." / "--annu").
+        between = text[run.end():gloss.start(1) - 2].strip()
+        for ch in "".join(c for c in between if c not in '*"”’'):
+            roman = roman[:-1] if roman.endswith(ch) else roman
+        if text[run.start() - 1:run.start()] == "-":
+            roman = roman.removeprefix("-")
+        out.append(text[pos:run.start()])
+        out.append(f"*{roman}*{between}")
+        pos = gloss.end()
+    out.append(text[pos:])
+    return "".join(out)
+
+
 def get_ui_text(key, lang_mode):
     """
     Retrieves UI text based on the selected language mode.

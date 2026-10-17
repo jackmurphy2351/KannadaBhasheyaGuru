@@ -105,13 +105,19 @@ class TestHumanizeTransliteration:
         # nāma: n + ā + m + a → n + a + m + a
         assert humanize_transliteration("nāma") == "nama"
 
-    def test_anusvara_base_char_preserved(self):
-        # ṃ (U+1E43) → NFKD: m + combining dot below → dot filtered → "m"
-        assert humanize_transliteration("ṃ") == "m"
+    def test_anusvara_becomes_n(self):
+        # ṃ must be handled before NFKD, which would otherwise split it into
+        # m + dot and render ತಿಂಡಿ as 'timdi' instead of 'tindi'.
+        assert humanize_transliteration("ṃ") == "n"
+        assert humanize_transliteration("tiṃḍi") == "tindi"
+
+    def test_anusvara_before_labial_becomes_m(self):
+        assert humanize_transliteration("tuṃbā") == "tumba"
+        assert humanize_transliteration("kaṃpyūṭar") == "kampyutar"
 
     def test_complex_iast_word(self):
-        # grāṃthika: g+r + ā(→a) + ṃ(→m) + t+h+i+k+a = "gramthika"
-        assert humanize_transliteration("grāṃthika") == "gramthika"
+        # The docstring's own example: grāṃthika -> granthika.
+        assert humanize_transliteration("grāṃthika") == "granthika"
 
     def test_mixed_case_preserved(self):
         # Uppercase letters should pass through unchanged
@@ -303,3 +309,17 @@ class TestLoadTopicDoc:
     def test_missing_single_file_returns_empty(self, tmp_path, monkeypatch):
         monkeypatch.setattr(config, "KNOWLEDGE_DIR", str(tmp_path))
         assert load_topic_doc("nope.md") == ""
+
+
+class TestTopicContext:
+    """Daily Review grades each item against its own lesson, not the whole KB."""
+
+    def test_returns_only_the_topics_own_doc(self):
+        import logic
+        ctx = logic.topic_context("Negation")
+        assert ctx == load_topic_doc(config.QUIZ_TOPIC_DOCS["Negation"]["files"])
+        assert ctx and len(ctx) < len(load_knowledge_base())
+
+    def test_unknown_topic_is_empty(self):
+        import logic
+        assert logic.topic_context("No Such Topic") == ""

@@ -13,7 +13,10 @@
   "Negation",
   "Relative Clauses",
   "Reported Speech",
-  "Verb Tenses"
+  "Verb Tenses",
+  "Greetings & Introductions",
+  "Family & Home",
+  "Everyday Phrases"
  ],
  "items": [
   {
@@ -131,12 +134,24 @@
    "id": "neg_010",
    "topic": "Negation",
    "english": "The child is not sleeping right now.",
-   "canonical": "ಈಗ ಮಗು ಮಲಗ್ತಾ ಇಲ್ಲ.",
+   "canonical": "ಈಗ ಮಗು ನಿದ್ದೆ ಮಾಡ್ತಾ ಇಲ್ಲ.",
    "acceptable": [
-    "ಈಗ ಮಗು ಮಲಗ್ತಾ ಇಲ್ಲ.",
-    "ಮಗು ಈಗ ಮಲಗ್ತಾ ಇಲ್ಲ.",
-    "ಈಗ ಮಗು ಮಲಗುತ್ತಾ ಇಲ್ಲ.",
-    "ಮಗು ಈಗ ಮಲಗುತ್ತಾ ಇಲ್ಲ."
+    "ಈಗ ಮಗು ನಿದ್ದೆ ಮಾಡ್ತಾ ಇಲ್ಲ.",
+    "ಮಗು ಈಗ ನಿದ್ದೆ ಮಾಡ್ತಾ ಇಲ್ಲ.",
+    "ಈಗ ಮಗು ನಿದ್ದೆ ಮಾಡ್ತಿಲ್ಲ.",
+    "ಮಗು ಈಗ ನಿದ್ದೆ ಮಾಡ್ತಿಲ್ಲ.",
+    "ಈಗ ಮಗು ನಿದ್ದೆ ಮಾಡುತ್ತಿಲ್ಲ.",
+    "ಮಗು ಈಗ ನಿದ್ದೆ ಮಾಡುತ್ತಿಲ್ಲ."
+   ],
+   "common_errors": [
+    {
+     "form": "ಈಗ ಮಗು ಮಲಗ್ತಾ ಇಲ್ಲ.",
+     "means": "The child is not lying down (not going to bed) right now."
+    },
+    {
+     "form": "ಮಗು ಈಗ ಮಲಗ್ತಾ ಇಲ್ಲ.",
+     "means": "The child is not lying down (not going to bed) right now."
+    }
    ],
    "difficulty": "medium",
    "grammar_note": "present continuous negative -taa illa"
@@ -184,11 +199,16 @@
    "id": "neg_014",
    "topic": "Negation",
    "english": "I cannot understand.",
-   "canonical": "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗಲ್ಲ.",
+   "canonical": "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳೋಕೆ ಆಗಲ್ಲ.",
    "acceptable": [
-    "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳೋಕೆ ಆಗಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥ ಮಾಡ್ಕೊಳ್ಳೋಕೆ ಆಗಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳೋಕೆ ಆಗ್ತಿಲ್ಲ.",
     "ನನಗೆ ಅರ್ಥ ಆಗಲ್ಲ.",
-    "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗುವುದಿಲ್ಲ."
+    "ನನಗೆ ಅರ್ಥ ಆಗ್ತಿಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗುವುದಿಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗುತ್ತಿಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗಲ್ಲ."
    ],
    "difficulty": "medium",
    "grammar_note": "inability infinitive + agalla"
@@ -470,11 +490,12 @@
    "id": "tense_006",
    "topic": "Verb Tenses",
    "english": "I am eating.",
-   "canonical": "ನಾನು ತಿನ್ತಾ ಇದ್ದೀನಿ.",
+   "canonical": "ನಾನು ತಿಂತಾ ಇದ್ದೀನಿ.",
    "acceptable": [
-    "ನಾನು ತಿನ್ತಾ ಇದ್ದೀನಿ.",
     "ನಾನು ತಿಂತಾ ಇದ್ದೀನಿ.",
-    "ನಾನು ತಿನ್ನುತ್ತಾ ಇದ್ದೇನೆ."
+    "ನಾನು ತಿನ್ತಾ ಇದ್ದೀನಿ.",
+    "ನಾನು ತಿನ್ನುತ್ತಾ ಇದ್ದೇನೆ.",
+    "ನಾನು ತಿನ್ನುತ್ತಿದ್ದೇನೆ."
    ],
    "difficulty": "medium",
    "grammar_note": "present continuous"
@@ -568,10 +589,22 @@
    "id": "tense_014",
    "topic": "Verb Tenses",
    "english": "She is sleeping.",
-   "canonical": "ಅವಳು ಮಲಗ್ತಾ ಇದ್ದಾಳೆ.",
+   "canonical": "ಅವಳು ನಿದ್ದೆ ಮಾಡ್ತಾ ಇದ್ದಾಳೆ.",
    "acceptable": [
-    "ಅವಳು ಮಲಗ್ತಾ ಇದ್ದಾಳೆ.",
-    "ಅವಳು ಮಲಗುತ್ತಾ ಇದ್ದಾಳೆ."
+    "ಅವಳು ನಿದ್ದೆ ಮಾಡ್ತಾ ಇದ್ದಾಳೆ.",
+    "ಅವಳು ನಿದ್ದೆ ಮಾಡುತ್ತಾ ಇದ್ದಾಳೆ.",
+    "ಅವಳು ನಿದ್ದೆ ಮಾಡುತ್ತಿದ್ದಾಳೆ.",
+    "ಅವಳು ಮಲಗಿದ್ದಾಳೆ."
+   ],
+   "common_errors": [
+    {
+     "form": "ಅವಳು ಮಲಗ್ತಾ ಇದ್ದಾಳೆ.",
+     "means": "She is lying down (going to bed)."
+    },
+    {
+     "form": "ಅವಳು ಮಲಗುತ್ತಾ ಇದ್ದಾಳೆ.",
+     "means": "She is lying down (going to bed)."
+    }
    ],
    "difficulty": "medium",
    "grammar_note": "present continuous 3rd fem"
@@ -735,12 +768,11 @@
   {
    "id": "adj_011",
    "topic": "Adjectives",
-   "english": "It is a good boy.",
-   "canonical": "ಅದು ಒಳ್ಳೆಯ ಹುಡುಗ.",
+   "english": "He is a good boy.",
+   "canonical": "ಅವನು ಒಳ್ಳೆಯ ಹುಡುಗ.",
    "acceptable": [
-    "ಅದು ಒಳ್ಳೆಯ ಹುಡುಗ.",
     "ಅವನು ಒಳ್ಳೆಯ ಹುಡುಗ.",
-    "ಅದು ಒಳ್ಳೆ ಹುಡುಗ."
+    "ಅವನು ಒಳ್ಳೆ ಹುಡುಗ."
    ],
    "difficulty": "easy",
    "grammar_note": "invariant adjective"
@@ -1183,14 +1215,16 @@
    "id": "conj_005",
    "topic": "Conjunctions",
    "english": "I am tired because I didn't sleep.",
-   "canonical": "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕೆಂದರೆ ನಾನು ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ.",
+   "canonical": "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕಂದ್ರೆ ನಾನು ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ.",
    "acceptable": [
-    "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕೆಂದರೆ ನಾನು ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ.",
     "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕಂದ್ರೆ ನಾನು ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ.",
+    "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕಂದ್ರೆ ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ.",
+    "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕಂದ್ರೆ ನಾನು ನಿದ್ದೆ ಮಾಡ್ಲಿಲ್ಲ.",
+    "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕೆಂದರೆ ನಾನು ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ.",
     "ನನಗೆ ಸುಸ್ತಾಗಿದೆ, ಯಾಕೆಂದರೆ ನಿದ್ದೆ ಮಾಡಲಿಲ್ಲ."
    ],
    "difficulty": "medium",
-   "grammar_note": "yakendare = because"
+   "grammar_note": "yakandre (spoken) / yakendare (formal) = because"
   },
   {
    "id": "conj_006",
@@ -1224,14 +1258,14 @@
    "id": "conj_008",
    "topic": "Conjunctions",
    "english": "She won't come because she has work.",
-   "canonical": "ಅವಳು ಬರಲ್ಲ, ಯಾಕೆಂದರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ.",
+   "canonical": "ಅವಳು ಬರಲ್ಲ, ಯಾಕಂದ್ರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ.",
    "acceptable": [
-    "ಅವಳು ಬರಲ್ಲ, ಯಾಕೆಂದರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ.",
+    "ಅವಳು ಬರಲ್ಲ, ಯಾಕಂದ್ರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ.",
     "ಅವಳು ಬರುವುದಿಲ್ಲ, ಯಾಕೆಂದರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ.",
-    "ಅವಳು ಬರಲ್ಲ, ಯಾಕಂದ್ರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ."
+    "ಅವಳು ಬರಲ್ಲ, ಯಾಕೆಂದರೆ ಅವಳಿಗೆ ಕೆಲಸ ಇದೆ."
    ],
    "difficulty": "medium",
-   "grammar_note": "yakendare reason clause"
+   "grammar_note": "yakandre (spoken) / yakendare (formal) reason clause"
   },
   {
    "id": "conj_009",
@@ -1312,13 +1346,15 @@
    "id": "imp_002",
    "topic": "Impersonal Verbs",
    "english": "I cannot do this.",
-   "canonical": "ನನಗೆ ಇದು ಮಾಡಲು ಆಗಲ್ಲ.",
+   "canonical": "ನನಗೆ ಇದನ್ನ ಮಾಡೋಕೆ ಆಗಲ್ಲ.",
    "acceptable": [
-    "ನನಗೆ ಇದು ಮಾಡಲು ಆಗಲ್ಲ.",
-    "ನನಗೆ ಇದು ಮಾಡಲು ಆಗುವುದಿಲ್ಲ."
+    "ನನಗೆ ಇದನ್ನ ಮಾಡೋಕೆ ಆಗಲ್ಲ.",
+    "ನನಗೆ ಇದನ್ನ ಮಾಡಕ್ಕೆ ಆಗಲ್ಲ.",
+    "ನನಗೆ ಇದನ್ನು ಮಾಡಲು ಆಗುವುದಿಲ್ಲ.",
+    "ನನಗೆ ಇದನ್ನು ಮಾಡಲು ಸಾಧ್ಯವಿಲ್ಲ."
    ],
    "difficulty": "medium",
-   "grammar_note": "infinitive + agalla"
+   "grammar_note": "infinitive + agalla (spoken -oke, formal -alu); the pronoun object is accusative (idanna)"
   },
   {
    "id": "imp_003",
@@ -1371,8 +1407,11 @@
    "id": "imp_007",
    "topic": "Impersonal Verbs",
    "english": "You learn by speaking.",
-   "canonical": "ನೀವು ಮಾತಾಡುವುದರಿಂದ ಕಲಿತೀರಿ.",
+   "canonical": "ನೀವು ಮಾತಾಡೋದರಿಂದ ಕಲಿತೀರಿ.",
    "acceptable": [
+    "ನೀವು ಮಾತಾಡೋದರಿಂದ ಕಲಿತೀರಿ.",
+    "ನೀವು ಮಾತನಾಡುವುದರಿಂದ ಕಲಿಯುತ್ತೀರಿ.",
+    "ನೀವು ಮಾತಾಡುವುದರಿಂದ ಕಲಿಯುತ್ತೀರಿ.",
     "ನೀವು ಮಾತಾಡುವುದರಿಂದ ಕಲಿತೀರಿ."
    ],
    "difficulty": "hard",
@@ -1382,12 +1421,14 @@
    "id": "imp_008",
    "topic": "Impersonal Verbs",
    "english": "Let me go.",
-   "canonical": "ನನ್ನ ಹೋಗಲು ಬಿಡಿ.",
+   "canonical": "ನನ್ನನ್ನ ಹೋಗೋಕೆ ಬಿಡಿ.",
    "acceptable": [
-    "ನನ್ನ ಹೋಗಲು ಬಿಡಿ."
+    "ನನ್ನನ್ನ ಹೋಗೋಕೆ ಬಿಡಿ.",
+    "ನನ್ನನ್ನ ಹೋಗಕ್ಕೆ ಬಿಡಿ.",
+    "ನನ್ನನ್ನು ಹೋಗಲು ಬಿಡಿ."
    ],
    "difficulty": "medium",
-   "grammar_note": "infinitive + bidi (permission)"
+   "grammar_note": "infinitive + bidi (permission); the person let go is accusative (nannanna), not genitive (nanna)"
   },
   {
    "id": "imp_009",
@@ -1546,11 +1587,14 @@
   {
    "id": "cmp_010",
    "topic": "Compound Verbs",
-   "english": "I am sleeping.",
+   "english": "I am lying down.",
    "canonical": "ನಾನು ಮಲಗ್ಕೊಂಡಿದ್ದೀನಿ.",
    "acceptable": [
     "ನಾನು ಮಲಗ್ಕೊಂಡಿದ್ದೀನಿ.",
-    "ನಾನು ಮಲಗಿಕೊಂಡಿದ್ದೇನೆ."
+    "ನಾನು ಮಲ್ಕೊಂಡಿದ್ದೀನಿ.",
+    "ನಾನು ಮಲಗಿದ್ದೀನಿ.",
+    "ನಾನು ಮಲಗಿಕೊಂಡಿದ್ದೇನೆ.",
+    "ನಾನು ಮಲಗಿದ್ದೇನೆ."
    ],
    "difficulty": "hard",
    "grammar_note": "koNDu stative"
@@ -1738,8 +1782,11 @@
    "id": "cond_002",
    "topic": "Conditional",
    "english": "If you get tired, take rest.",
-   "canonical": "ನಿನಗೆ ಸುಸ್ತಾದರೆ, ವಿಶ್ರಾಂತಿ ತೆಗೆದುಕೊ.",
+   "canonical": "ನಿನಗೆ ಸುಸ್ತಾದರೆ, ವಿಶ್ರಾಂತಿ ತೆಗೆದುಕೋ.",
    "acceptable": [
+    "ನಿನಗೆ ಸುಸ್ತಾದರೆ, ವಿಶ್ರಾಂತಿ ತೆಗೆದುಕೋ.",
+    "ನಿನಗೆ ಸುಸ್ತಾದ್ರೆ, ರೆಸ್ಟ್ ತಗೋ.",
+    "ನಿನಗೆ ಸುಸ್ತಾದ್ರೆ, ವಿಶ್ರಾಂತಿ ತಗೋ.",
     "ನಿನಗೆ ಸುಸ್ತಾದರೆ, ವಿಶ್ರಾಂತಿ ತೆಗೆದುಕೊ."
    ],
    "difficulty": "medium",
@@ -1786,8 +1833,10 @@
    "id": "cond_006",
    "topic": "Conditional",
    "english": "If he does not come, we won't go.",
-   "canonical": "ಅವನು ಬಾರದಿದ್ದರೆ, ನಾವು ಹೋಗುವುದಿಲ್ಲ.",
+   "canonical": "ಅವನು ಬರದಿದ್ದರೆ, ನಾವು ಹೋಗುವುದಿಲ್ಲ.",
    "acceptable": [
+    "ಅವನು ಬರದಿದ್ದರೆ, ನಾವು ಹೋಗುವುದಿಲ್ಲ.",
+    "ಅವನು ಬರದಿದ್ರೆ, ನಾವು ಹೋಗಲ್ಲ.",
     "ಅವನು ಬಾರದಿದ್ದರೆ, ನಾವು ಹೋಗುವುದಿಲ್ಲ."
    ],
    "difficulty": "hard",
@@ -2242,14 +2291,17 @@
   {
    "id": "cmp_014",
    "topic": "Compound Verbs",
-   "english": "Hurry up.",
-   "canonical": "ಬೇಗ ಮಾಡಿಕೊಳ್ಳಿ.",
+   "english": "Write down my number.",
+   "canonical": "ನನ್ನ ನಂಬರ್ ಬರ್ಕೊಳ್ಳಿ.",
    "acceptable": [
-    "ಬೇಗ ಮಾಡಿಕೊಳ್ಳಿ.",
-    "ಬೇಗ ಮಾಡ್ಕೊಳ್ಳಿ."
+    "ನನ್ನ ನಂಬರ್ ಬರ್ಕೊಳ್ಳಿ.",
+    "ನನ್ನ ನಂಬರ್ ಬರೆದುಕೊಳ್ಳಿ.",
+    "ನನ್ನ ನಂಬರನ್ನು ಬರೆದುಕೊಳ್ಳಿ.",
+    "ನನ್ನ ನಂಬರ್ ಬರ್ಕೋ.",
+    "ನನ್ನ ನಂಬರ್ ಬರೆದುಕೋ."
    ],
    "difficulty": "medium",
-   "grammar_note": "bega madikoLLu"
+   "grammar_note": "baredukoLLu = note down for yourself (koLLu: for one's own use)"
   },
   {
    "id": "rel_013",
@@ -2327,10 +2379,11 @@
    "id": "cmp_015",
    "topic": "Compound Verbs",
    "english": "Listen carefully.",
-   "canonical": "ಗಮನವಾಗಿ ಕೇಳಿಸಿಕೊಳ್ಳಿ.",
+   "canonical": "ಗಮನವಿಟ್ಟು ಕೇಳಿಸಿಕೊಳ್ಳಿ.",
    "acceptable": [
-    "ಗಮನವಾಗಿ ಕೇಳಿಸಿಕೊಳ್ಳಿ.",
-    "ಗಮನವಾಗಿ ಕೇಳಿಸ್ಕೊಳ್ಳಿ."
+    "ಗಮನವಿಟ್ಟು ಕೇಳಿಸಿಕೊಳ್ಳಿ.",
+    "ಗಮನವಿಟ್ಟು ಕೇಳಿಸ್ಕೊಳ್ಳಿ.",
+    "ಗಮನವಿಟ್ಟು ಕೇಳಿ."
    ],
    "difficulty": "hard",
    "grammar_note": "keLisikoLLu = to listen"
@@ -2339,10 +2392,11 @@
    "id": "cmp_016",
    "topic": "Compound Verbs",
    "english": "He sat down.",
-   "canonical": "ಅವನು ಕುಳಿತುಕೊಂಡ.",
+   "canonical": "ಅವನು ಕೂತ್ಕೊಂಡ.",
    "acceptable": [
-    "ಅವನು ಕುಳಿತುಕೊಂಡ.",
-    "ಅವನು ಕೂತ್ಕೊಂಡ."
+    "ಅವನು ಕೂತ್ಕೊಂಡ.",
+    "ಅವನು ಕುಳಿತುಕೊಂಡನು.",
+    "ಅವನು ಕುಳಿತುಕೊಂಡ."
    ],
    "difficulty": "medium",
    "grammar_note": "koLLu past posture"
@@ -2386,8 +2440,11 @@
    "id": "cond_017",
    "topic": "Conditional",
    "english": "If you don't come, I will be sad.",
-   "canonical": "ನೀನು ಬಾರದಿದ್ದರೆ, ನನಗೆ ಬೇಸರ ಆಗುತ್ತದೆ.",
+   "canonical": "ನೀನು ಬರದಿದ್ದರೆ, ನನಗೆ ಬೇಸರ ಆಗುತ್ತದೆ.",
    "acceptable": [
+    "ನೀನು ಬರದಿದ್ದರೆ, ನನಗೆ ಬೇಸರ ಆಗುತ್ತದೆ.",
+    "ನೀನು ಬರದಿದ್ರೆ, ನನಗೆ ಬೇಜಾರಾಗುತ್ತೆ.",
+    "ನೀನು ಬರದಿದ್ರೆ, ನನಗೆ ಬೇಜಾರು ಆಗುತ್ತೆ.",
     "ನೀನು ಬಾರದಿದ್ದರೆ, ನನಗೆ ಬೇಸರ ಆಗುತ್ತದೆ."
    ],
    "difficulty": "hard",
@@ -2452,12 +2509,735 @@
    "id": "rel_017",
    "topic": "Relative Clauses",
    "english": "Those who did not come.",
-   "canonical": "ಬಾರದವರು.",
+   "canonical": "ಬರದವರು.",
    "acceptable": [
+    "ಬರದವರು.",
+    "ಬರದೇ ಇದ್ದವರು.",
     "ಬಾರದವರು."
    ],
    "difficulty": "hard",
    "grammar_note": "negative participial noun"
+  },
+  {
+   "id": "greet_001",
+   "topic": "Greetings & Introductions",
+   "english": "Hello.",
+   "canonical": "ನಮಸ್ಕಾರ.",
+   "acceptable": [
+    "ನಮಸ್ಕಾರ.",
+    "ನಮಸ್ತೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "namaskāra: the all-purpose respectful greeting"
+  },
+  {
+   "id": "greet_002",
+   "topic": "Greetings & Introductions",
+   "english": "How are you? (respectful)",
+   "canonical": "ಹೇಗಿದ್ದೀರಿ?",
+   "acceptable": [
+    "ಹೇಗಿದ್ದೀರಿ?",
+    "ಹೇಗಿದ್ದೀರ?",
+    "ನೀವು ಹೇಗಿದ್ದೀರಿ?",
+    "ನೀವು ಹೇಗಿದ್ದೀರ?",
+    "ಹೇಗಿದ್ದೀರಾ?",
+    "ನೀವು ಹೇಗಿದ್ದೀರಾ?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "hēgiddīri: 'how are you' with the respectful -īri ending"
+  },
+  {
+   "id": "greet_003",
+   "topic": "Greetings & Introductions",
+   "english": "I am fine, and you? (respectful)",
+   "canonical": "ನಾನು ಚೆನ್ನಾಗಿದ್ದೇನೆ, ನೀವು?",
+   "acceptable": [
+    "ನಾನು ಚೆನ್ನಾಗಿದ್ದೇನೆ, ನೀವು?",
+    "ನಾನು ಚೆನ್ನಾಗಿದ್ದೀನಿ, ನೀವು?",
+    "ಚೆನ್ನಾಗಿದ್ದೇನೆ, ನೀವು?",
+    "ಚೆನ್ನಾಗಿದ್ದೀನಿ, ನೀವು?",
+    "ನಾನು ಚೆನ್ನಾಗಿದ್ದೇನೆ, ನೀವು ಹೇಗಿದ್ದೀರಿ?",
+    "ಚೆನ್ನಾಗಿದ್ದೀನಿ, ನೀವು ಹೇಗಿದ್ದೀರಿ?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "chennāgi + iru: 'I am well'; return the question with respectful nīvu"
+  },
+  {
+   "id": "greet_004",
+   "topic": "Greetings & Introductions",
+   "english": "What is your name? (respectful)",
+   "canonical": "ನಿಮ್ಮ ಹೆಸರು ಏನು?",
+   "acceptable": [
+    "ನಿಮ್ಮ ಹೆಸರು ಏನು?",
+    "ನಿಮ್ಮ ಹೆಸರೇನು?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "nimma = your (respectful); no verb needed",
+   "common_errors": [
+    {
+     "form": "ನಿನ್ನ ಹೆಸರು ಏನು?",
+     "means": "What is your name? (informal - for a child or close friend)"
+    }
+   ]
+  },
+  {
+   "id": "greet_005",
+   "topic": "Greetings & Introductions",
+   "english": "My name is Ravi.",
+   "canonical": "ನನ್ನ ಹೆಸರು ರವಿ.",
+   "acceptable": [
+    "ನನ್ನ ಹೆಸರು ರವಿ.",
+    "ನನ್ನ ಹೆಸರು ರವಿ ಅಂತ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "nanna hesaru X: no verb 'is' needed"
+  },
+  {
+   "id": "greet_006",
+   "topic": "Greetings & Introductions",
+   "english": "Thank you.",
+   "canonical": "ಧನ್ಯವಾದಗಳು.",
+   "acceptable": [
+    "ಧನ್ಯವಾದಗಳು.",
+    "ಧನ್ಯವಾದ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "dhanyavādagaḷu: formal thanks"
+  },
+  {
+   "id": "greet_007",
+   "topic": "Greetings & Introductions",
+   "english": "Where are you from? (respectful)",
+   "canonical": "ನೀವು ಎಲ್ಲಿಯವರು?",
+   "acceptable": [
+    "ನೀವು ಎಲ್ಲಿಯವರು?",
+    "ನೀವು ಯಾವ ಊರಿನವರು?"
+   ],
+   "difficulty": "medium",
+   "grammar_note": "elliyavaru: 'person of where', respectful plural"
+  },
+  {
+   "id": "greet_008",
+   "topic": "Greetings & Introductions",
+   "english": "I live in Bengaluru.",
+   "canonical": "ನಾನು ಬೆಂಗಳೂರಿನಲ್ಲಿ ಇದ್ದೇನೆ.",
+   "acceptable": [
+    "ನಾನು ಬೆಂಗಳೂರಿನಲ್ಲಿ ಇದ್ದೇನೆ.",
+    "ನಾನು ಬೆಂಗಳೂರಿನಲ್ಲಿದ್ದೇನೆ.",
+    "ನಾನು ಬೆಂಗಳೂರಿನಲ್ಲಿ ಇದ್ದೀನಿ.",
+    "ನಾನು ಬೆಂಗಳೂರಲ್ಲಿ ಇದ್ದೀನಿ.",
+    "ನಾನು ಬೆಂಗಳೂರಿನಲ್ಲಿ ವಾಸಿಸುತ್ತೇನೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "locative -alli + iru"
+  },
+  {
+   "id": "greet_009",
+   "topic": "Greetings & Introductions",
+   "english": "Nice to meet you.",
+   "canonical": "ನಿಮ್ಮನ್ನು ಭೇಟಿಯಾಗಿ ಸಂತೋಷವಾಯಿತು.",
+   "acceptable": [
+    "ನಿಮ್ಮನ್ನು ಭೇಟಿಯಾಗಿ ಸಂತೋಷವಾಯಿತು.",
+    "ನಿಮ್ಮನ್ನು ನೋಡಿ ಸಂತೋಷವಾಯಿತು.",
+    "ನಿಮ್ಮನ್ನು ಭೇಟಿಯಾಗಿ ಖುಷಿಯಾಯಿತು.",
+    "ನಿಮ್ಮನ್ನ ಭೇಟಿಯಾಗಿ ಖುಷಿಯಾಯ್ತು.",
+    "ನಿಮ್ಮನ್ನ ನೋಡಿ ಖುಷಿಯಾಯ್ತು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "verb-i + santōṣavāyitu: 'having met you, (it) became a joy'"
+  },
+  {
+   "id": "greet_010",
+   "topic": "Greetings & Introductions",
+   "english": "I am learning Kannada.",
+   "canonical": "ನಾನು ಕನ್ನಡ ಕಲಿಯುತ್ತಿದ್ದೇನೆ.",
+   "acceptable": [
+    "ನಾನು ಕನ್ನಡ ಕಲಿಯುತ್ತಿದ್ದೇನೆ.",
+    "ನಾನು ಕನ್ನಡ ಕಲಿಯುತ್ತಾ ಇದ್ದೇನೆ.",
+    "ನಾನು ಕನ್ನಡ ಕಲೀತಾ ಇದ್ದೀನಿ.",
+    "ನಾನು ಕನ್ನಡ ಕಲಿತಾ ಇದ್ದೀನಿ.",
+    "ನಾನು ಕನ್ನಡ ಕಲೀತಿದ್ದೀನಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "present continuous: kaliyuttiddēne"
+  },
+  {
+   "id": "greet_011",
+   "topic": "Greetings & Introductions",
+   "english": "I don't know Kannada well.",
+   "canonical": "ನನಗೆ ಕನ್ನಡ ಚೆನ್ನಾಗಿ ಬರುವುದಿಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಕನ್ನಡ ಚೆನ್ನಾಗಿ ಬರುವುದಿಲ್ಲ.",
+    "ನನಗೆ ಕನ್ನಡ ಚೆನ್ನಾಗಿ ಬರಲ್ಲ.",
+    "ನಂಗೆ ಕನ್ನಡ ಚೆನ್ನಾಗಿ ಬರಲ್ಲ.",
+    "ನನಗೆ ಕನ್ನಡ ಸರಿಯಾಗಿ ಬರುವುದಿಲ್ಲ.",
+    "ನಂಗೆ ಕನ್ನಡ ಸರಿಯಾಗಿ ಬರಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "dative nanage + baru: a language 'comes to' you"
+  },
+  {
+   "id": "greet_012",
+   "topic": "Greetings & Introductions",
+   "english": "Please speak slowly.",
+   "canonical": "ದಯವಿಟ್ಟು ನಿಧಾನವಾಗಿ ಮಾತನಾಡಿ.",
+   "acceptable": [
+    "ದಯವಿಟ್ಟು ನಿಧಾನವಾಗಿ ಮಾತನಾಡಿ.",
+    "ದಯವಿಟ್ಟು ನಿಧಾನವಾಗಿ ಮಾತಾಡಿ.",
+    "ದಯವಿಟ್ಟು ನಿಧಾನ ಮಾತಾಡಿ.",
+    "ನಿಧಾನವಾಗಿ ಮಾತಾಡಿ ದಯವಿಟ್ಟು."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "respectful imperative -i: mātāḍi"
+  },
+  {
+   "id": "greet_013",
+   "topic": "Greetings & Introductions",
+   "english": "I'll take my leave (literally: I will go and come).",
+   "canonical": "ಹೋಗಿ ಬರುತ್ತೇನೆ.",
+   "acceptable": [
+    "ಹೋಗಿ ಬರುತ್ತೇನೆ.",
+    "ಹೋಗಿ ಬರ್ತೀನಿ.",
+    "ಹೋಗಿ ಬರುತ್ತೀನಿ.",
+    "ಹೋಗ್ಬರ್ತೀನಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "hōgi baruttēne: the polite goodbye - never just 'I'm going'"
+  },
+  {
+   "id": "greet_014",
+   "topic": "Greetings & Introductions",
+   "english": "Have you had your coffee? (a common greeting)",
+   "canonical": "ಕಾಫಿ ಆಯಿತಾ?",
+   "acceptable": [
+    "ಕಾಫಿ ಆಯಿತಾ?",
+    "ಕಾಫಿ ಆಯ್ತಾ?",
+    "ಕಾಫಿ ಆಯಿತೇ?",
+    "ಕಾಫಿ ಆಯ್ತೇ?",
+    "ನಿಮ್ಮ ಕಾಫಿ ಆಯ್ತಾ?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "X āyitā: 'has X happened?' - a greeting, not an offer"
+  },
+  {
+   "id": "greet_015",
+   "topic": "Greetings & Introductions",
+   "english": "Yes, I have had my coffee.",
+   "canonical": "ಹೌದು, ಕಾಫಿ ಆಯಿತು.",
+   "acceptable": [
+    "ಹೌದು, ಕಾಫಿ ಆಯಿತು.",
+    "ಹೌದು, ಕಾಫಿ ಆಯ್ತು.",
+    "ಕಾಫಿ ಆಯಿತು.",
+    "ಕಾಫಿ ಆಯ್ತು.",
+    "ಹೂಂ, ಕಾಫಿ ಆಯ್ತು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "answer with the same verb: āyitu"
+  },
+  {
+   "id": "greet_016",
+   "topic": "Greetings & Introductions",
+   "english": "What work do you do? (respectful)",
+   "canonical": "ನೀವು ಏನು ಕೆಲಸ ಮಾಡುತ್ತೀರಿ?",
+   "acceptable": [
+    "ನೀವು ಏನು ಕೆಲಸ ಮಾಡುತ್ತೀರಿ?",
+    "ನೀವು ಏನು ಕೆಲಸ ಮಾಡ್ತೀರಿ?",
+    "ನೀವು ಏನ್ ಕೆಲಸ ಮಾಡ್ತೀರಾ?",
+    "ನೀವು ಏನು ಕೆಲಸ ಮಾಡ್ತೀರ?",
+    "ನೀವು ಏನು ಕೆಲಸ ಮಾಡುತ್ತೀರ?"
+   ],
+   "difficulty": "medium",
+   "grammar_note": "present tense 2nd person respectful: māḍuttīri"
+  },
+  {
+   "id": "fam_001",
+   "topic": "Family & Home",
+   "english": "This is my mother.",
+   "canonical": "ಇವರು ನನ್ನ ಅಮ್ಮ.",
+   "acceptable": [
+    "ಇವರು ನನ್ನ ಅಮ್ಮ.",
+    "ಇವರು ನನ್ನ ತಾಯಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "respectful ivaru for a person you honour, not idu",
+   "common_errors": [
+    {
+     "form": "ಇದು ನನ್ನ ಅಮ್ಮ.",
+     "means": "This (thing) is my mother - idu is for objects, and is rude for a person"
+    }
+   ]
+  },
+  {
+   "id": "fam_002",
+   "topic": "Family & Home",
+   "english": "I have one elder brother.",
+   "canonical": "ನನಗೆ ಒಬ್ಬ ಅಣ್ಣ ಇದ್ದಾನೆ.",
+   "acceptable": [
+    "ನನಗೆ ಒಬ್ಬ ಅಣ್ಣ ಇದ್ದಾನೆ.",
+    "ನಂಗೆ ಒಬ್ಬ ಅಣ್ಣ ಇದ್ದಾನೆ.",
+    "ನನಗೆ ಒಬ್ಬ ಅಣ್ಣ ಇದ್ದಾರೆ.",
+    "ನಂಗೆ ಒಬ್ಬ ಅಣ್ಣ ಇದ್ದಾರೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "possession = dative nanage + iru",
+   "common_errors": [
+    {
+     "form": "ನನಗೆ ಒಬ್ಬ ತಮ್ಮ ಇದ್ದಾನೆ.",
+     "means": "I have one younger brother."
+    }
+   ]
+  },
+  {
+   "id": "fam_003",
+   "topic": "Family & Home",
+   "english": "My younger sister is a student.",
+   "canonical": "ನನ್ನ ತಂಗಿ ವಿದ್ಯಾರ್ಥಿನಿ.",
+   "acceptable": [
+    "ನನ್ನ ತಂಗಿ ವಿದ್ಯಾರ್ಥಿನಿ.",
+    "ನನ್ನ ತಂಗಿ ಸ್ಟೂಡೆಂಟ್."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "tangi = younger sister; no verb 'is'",
+   "common_errors": [
+    {
+     "form": "ನನ್ನ ಅಕ್ಕ ವಿದ್ಯಾರ್ಥಿನಿ.",
+     "means": "My elder sister is a student."
+    }
+   ]
+  },
+  {
+   "id": "fam_004",
+   "topic": "Family & Home",
+   "english": "How many people are there in your family?",
+   "canonical": "ನಿಮ್ಮ ಮನೆಯಲ್ಲಿ ಎಷ್ಟು ಜನ ಇದ್ದಾರೆ?",
+   "acceptable": [
+    "ನಿಮ್ಮ ಮನೆಯಲ್ಲಿ ಎಷ್ಟು ಜನ ಇದ್ದಾರೆ?",
+    "ನಿಮ್ಮ ಮನೆಯಲ್ಲಿ ಎಷ್ಟು ಜನ ಇದ್ದೀರಿ?",
+    "ನಿಮ್ಮ ಮನೇಲಿ ಎಷ್ಟು ಜನ ಇದ್ದೀರಾ?",
+    "ನಿಮ್ಮ ಕುಟುಂಬದಲ್ಲಿ ಎಷ್ಟು ಜನ ಇದ್ದಾರೆ?",
+    "ನಿಮ್ಮ ಕುಟುಂಬದಲ್ಲಿ ಎಷ್ಟು ಜನ ಇದ್ದೀರಿ?"
+   ],
+   "difficulty": "medium",
+   "grammar_note": "eṣṭu jana: 'how many people'"
+  },
+  {
+   "id": "fam_005",
+   "topic": "Family & Home",
+   "english": "There are four of us at home.",
+   "canonical": "ನಮ್ಮ ಮನೆಯಲ್ಲಿ ನಾಲ್ಕು ಜನ ಇದ್ದೇವೆ.",
+   "acceptable": [
+    "ನಮ್ಮ ಮನೆಯಲ್ಲಿ ನಾಲ್ಕು ಜನ ಇದ್ದೇವೆ.",
+    "ನಮ್ಮ ಮನೆಯಲ್ಲಿ ನಾಲ್ಕು ಜನ ಇದ್ದೀವಿ.",
+    "ನಮ್ಮ ಮನೇಲಿ ನಾಲ್ಕು ಜನ ಇದ್ದೀವಿ.",
+    "ನಮ್ಮ ಮನೆಯಲ್ಲಿ ನಾವು ನಾಲ್ಕು ಜನ ಇದ್ದೇವೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "iddēve: 'we are' - verb agrees with 'we'"
+  },
+  {
+   "id": "fam_006",
+   "topic": "Family & Home",
+   "english": "My father is a teacher.",
+   "canonical": "ನನ್ನ ತಂದೆ ಶಿಕ್ಷಕರು.",
+   "acceptable": [
+    "ನನ್ನ ತಂದೆ ಶಿಕ್ಷಕರು.",
+    "ನನ್ನ ಅಪ್ಪ ಶಿಕ್ಷಕರು.",
+    "ನನ್ನ ತಂದೆ ಟೀಚರ್.",
+    "ನನ್ನ ಅಪ್ಪ ಟೀಚರ್.",
+    "ನನ್ನ ತಂದೆ ಶಿಕ್ಷಕ.",
+    "ನನ್ನ ಅಪ್ಪ ಶಿಕ್ಷಕ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "respectful -aru (śikṣakaru) for a parent"
+  },
+  {
+   "id": "fam_007",
+   "topic": "Family & Home",
+   "english": "Our house is small.",
+   "canonical": "ನಮ್ಮ ಮನೆ ಚಿಕ್ಕದು.",
+   "acceptable": [
+    "ನಮ್ಮ ಮನೆ ಚಿಕ್ಕದು.",
+    "ನಮ್ಮ ಮನೆ ಚಿಕ್ಕದಾಗಿದೆ.",
+    "ನಮ್ಮ ಮನೆ ಸಣ್ಣದು.",
+    "ನಮ್ಮ ಮನೆ ಸಣ್ಣದಾಗಿದೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "predicate adjective takes -du: cikkadu",
+   "common_errors": [
+    {
+     "form": "ನಮ್ಮ ಮನೆ ದೊಡ್ಡದು.",
+     "means": "Our house is big."
+    }
+   ]
+  },
+  {
+   "id": "fam_008",
+   "topic": "Family & Home",
+   "english": "Where is your house?",
+   "canonical": "ನಿಮ್ಮ ಮನೆ ಎಲ್ಲಿದೆ?",
+   "acceptable": [
+    "ನಿಮ್ಮ ಮನೆ ಎಲ್ಲಿದೆ?",
+    "ನಿಮ್ಮ ಮನೆ ಎಲ್ಲಿ ಇದೆ?",
+    "ನಿನ್ನ ಮನೆ ಎಲ್ಲಿದೆ?",
+    "ನಿನ್ನ ಮನೆ ಎಲ್ಲಿ ಇದೆ?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "elli + ide: 'where is'"
+  },
+  {
+   "id": "fam_009",
+   "topic": "Family & Home",
+   "english": "My house is in Jayanagar.",
+   "canonical": "ನನ್ನ ಮನೆ ಜಯನಗರದಲ್ಲಿದೆ.",
+   "acceptable": [
+    "ನನ್ನ ಮನೆ ಜಯನಗರದಲ್ಲಿದೆ.",
+    "ನನ್ನ ಮನೆ ಜಯನಗರದಲ್ಲಿ ಇದೆ.",
+    "ನಮ್ಮ ಮನೆ ಜಯನಗರದಲ್ಲಿದೆ.",
+    "ನಮ್ಮ ಮನೆ ಜಯನಗರದಲ್ಲಿ ಇದೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "locative -alli; 'our house' (namma mane) is the natural way to say it"
+  },
+  {
+   "id": "fam_010",
+   "topic": "Family & Home",
+   "english": "Are you married?",
+   "canonical": "ನಿಮಗೆ ಮದುವೆ ಆಗಿದೆಯಾ?",
+   "acceptable": [
+    "ನಿಮಗೆ ಮದುವೆ ಆಗಿದೆಯಾ?",
+    "ನಿಮಗೆ ಮದುವೆ ಆಗಿದೆಯೇ?",
+    "ನಿಮಗೆ ಮದುವೆಯಾಗಿದೆಯಾ?",
+    "ನಿಮಗೆ ಮದುವೆಯಾಗಿದೆಯೇ?",
+    "ನಿಮಗೆ ಮದುವೆ ಆಗಿದ್ಯಾ?"
+   ],
+   "difficulty": "medium",
+   "grammar_note": "dative nimage + maduve āgu: marriage 'happens to' you"
+  },
+  {
+   "id": "fam_011",
+   "topic": "Family & Home",
+   "english": "I have two children.",
+   "canonical": "ನನಗೆ ಇಬ್ಬರು ಮಕ್ಕಳು ಇದ್ದಾರೆ.",
+   "acceptable": [
+    "ನನಗೆ ಇಬ್ಬರು ಮಕ್ಕಳು ಇದ್ದಾರೆ.",
+    "ನನಗೆ ಇಬ್ಬರು ಮಕ್ಕಳಿದ್ದಾರೆ.",
+    "ನಂಗೆ ಇಬ್ಬರು ಮಕ್ಕಳು ಇದ್ದಾರೆ.",
+    "ನಂಗೆ ಇಬ್ಬರು ಮಕ್ಕಳಿದ್ದಾರೆ.",
+    "ನಂಗೆ ಇಬ್ರು ಮಕ್ಕಳು ಇದ್ದಾರೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "human counting word ibbaru (two people), not eraḍu"
+  },
+  {
+   "id": "fam_012",
+   "topic": "Family & Home",
+   "english": "Grandmother is in the kitchen.",
+   "canonical": "ಅಜ್ಜಿ ಅಡುಗೆಮನೆಯಲ್ಲಿ ಇದ್ದಾರೆ.",
+   "acceptable": [
+    "ಅಜ್ಜಿ ಅಡುಗೆಮನೆಯಲ್ಲಿ ಇದ್ದಾರೆ.",
+    "ಅಜ್ಜಿ ಅಡುಗೆಮನೆಯಲ್ಲಿದ್ದಾರೆ.",
+    "ಅಜ್ಜಿ ಅಡುಗೆ ಮನೆಯಲ್ಲಿ ಇದ್ದಾರೆ.",
+    "ಅಜ್ಜಿ ಅಡುಗೆ ಮನೆಯಲ್ಲಿದ್ದಾರೆ.",
+    "ಅಜ್ಜಿ ಅಡುಗೆಮನೆಯಲ್ಲಿ ಇದ್ದಾಳೆ.",
+    "ಅಜ್ಜಿ ಅಡಿಗೆಮನೆಯಲ್ಲಿ ಇದ್ದಾರೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "respectful iddāre for an elder"
+  },
+  {
+   "id": "fam_013",
+   "topic": "Family & Home",
+   "english": "My elder sister lives in Mysuru.",
+   "canonical": "ನನ್ನ ಅಕ್ಕ ಮೈಸೂರಿನಲ್ಲಿ ಇದ್ದಾಳೆ.",
+   "acceptable": [
+    "ನನ್ನ ಅಕ್ಕ ಮೈಸೂರಿನಲ್ಲಿ ಇದ್ದಾಳೆ.",
+    "ನನ್ನ ಅಕ್ಕ ಮೈಸೂರಿನಲ್ಲಿದ್ದಾಳೆ.",
+    "ನನ್ನ ಅಕ್ಕ ಮೈಸೂರಲ್ಲಿ ಇದ್ದಾಳೆ.",
+    "ನನ್ನ ಅಕ್ಕ ಮೈಸೂರಿನಲ್ಲಿ ಇದ್ದಾರೆ.",
+    "ನನ್ನ ಅಕ್ಕ ಮೈಸೂರಿನಲ್ಲಿ ವಾಸಿಸುತ್ತಾಳೆ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "akka = elder sister; feminine iddāḷe",
+   "common_errors": [
+    {
+     "form": "ನನ್ನ ತಂಗಿ ಮೈಸೂರಿನಲ್ಲಿ ಇದ್ದಾಳೆ.",
+     "means": "My younger sister lives in Mysuru."
+    }
+   ]
+  },
+  {
+   "id": "fam_014",
+   "topic": "Family & Home",
+   "english": "This is our house.",
+   "canonical": "ಇದು ನಮ್ಮ ಮನೆ.",
+   "acceptable": [
+    "ಇದು ನಮ್ಮ ಮನೆ.",
+    "ಇದು ನಮ್ ಮನೆ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "idu for a thing; namma = our"
+  },
+  {
+   "id": "fam_015",
+   "topic": "Family & Home",
+   "english": "My younger brother's name is Arun.",
+   "canonical": "ನನ್ನ ತಮ್ಮನ ಹೆಸರು ಅರುಣ್.",
+   "acceptable": [
+    "ನನ್ನ ತಮ್ಮನ ಹೆಸರು ಅರುಣ್.",
+    "ನನ್ನ ತಮ್ಮನ ಹೆಸರು ಅರುಣ್ ಅಂತ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "genitive -na: tammana (younger brother's); aṇṇa is elder",
+   "common_errors": [
+    {
+     "form": "ನನ್ನ ಅಣ್ಣನ ಹೆಸರು ಅರುಣ್.",
+     "means": "My elder brother's name is Arun."
+    }
+   ]
+  },
+  {
+   "id": "phr_001",
+   "topic": "Everyday Phrases",
+   "english": "Please give me water.",
+   "canonical": "ದಯವಿಟ್ಟು ನೀರು ಕೊಡಿ.",
+   "acceptable": [
+    "ದಯವಿಟ್ಟು ನೀರು ಕೊಡಿ.",
+    "ನೀರು ಕೊಡಿ.",
+    "ದಯವಿಟ್ಟು ನನಗೆ ನೀರು ಕೊಡಿ.",
+    "ದಯವಿಟ್ಟು ನಂಗೆ ನೀರು ಕೊಡಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "respectful imperative koḍi (give)"
+  },
+  {
+   "id": "phr_002",
+   "topic": "Everyday Phrases",
+   "english": "How much is this?",
+   "canonical": "ಇದು ಎಷ್ಟು?",
+   "acceptable": [
+    "ಇದು ಎಷ್ಟು?",
+    "ಇದಕ್ಕೆ ಎಷ್ಟು?",
+    "ಇದರ ಬೆಲೆ ಎಷ್ಟು?",
+    "ಇದು ಎಷ್ಟು ರೂಪಾಯಿ?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "eṣṭu = how much"
+  },
+  {
+   "id": "phr_003",
+   "topic": "Everyday Phrases",
+   "english": "Where is the bus stand?",
+   "canonical": "ಬಸ್ ಸ್ಟ್ಯಾಂಡ್ ಎಲ್ಲಿದೆ?",
+   "acceptable": [
+    "ಬಸ್ ಸ್ಟ್ಯಾಂಡ್ ಎಲ್ಲಿದೆ?",
+    "ಬಸ್ ಸ್ಟ್ಯಾಂಡ್ ಎಲ್ಲಿ ಇದೆ?",
+    "ಬಸ್‌ಸ್ಟ್ಯಾಂಡ್ ಎಲ್ಲಿದೆ?",
+    "ಬಸ್ ನಿಲ್ದಾಣ ಎಲ್ಲಿದೆ?",
+    "ಬಸ್ ನಿಲ್ದಾಣ ಎಲ್ಲಿ ಇದೆ?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "elli + ide = where is"
+  },
+  {
+   "id": "phr_004",
+   "topic": "Everyday Phrases",
+   "english": "I don't understand.",
+   "canonical": "ನನಗೆ ಅರ್ಥ ಆಗುತ್ತಿಲ್ಲ.",
+   "acceptable": [
+    "ನನಗೆ ಅರ್ಥ ಆಗುತ್ತಿಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥವಾಗುತ್ತಿಲ್ಲ.",
+    "ನಂಗೆ ಅರ್ಥ ಆಗ್ತಿಲ್ಲ.",
+    "ನನಗೆ ಅರ್ಥ ಆಗಲಿಲ್ಲ.",
+    "ನಂಗೆ ಅರ್ಥ ಆಗಲಿಲ್ಲ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "dative nanage + artha āgu: meaning 'happens to' you"
+  },
+  {
+   "id": "phr_005",
+   "topic": "Everyday Phrases",
+   "english": "Please say that again.",
+   "canonical": "ದಯವಿಟ್ಟು ಇನ್ನೊಮ್ಮೆ ಹೇಳಿ.",
+   "acceptable": [
+    "ದಯವಿಟ್ಟು ಇನ್ನೊಮ್ಮೆ ಹೇಳಿ.",
+    "ಇನ್ನೊಮ್ಮೆ ಹೇಳಿ.",
+    "ದಯವಿಟ್ಟು ಮತ್ತೊಮ್ಮೆ ಹೇಳಿ.",
+    "ಮತ್ತೊಮ್ಮೆ ಹೇಳಿ.",
+    "ದಯವಿಟ್ಟು ಮತ್ತೆ ಹೇಳಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "innomme = once more; hēḷi = say (respectful)"
+  },
+  {
+   "id": "phr_006",
+   "topic": "Everyday Phrases",
+   "english": "I want coffee.",
+   "canonical": "ನನಗೆ ಕಾಫಿ ಬೇಕು.",
+   "acceptable": [
+    "ನನಗೆ ಕಾಫಿ ಬೇಕು.",
+    "ನಂಗೆ ಕಾಫಿ ಬೇಕು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "dative nanage + bēku (want)",
+   "common_errors": [
+    {
+     "form": "ನನಗೆ ಕಾಫಿ ಬೇಡ.",
+     "means": "I don't want coffee."
+    }
+   ]
+  },
+  {
+   "id": "phr_007",
+   "topic": "Everyday Phrases",
+   "english": "I don't want rice.",
+   "canonical": "ನನಗೆ ಅನ್ನ ಬೇಡ.",
+   "acceptable": [
+    "ನನಗೆ ಅನ್ನ ಬೇಡ.",
+    "ನಂಗೆ ಅನ್ನ ಬೇಡ.",
+    "ಅನ್ನ ಬೇಡ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "bēḍa = don't want (negative of bēku)",
+   "common_errors": [
+    {
+     "form": "ನನಗೆ ಅನ್ನ ಬೇಕು.",
+     "means": "I want rice."
+    }
+   ]
+  },
+  {
+   "id": "phr_008",
+   "topic": "Everyday Phrases",
+   "english": "That is very expensive.",
+   "canonical": "ಅದು ತುಂಬಾ ದುಬಾರಿ.",
+   "acceptable": [
+    "ಅದು ತುಂಬಾ ದುಬಾರಿ.",
+    "ಅದು ತುಂಬ ದುಬಾರಿ.",
+    "ಅದು ತುಂಬಾ ದುಬಾರಿಯಾಗಿದೆ.",
+    "ಅದು ತುಂಬಾ ಕಾಸ್ಟ್ಲಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "tumbā = very; no verb 'is' needed"
+  },
+  {
+   "id": "phr_009",
+   "topic": "Everyday Phrases",
+   "english": "Stop here. (to a driver)",
+   "canonical": "ಇಲ್ಲಿ ನಿಲ್ಲಿಸಿ.",
+   "acceptable": [
+    "ಇಲ್ಲಿ ನಿಲ್ಲಿಸಿ.",
+    "ಇಲ್ಲೇ ನಿಲ್ಲಿಸಿ.",
+    "ಇಲ್ಲಿ ನಿಲ್ಸಿ.",
+    "ಇಲ್ಲೇ ನಿಲ್ಸಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "nillisu = stop (something); nillu = stand",
+   "common_errors": [
+    {
+     "form": "ಇಲ್ಲಿ ನಿಲ್ಲಿ.",
+     "means": "Stand here."
+    }
+   ]
+  },
+  {
+   "id": "phr_010",
+   "topic": "Everyday Phrases",
+   "english": "Go straight.",
+   "canonical": "ನೇರವಾಗಿ ಹೋಗಿ.",
+   "acceptable": [
+    "ನೇರವಾಗಿ ಹೋಗಿ.",
+    "ಸೀದಾ ಹೋಗಿ.",
+    "ನೇರ ಹೋಗಿ.",
+    "ಸ್ಟ್ರೈಟ್ ಹೋಗಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "hōgi = go (respectful)"
+  },
+  {
+   "id": "phr_011",
+   "topic": "Everyday Phrases",
+   "english": "What time is it now?",
+   "canonical": "ಈಗ ಎಷ್ಟು ಗಂಟೆ?",
+   "acceptable": [
+    "ಈಗ ಎಷ್ಟು ಗಂಟೆ?",
+    "ಈಗ ಗಂಟೆ ಎಷ್ಟು?",
+    "ಎಷ್ಟು ಗಂಟೆ?",
+    "ಗಂಟೆ ಎಷ್ಟು?",
+    "ಈಗ ಟೈಮ್ ಎಷ್ಟು?",
+    "ಟೈಮ್ ಎಷ್ಟು?"
+   ],
+   "difficulty": "easy",
+   "grammar_note": "eṣṭu gaṇṭe: 'how many hours'"
+  },
+  {
+   "id": "phr_012",
+   "topic": "Everyday Phrases",
+   "english": "Five rupees.",
+   "canonical": "ಐದು ರೂಪಾಯಿ.",
+   "acceptable": [
+    "ಐದು ರೂಪಾಯಿ.",
+    "ಐದು ರುಪಾಯಿ."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "number before noun; no plural on rūpāyi"
+  },
+  {
+   "id": "phr_013",
+   "topic": "Everyday Phrases",
+   "english": "One coffee and two idlis, please.",
+   "canonical": "ಒಂದು ಕಾಫಿ ಮತ್ತು ಎರಡು ಇಡ್ಲಿ ಕೊಡಿ.",
+   "acceptable": [
+    "ಒಂದು ಕಾಫಿ ಮತ್ತು ಎರಡು ಇಡ್ಲಿ ಕೊಡಿ.",
+    "ಒಂದು ಕಾಫಿ, ಎರಡು ಇಡ್ಲಿ ಕೊಡಿ.",
+    "ಒಂದು ಕಾಫಿ ಹಾಗೂ ಎರಡು ಇಡ್ಲಿ ಕೊಡಿ.",
+    "ದಯವಿಟ್ಟು ಒಂದು ಕಾಫಿ ಮತ್ತು ಎರಡು ಇಡ್ಲಿ ಕೊಡಿ."
+   ],
+   "difficulty": "medium",
+   "grammar_note": "count noun stays singular after a number: eraḍu iḍli"
+  },
+  {
+   "id": "phr_014",
+   "topic": "Everyday Phrases",
+   "english": "Is there a pharmacy nearby?",
+   "canonical": "ಹತ್ತಿರದಲ್ಲಿ ಮೆಡಿಕಲ್ ಶಾಪ್ ಇದೆಯಾ?",
+   "acceptable": [
+    "ಹತ್ತಿರದಲ್ಲಿ ಮೆಡಿಕಲ್ ಶಾಪ್ ಇದೆಯಾ?",
+    "ಹತ್ತಿರದಲ್ಲಿ ಮೆಡಿಕಲ್ ಶಾಪ್ ಇದೆಯೇ?",
+    "ಹತ್ತಿರದಲ್ಲಿ ಔಷಧಿ ಅಂಗಡಿ ಇದೆಯಾ?",
+    "ಹತ್ತಿರದಲ್ಲಿ ಔಷಧಿ ಅಂಗಡಿ ಇದೆಯೇ?",
+    "ಇಲ್ಲಿ ಹತ್ತಿರ ಮೆಡಿಕಲ್ ಶಾಪ್ ಇದೆಯಾ?",
+    "ಹತ್ತಿರ ಮೆಡಿಕಲ್ ಶಾಪ್ ಇದ್ಯಾ?"
+   ],
+   "difficulty": "medium",
+   "grammar_note": "yes/no question: ide + -ā"
+  },
+  {
+   "id": "phr_015",
+   "topic": "Everyday Phrases",
+   "english": "Okay.",
+   "canonical": "ಸರಿ.",
+   "acceptable": [
+    "ಸರಿ.",
+    "ಆಯ್ತು.",
+    "ಆಯಿತು.",
+    "ಸರಿ ಆಯ್ತು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "sari / āytu: agreement"
+  },
+  {
+   "id": "phr_016",
+   "topic": "Everyday Phrases",
+   "english": "Wait a minute. (respectful)",
+   "canonical": "ಒಂದು ನಿಮಿಷ ಇರಿ.",
+   "acceptable": [
+    "ಒಂದು ನಿಮಿಷ ಇರಿ.",
+    "ಒಂದ್ ನಿಮಿಷ ಇರಿ.",
+    "ಒಂದು ನಿಮಿಷ ತಾಳಿ.",
+    "ಒಂದು ನಿಮಿಷ ಇರಿ ದಯವಿಟ್ಟು."
+   ],
+   "difficulty": "easy",
+   "grammar_note": "iri = stay/wait (respectful imperative of iru)"
   }
  ]
 }

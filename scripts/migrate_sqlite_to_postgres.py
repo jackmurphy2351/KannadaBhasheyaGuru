@@ -4,8 +4,8 @@ Copy local SQLite progress into the hosted Postgres database.
     VANI_DATABASE_URL=postgresql://... \\
         python scripts/migrate_sqlite_to_postgres.py --sqlite data/vani.db [--dry-run]
 
-Copies mastery, attempts, cards, reviews and users (sessions are not copied —
-sign in again on the hosted app). The whole copy is one transaction, and it is
+Copies mastery, attempts, cards, reviews, users and learner profiles
+(sessions are not copied — sign in again on the hosted app). The whole copy is one transaction, and it is
 idempotent: rows already present are skipped, so re-running after a partial
 failure or by accident never duplicates anything.
 
@@ -25,10 +25,12 @@ import storage  # noqa: E402
 # Tables with a primary key: ON CONFLICT DO NOTHING makes re-runs safe.
 _KEYED = {
     "users": ("profile_id", "username", "password_hash", "is_admin",
-              "disabled", "created_at", "last_login_at"),
+              "disabled", "created_at", "last_login_at", "email_confirmed_at"),
     "mastery": ("profile_id", "topic", "score", "mastered_at"),
     "cards": ("profile_id", "item_id", "topic", "due", "state", "stability",
               "difficulty", "last_review", "fsrs_json"),
+    "learner_profiles": ("profile_id", "level", "motivation", "reads_script",
+                         "updated_at"),
 }
 
 # Append-only logs with surrogate ids, which are not copied (the target assigns
@@ -41,7 +43,14 @@ _LOGS = {
                 ("profile_id", "item_id", "reviewed_at")),
 }
 
-TABLES = ("users", "mastery", "cards", "attempts", "reviews")
+TABLES = ("users", "mastery", "cards", "attempts", "reviews",
+          "learner_profiles")
+
+# Columns an older source may lack, and the expression to read instead.
+# A pre-v3 database only ever held invite-only accounts, which the app's own
+# v3 migration marks confirmed as of their creation — copy the same, or a
+# migrated account would look like a pending signup.
+_FALLBACKS = {("users", "email_confirmed_at"): "created_at"}
 
 
 def _read(src, table, columns):
@@ -49,7 +58,10 @@ def _read(src, table, columns):
                          "AND name = ?", (table,)).fetchone()
     if not exists:        # e.g. a v1 database has no users table
         return []
-    return src.execute(f"SELECT {', '.join(columns)} FROM {table}").fetchall()
+    present = {row[1] for row in src.execute(f"PRAGMA table_info({table})")}
+    select = [c if c in present else f"{_FALLBACKS[(table, c)]} AS {c}"
+              for c in columns]
+    return src.execute(f"SELECT {', '.join(select)} FROM {table}").fetchall()
 
 
 def _count(conn, table):

@@ -43,12 +43,15 @@ DB_FILE = os.path.join(DATA_DIR, "vani.db")
 PROGRESS_FILE = os.path.join(DATA_DIR, "progress.json")
 
 DEFAULT_PROFILE = "local"
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # Set by configure(). None means SQLite at DB_FILE.
 _DATABASE_URL = None
 _pool = None
 _pg_migrated = False
+# The SQLite file already migrated by this process. Keyed by path, not a bool,
+# because tests repoint DB_FILE at a fresh file for every test.
+_sqlite_migrated_path = None
 
 
 # ---------------------------------------------------------------------------
@@ -182,6 +185,21 @@ CREATE TABLE IF NOT EXISTS email_confirmations (
 );
 CREATE INDEX IF NOT EXISTS idx_email_confirmations_profile
     ON email_confirmations (profile_id);
+"""
+
+
+# v4: learning tracks — the onboarding answers that tailor content. One row
+# per profile; the valid values are owned by learner.py, not by this layer.
+# CREATE-only (no ALTER), so re-running it after a rolled-back version row is
+# harmless.
+_SCHEMA_V4 = """
+CREATE TABLE IF NOT EXISTS learner_profiles (
+    profile_id   TEXT PRIMARY KEY,
+    level        TEXT NOT NULL,
+    motivation   TEXT NOT NULL,
+    reads_script INTEGER NOT NULL,
+    updated_at   TEXT NOT NULL
+);
 """
 
 
@@ -341,15 +359,23 @@ def _connect_postgres():
 
 
 def _connect_sqlite():
-    os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
-    raw = sqlite3.connect(DB_FILE, check_same_thread=False)
+    global _sqlite_migrated_path
+    path = DB_FILE
+    # Every storage call opens a connection, so the schema check runs once
+    # per file per process rather than on each call. A file that vanished
+    # since (deleted, or a test's tmp dir) is migrated again.
+    migrating = path != _sqlite_migrated_path or not os.path.exists(path)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    raw = sqlite3.connect(path, check_same_thread=False)
     raw.row_factory = sqlite3.Row
     conn = _SqliteConn(raw)
     try:
-        # WAL lets a second Streamlit tab read while this one writes.
-        conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA foreign_keys=ON")
-        _migrate(conn)
+        if migrating:
+            # WAL lets a second Streamlit tab read while this one writes. It
+            # is a property of the file, so setting it once is enough.
+            conn.execute("PRAGMA journal_mode=WAL")
+            _migrate(conn)
         yield conn
         raw.commit()
     except Exception:
@@ -357,6 +383,10 @@ def _connect_sqlite():
         raise
     finally:
         raw.close()
+    # Only once committed, as for Postgres: a rolled-back caller may have
+    # rolled back the version row too.
+    if migrating:
+        _sqlite_migrated_path = path
 
 
 def _integrity_errors():
@@ -390,6 +420,8 @@ def _migrate(conn):
         if just_added:
             conn.execute("UPDATE users SET email_confirmed_at = created_at "
                          "WHERE email_confirmed_at IS NULL")
+    if version < 4:
+        conn.executescript(_SCHEMA_V4)
     conn.execute(
         "INSERT INTO schema_meta (key, value) VALUES ('version', ?) "
         "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
@@ -439,11 +471,48 @@ def _import_progress_json(conn):
 
 def reset_for_tests():
     """Delete the database file. Tests only — never called by the app."""
+    global _sqlite_migrated_path
+    _sqlite_migrated_path = None
     for suffix in ("", "-wal", "-shm"):
         try:
             os.remove(DB_FILE + suffix)
         except OSError:
             pass
+
+
+# ---------------------------------------------------------------------------
+# Learner profile (learning tracks)
+# ---------------------------------------------------------------------------
+def get_learner_profile(profile_id=DEFAULT_PROFILE):
+    """Return ``{"level", "motivation", "reads_script", "updated_at"}`` or None."""
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT level, motivation, reads_script, updated_at "
+            "FROM learner_profiles WHERE profile_id = ?",
+            (profile_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    profile = dict(row)
+    profile["reads_script"] = bool(profile["reads_script"])
+    return profile
+
+
+def set_learner_profile(level, motivation, reads_script,
+                        profile_id=DEFAULT_PROFILE, at=None):
+    """Create or replace this profile's onboarding answers."""
+    with _connect() as conn:
+        conn.execute(
+            "INSERT INTO learner_profiles "
+            "(profile_id, level, motivation, reads_script, updated_at) "
+            "VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(profile_id) DO UPDATE SET level = excluded.level, "
+            "motivation = excluded.motivation, "
+            "reads_script = excluded.reads_script, "
+            "updated_at = excluded.updated_at",
+            (profile_id, level, motivation, int(bool(reads_script)),
+             to_iso(at or utcnow())),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -553,19 +622,8 @@ def upsert_card(item_id, topic, fsrs_json, due, state=None, stability=None,
     are queried or displayed.
     """
     with _connect() as conn:
-        conn.execute(
-            "INSERT INTO cards (profile_id, item_id, topic, due, state, "
-            "stability, difficulty, last_review, fsrs_json) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
-            "ON CONFLICT(profile_id, item_id) DO UPDATE SET "
-            "topic = excluded.topic, due = excluded.due, "
-            "state = excluded.state, stability = excluded.stability, "
-            "difficulty = excluded.difficulty, "
-            "last_review = excluded.last_review, "
-            "fsrs_json = excluded.fsrs_json",
-            (profile_id, item_id, topic, due, state, stability, difficulty,
-             last_review, fsrs_json),
-        )
+        _upsert_card(conn, profile_id, item_id, topic, fsrs_json, due, state,
+                     stability, difficulty, last_review)
 
 
 def log_review(item_id, tier, rating, topic=None, profile_id=DEFAULT_PROFILE,
@@ -576,12 +634,47 @@ def log_review(item_id, tier, rating, topic=None, profile_id=DEFAULT_PROFILE,
     carries no reps/lapses fields, so those are derived here.
     """
     with _connect() as conn:
-        conn.execute(
-            "INSERT INTO reviews (profile_id, item_id, topic, tier, rating, "
-            "reviewed_at) VALUES (?, ?, ?, ?, ?, ?)",
-            (profile_id, item_id, topic, tier, int(rating),
-             to_iso(at or utcnow())),
-        )
+        _log_review(conn, profile_id, item_id, topic, tier, rating, at)
+
+
+def record_review(item_id, topic, card, tier, rating,
+                  profile_id=DEFAULT_PROFILE, at=None):
+    """Reschedule a card and log the answer in one transaction.
+
+    ``card`` holds the ``upsert_card`` fields (``fsrs_json``, ``due``,
+    ``state``, ``stability``, ``difficulty``, ``last_review``). Doing both
+    writes together means the card's schedule and the review history that
+    reps/lapses are derived from can never disagree.
+    """
+    with _connect() as conn:
+        _upsert_card(conn, profile_id, item_id, topic, **card)
+        _log_review(conn, profile_id, item_id, topic, tier, rating, at)
+
+
+def _upsert_card(conn, profile_id, item_id, topic, fsrs_json, due, state=None,
+                 stability=None, difficulty=None, last_review=None):
+    conn.execute(
+        "INSERT INTO cards (profile_id, item_id, topic, due, state, "
+        "stability, difficulty, last_review, fsrs_json) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(profile_id, item_id) DO UPDATE SET "
+        "topic = excluded.topic, due = excluded.due, "
+        "state = excluded.state, stability = excluded.stability, "
+        "difficulty = excluded.difficulty, "
+        "last_review = excluded.last_review, "
+        "fsrs_json = excluded.fsrs_json",
+        (profile_id, item_id, topic, due, state, stability, difficulty,
+         last_review, fsrs_json),
+    )
+
+
+def _log_review(conn, profile_id, item_id, topic, tier, rating, at):
+    conn.execute(
+        "INSERT INTO reviews (profile_id, item_id, topic, tier, rating, "
+        "reviewed_at) VALUES (?, ?, ?, ?, ?, ?)",
+        (profile_id, item_id, topic, tier, int(rating),
+         to_iso(at or utcnow())),
+    )
 
 
 def get_review_counts(item_id, profile_id=DEFAULT_PROFILE):
@@ -629,19 +722,16 @@ def get_srs_summary(now=None, profile_id=DEFAULT_PROFILE):
     """Return ``{"tracked", "due", "next_due"}`` for the Review dashboard."""
     stamp = to_iso(now or utcnow())
     with _connect() as conn:
-        tracked = conn.execute(
-            "SELECT COUNT(*) FROM cards WHERE profile_id = ?",
-            (profile_id,),
-        ).fetchone()[0]
-        due = conn.execute(
-            "SELECT COUNT(*) FROM cards WHERE profile_id = ? AND due <= ?",
-            (profile_id, stamp),
-        ).fetchone()[0]
-        nxt = conn.execute(
-            "SELECT MIN(due) FROM cards WHERE profile_id = ? AND due > ?",
-            (profile_id, stamp),
-        ).fetchone()[0]
-    return {"tracked": tracked, "due": due, "next_due": nxt}
+        row = conn.execute(
+            "SELECT COUNT(*), "
+            "COALESCE(SUM(CASE WHEN due <= ? THEN 1 ELSE 0 END), 0), "
+            "MIN(CASE WHEN due > ? THEN due END) "
+            "FROM cards WHERE profile_id = ?",
+            (stamp, stamp, profile_id),
+        ).fetchone()
+    # Indexed, not unpacked: the Postgres row is a dict, so unpacking it would
+    # yield column names. int() because Postgres SUM returns a Decimal.
+    return {"tracked": row[0], "due": int(row[1]), "next_due": row[2]}
 
 
 # ---------------------------------------------------------------------------

@@ -1,5 +1,8 @@
 """
-Account administration for Vāṇi (invite-only: there is no sign-up page).
+Account administration for Vāṇi.
+
+Learners can also sign themselves up in the app; this script is for everything
+signup deliberately cannot do — above all, creating an admin.
 
     python scripts/manage_users.py create asha
     python scripts/manage_users.py create jack --admin --profile-id local

@@ -102,11 +102,11 @@ def quiz_log(tmp_path, monkeypatch):
 
 class TestBankIntegrity:
 
-    def test_bank_has_200_items(self):
-        assert len(BANK["items"]) == 200
+    def test_bank_has_247_items(self):
+        assert len(BANK["items"]) == 247
 
-    def test_bank_has_12_topics(self):
-        assert len(BANK["topics"]) == 12
+    def test_bank_has_15_topics(self):
+        assert len(BANK["topics"]) == 15
 
     def test_every_topic_has_at_least_10_items(self):
         for topic in BANK["topics"]:
@@ -123,10 +123,17 @@ class TestBankIntegrity:
         for form in item["acceptable"]:
             assert check_answer(form, item) is True
 
+    # Phrasebook topics: the quiz deliberately tests the very phrases their
+    # lessons teach (ನಮಸ್ಕಾರ, ಸರಿ), so a cap of 2 would stop those lessons
+    # teaching any other quizzed phrase. Grammar topics keep the cap of 2.
+    STARTER_OVERLAP_CAP = {"Greetings & Introductions": 6,
+                           "Family & Home": 6,
+                           "Everyday Phrases": 6}
+
     def test_at_most_two_items_per_topic_overlap_lesson_docs(self):
         # Quiz sentences must test the learner beyond the lesson material:
         # at most 2 canonical answers per topic may appear verbatim in the
-        # knowledge_base markdown.
+        # knowledge_base markdown (STARTER_OVERLAP_CAP for phrasebook topics).
         def squash(s):
             s = unicodedata.normalize("NFC", s)
             s = re.sub("[\"“”.!?,;:।॥]", "", s)
@@ -139,7 +146,8 @@ class TestBankIntegrity:
         for topic in BANK["topics"]:
             hits = [it["id"] for it in BANK["items"]
                     if it["topic"] == topic and squash(it["canonical"]) in docs]
-            assert len(hits) <= 2, f"{topic}: lesson-copied items {hits}"
+            cap = self.STARTER_OVERLAP_CAP.get(topic, 2)
+            assert len(hits) <= cap, f"{topic}: lesson-copied items {hits}"
 
     def test_no_duplicate_canonicals_across_bank(self):
         seen = {}
@@ -399,8 +407,8 @@ class TestLoadQuizBank:
 class TestGetQuizTopics:
 
     REAL_DOCS_SUBSET = {
-        "Topic A": {"files": ["a.md"], "level": "Core"},
-        "Topic B": {"files": ["b.md"], "level": "Advanced"},
+        "Topic A": {"files": ["a.md"], "level": "Core", "band": "beginner"},
+        "Topic B": {"files": ["b.md"], "level": "Advanced", "band": "advanced"},
     }
 
     def test_topics_come_from_bank(self, seeded_session, monkeypatch):
@@ -413,7 +421,7 @@ class TestGetQuizTopics:
         storage.set_mastered("Topic A", score="10/10")
         t = get_quiz_topics(profile_id=P)[0]
         assert t == {"name": "Topic A", "file": ["a.md"], "level": "Core",
-                     "mastered": True, "due": 0}
+                     "band": "beginner", "mastered": True, "due": 0}
 
     def test_topic_reports_due_count(self, seeded_session, monkeypatch):
         monkeypatch.setattr(config, "QUIZ_TOPIC_DOCS", self.REAL_DOCS_SUBSET)
@@ -425,12 +433,13 @@ class TestGetQuizTopics:
 
     def test_out_of_sync_mapping_raises(self, seeded_session, monkeypatch):
         monkeypatch.setattr(config, "QUIZ_TOPIC_DOCS",
-                            {"Topic A": {"files": ["a.md"], "level": "Core"}})
+                            {"Topic A": {"files": ["a.md"], "level": "Core",
+                                         "band": "beginner"}})
         with pytest.raises(ValueError, match="out of sync"):
             get_quiz_topics(profile_id=P)
 
     def test_real_mapping_matches_real_bank(self):
-        # The shipped config must map exactly the bank's 12 topics.
+        # The shipped config must map exactly the bank's topics.
         assert set(config.QUIZ_TOPIC_DOCS) == set(BANK["topics"])
 
 
@@ -535,6 +544,12 @@ class TestJudgeEquivalence:
         entry = json.loads(quiz_log.read_text(encoding="utf-8").strip())
         assert entry["item_id"] == "neg_003"
 
+    def test_api_error_is_not_retried_again(self, quiz_log):
+        with patch("logic.generate_content",
+                   return_value="API Error: boom") as mock_gen:
+            judge_equivalence(self.ANSWER, self.ITEM, "ctx")
+        assert mock_gen.call_count == 1
+
     def test_exception_does_not_propagate(self, quiz_log):
         with patch("logic.generate_content", side_effect=Exception("down")):
             assert judge_equivalence(self.ANSWER, self.ITEM, "ctx") is False
@@ -578,12 +593,14 @@ class TestExplainMistake:
         assert mock_gen.call_count == 2
         assert "illa" in res["feedback"]
 
-    def test_api_error_string_treated_as_failure(self, quiz_log):
+    def test_api_error_falls_back_without_a_second_round(self, quiz_log):
+        # generate_content has already retried before returning "API Error",
+        # so another round would only make the learner wait again.
         with patch("logic.generate_content",
                    side_effect=["API Error: boom", self.GOOD]) as mock_gen:
             res = explain_mistake(self.WRONG, self.ITEM, "ctx")
-        assert mock_gen.call_count == 2
-        assert "illa" in res["feedback"]
+        assert mock_gen.call_count == 1
+        assert self.ITEM["grammar_note"] in res["feedback"]
 
     def test_double_failure_returns_friendly_fallback_and_logs(self, quiz_log):
         with patch("logic.generate_content",
@@ -855,12 +872,16 @@ class TestQuizPersistenceWiring:
         branch = src.index("if known:", known)
         judge = src.index("logic.judge_equivalence(user_ans, item", known)
         assert known < branch < judge
-        assert "elif tier == \"incorrect\":" in src
+        # The placement check runs with judge=False: bank matches only.
+        assert "elif tier == \"incorrect\" and judge:" in src
 
     def test_error_quiz_also_shows_the_learners_answer(self):
         # The post-chat quiz had the same gap: a verdict with nothing to
         # compare it against.
-        assert "**Your answer:** {last['user_answer']}" in self._main_source()
+        src = self._main_source()
+        body = src[src.index("def _render_error_quiz_result("):
+                   src.index("def render_voice_chat(")]
+        assert "**Your answer:** {entry['user_answer']}" in body
 
     def test_unreachable_judge_does_not_grade_the_answer(self):
         # A network blip must not mark a learner wrong, nor schedule the item
@@ -932,8 +953,15 @@ class TestRecordQuizAnswer:
 
     def test_a_storage_failure_does_not_break_the_quiz(self):
         # A learner mid-quiz must not lose the session to a disk problem.
-        with patch("logic.storage.upsert_card", side_effect=OSError("disk")):
+        with patch("logic.storage.record_review", side_effect=OSError("disk")):
             assert logic.record_quiz_answer(self.ITEM, "exact", profile_id=P) is None
+
+    def test_card_and_review_log_are_written_together(self):
+        # One transaction: if the review-log insert fails, the card must not
+        # have been rescheduled either, or reps/lapses would disagree with it.
+        with patch("storage._log_review", side_effect=OSError("disk")):
+            assert logic.record_quiz_answer(self.ITEM, "exact", profile_id=P) is None
+        assert storage.get_card("neg_001") is None
 
 
 class TestBuildReviewQuiz:

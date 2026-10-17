@@ -86,9 +86,11 @@ def rating_for_tier(tier):
         ) from None
 
 
-def new_card():
-    """A never-reviewed card, due immediately."""
-    return Card()
+def _aware_utc(now):
+    """``now`` (default: the current time) as an aware UTC datetime; a naive
+    value is taken to be UTC already."""
+    now = now or datetime.now(timezone.utc)
+    return now if now.tzinfo else now.replace(tzinfo=timezone.utc)
 
 
 def load_card(fsrs_json):
@@ -106,9 +108,7 @@ def review(fsrs_json, tier, now=None):
     ``fsrs_json``/``due``/``state``/``stability``/``difficulty``/``last_review``
     with timestamps as aware UTC datetimes.
     """
-    now = now or datetime.now(timezone.utc)
-    if now.tzinfo is None:
-        now = now.replace(tzinfo=timezone.utc)
+    now = _aware_utc(now)
     card = load_card(fsrs_json)
     rating = rating_for_tier(tier)
     card, _log = get_scheduler().review_card(card, rating, review_datetime=now)
@@ -134,7 +134,4 @@ def is_due(fsrs_json, now=None):
     """
     if not fsrs_json:
         return True
-    now = now or datetime.now(timezone.utc)
-    if now.tzinfo is None:
-        now = now.replace(tzinfo=timezone.utc)
-    return load_card(fsrs_json).due <= now
+    return load_card(fsrs_json).due <= _aware_utc(now)

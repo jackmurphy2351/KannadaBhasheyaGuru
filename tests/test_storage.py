@@ -119,8 +119,70 @@ class TestSchema:
         with sqlite3.connect(storage.DB_FILE) as conn:
             conn.execute(
                 "UPDATE schema_meta SET value = '2' WHERE key = 'version'")
+        # The schema check is cached per process; an out-of-band edit is only
+        # seen by a fresh process, which is what this simulates.
+        storage._sqlite_migrated_path = None
         storage.get_progress()  # would raise OperationalError if not guarded
         assert storage.get_schema_version() == storage.SCHEMA_VERSION
+
+    def test_schema_check_runs_once_per_file(self, monkeypatch):
+        storage.get_progress()
+        calls = []
+        monkeypatch.setattr(storage, "_migrate", calls.append)
+        storage.get_progress()
+        storage.set_mastered("Negation")
+        assert calls == []
+
+    def test_a_rolled_back_first_open_is_migrated_again(self, monkeypatch):
+        # The cache is only set after commit: if the caller's write fails,
+        # the version row rolled back with it, so the next call must re-check.
+        storage._sqlite_migrated_path = None
+        with pytest.raises(RuntimeError):
+            with storage._connect():
+                raise RuntimeError("caller failed")
+        assert storage._sqlite_migrated_path is None
+        assert storage.get_schema_version() == storage.SCHEMA_VERSION
+
+    def test_v4_migration_is_idempotent(self):
+        # _SCHEMA_V4 is CREATE-only; re-running it after the version row
+        # regressed (e.g. a rolled-back first write) must not raise.
+        storage.get_progress()
+        with sqlite3.connect(storage.DB_FILE) as conn:
+            conn.execute(
+                "UPDATE schema_meta SET value = '3' WHERE key = 'version'")
+        storage._sqlite_migrated_path = None    # as a fresh process would
+        storage.set_learner_profile("beginner", "work", True)
+        assert storage.get_schema_version() == storage.SCHEMA_VERSION
+        assert storage.get_learner_profile()["level"] == "beginner"
+
+
+class TestLearnerProfile:
+
+    def test_none_before_onboarding(self):
+        assert storage.get_learner_profile() is None
+
+    def test_round_trip(self):
+        storage.set_learner_profile("intermediate", "work", False, at=NOW)
+        assert storage.get_learner_profile() == {
+            "level": "intermediate", "motivation": "work",
+            "reads_script": False, "updated_at": storage.to_iso(NOW)}
+
+    def test_reads_script_is_a_bool(self):
+        storage.set_learner_profile("advanced", "fun", True)
+        assert storage.get_learner_profile()["reads_script"] is True
+
+    def test_update_replaces_the_row(self):
+        storage.set_learner_profile("total_beginner", "heritage", False)
+        storage.set_learner_profile("advanced", "fun", True)
+        assert storage.get_learner_profile()["level"] == "advanced"
+        assert storage.get_learner_profile()["motivation"] == "fun"
+
+    def test_profiles_are_isolated(self):
+        storage.set_learner_profile("beginner", "work", True, profile_id="a")
+        storage.set_learner_profile("advanced", "fun", False, profile_id="b")
+        assert storage.get_learner_profile(profile_id="a")["level"] == "beginner"
+        assert storage.get_learner_profile(profile_id="b")["level"] == "advanced"
+        assert storage.get_learner_profile() is None
 
 
 class TestProgressJsonImport:
@@ -408,6 +470,8 @@ class TestDurability:
             raise RuntimeError("simulated crash mid-write")
 
         monkeypatch.setattr(storage, "_migrate", boom)
+        # _migrate is the injection point, so make the next call run it.
+        monkeypatch.setattr(storage, "_sqlite_migrated_path", None)
         with pytest.raises(RuntimeError):
             storage.set_mastered("Adverbs", score="10/10")
         monkeypatch.setattr(storage, "_migrate", original)
